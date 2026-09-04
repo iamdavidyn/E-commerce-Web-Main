@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en" class="bg-background">
+
+<head>
+  <script>
+    // Set theme before first paint to avoid a light/dark flash.
+    (function () {
+      try {
+        var saved = localStorage.getItem('luxe-theme');
+        var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff6b00">
+    <title>About Us | LUXE</title>
+    <meta name="description"
+        content="Learn about LUXE, our mission and the premium experience we deliver across products, shipping and customer care.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body data-page="about">
+  <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+    <div id="site-header"></div>
+
+    <main>
+        <section class="page-banner">
+            <div class="container">
+                <nav class="breadcrumb" aria-label="Breadcrumb">
+                    <a href="/">Home</a> <span>/</span> <span>About Us</span>
+                </nav>
+                <h1>Built for premium shopping, designed to delight.</h1>
+                <p>We combine thoughtful curation, fast delivery and modern design to create a marketplace you can
+                    trust.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container about-hero">
+                <div>
+                    <span class="eyebrow">Our story</span>
+                    <h2>A marketplace with meticulous detail and premium craftsmanship.</h2>
+                    <p>LUXE is designed for the modern shopper who expects exceptional products and a seamless
+                        experience. Our storefront showcases standout brands, expert-curated collections and trusted
+                        services from day one.</p>
+                    <div class="mv-grid">
+                        <div class="mv-card">
+                            <div class="ic">✨</div>
+                            <h4>Curated Collections</h4>
+                            <p>Every product is selected for quality, design and real-world value.</p>
+                        </div>
+                        <div class="mv-card">
+                            <div class="ic">🚚</div>
+                            <h4>Fast Fulfillment</h4>
+                            <p>Reliable shipping and tracking, so your order arrives exactly when expected.</p>
+                        </div>
+                    </div>
+                </div>
+                <img src="{% static 'images/home2.png' %}" alt="Premium shopping experience" loading="lazy">
+            </div>
+        </section>
+
+        <section class="section section-sm">
+            <div class="container">
+                <div class="section-head">
+                    <span class="eyebrow">Why choose us</span>
+                    <h2>Designed for confidence at every step.</h2>
+                    <p>Our platform blends secure checkout, premium customer service and modern interfaces that feel
+                        polished on every device.</p>
+                </div>
+                <div class="mv-grid">
+                    <div class="mv-card">
+                        <h4>Secure payment</h4>
+                        <p>Industry-grade protection keeps your purchase data safe.</p>
+                    </div>
+                    <div class="mv-card">
+                        <h4>Easy returns</h4>
+                        <p>Simple return policies make shopping risk-free and reliable.</p>
+                    </div>
+                    <div class="mv-card">
+                        <h4>Quality assurance</h4>
+                        <p>Products are vetted for performance, durability and style.</p>
+                    </div>
+                    <div class="mv-card">
+                        <h4>Expert support</h4>
+                        <p>Dedicated customer service available whenever you need it.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="site-footer"></div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var html = document.documentElement;
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('luxe-theme', next); } catch (e) {}
+      });
+    })();
+  </script>
+</body>
+
+</html>

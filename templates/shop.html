@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="bg-background">
+
+<head>
+  <script>
+    // Set theme before first paint to avoid a light/dark flash.
+    (function () {
+      try {
+        var saved = localStorage.getItem('luxe-theme');
+        var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff6b00">
+  <title>Shop All Products | LUXE</title>
+  <meta name="description"
+    content="Browse the full LUXE catalog. Filter by category, price and rating to find premium electronics, fashion, beauty and home essentials.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body data-page="shop">
+  <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+  <div id="site-header"></div>
+
+  <main>
+    <div class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Home</a> <span>/</span> <span id="crumb-current">Shop</span>
+        </nav>
+        <h1 id="shop-title">All Products</h1>
+        <p id="shop-subtitle">Discover our complete collection of premium products.</p>
+      </div>
+    </div>
+
+    <div class="container shop-layout">
+      <!-- Sidebar filters -->
+      <aside class="shop-sidebar" id="shop-sidebar">
+        <div class="filter-head">
+          <h2>Filters</h2>
+          <button class="link-btn js-clear-filters">Clear all</button>
+        </div>
+
+        <div class="filter-group">
+          <h3>Category</h3>
+          <div id="filter-cats" class="filter-list"></div>
+        </div>
+
+        <div class="filter-group">
+          <h3>Price Range</h3>
+          <div class="price-range">
+            <input type="range" id="price-range" min="0" max="1000000" value="1000000" step="10000">
+            <div class="price-range-labels">
+              <span>$0</span>
+              <span>Up to <strong id="price-value">No limit</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h3>Rating</h3>
+          <div id="filter-rating" class="filter-list"></div>
+        </div>
+      </aside>
+
+      <!-- Products -->
+      <section class="shop-main">
+        <div class="shop-toolbar">
+          <button class="btn btn-outline js-filter-toggle filter-mobile-btn"><span id="filter-icon"></span>
+            Filters</button>
+          <span class="result-count" id="result-count"></span>
+          <div class="sort-wrap">
+            <label for="sort-select">Sort by</label>
+            <select id="sort-select">
+              <option value="featured">Featured</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+              <option value="name">Name A-Z</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="products-grid" id="shop-grid"></div>
+        <div class="empty-state" id="shop-empty" hidden>
+          <h3>No products found</h3>
+          <p>Try adjusting your filters or search term.</p>
+          <button class="btn btn-primary js-clear-filters">Clear filters</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="filter-drawer-overlay js-filter-overlay"></div>
+  <div id="site-footer"></div>
+
+
+  </script>
+  <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/shop.js' %}"></script>
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var html = document.documentElement;
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('luxe-theme', next); } catch (e) {}
+      });
+    })();
+  </script>
+</body>
+
+</html>
