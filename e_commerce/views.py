@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import User, Product, Cart_Items, Cart
+from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.utils import timezone
 
 
 # Create your views here.
@@ -107,7 +108,7 @@ def api_shop(request):
             'name': item.product_name,
             'cat': item.product_category,
             'price': float(item.new_product_price),
-            'old': float(item.old_product_price),  # Assuming old price is current price + 50 for demonstration
+            'old': float(item.old_product_price) if item.old_product_price is not None else 0,
             'img': item.product_image.url if item.product_image else '',
             'badge': item.badge,
             'tags': [item.tag],
@@ -242,6 +243,8 @@ def cart(request):
 
     cart_items = cart.items.select_related("product").all()
 
+
+    
     return render(
         request,
         "cart.html",
@@ -250,9 +253,31 @@ def cart(request):
             "cart_items": cart_items,
         }
     )
+    
+
+def store_settings_api(request):
+
+    settings = StoreSettings.objects.first()
+
+    if not settings:
+        settings = StoreSettings.objects.create(
+            currency="NGN",
+            currency_symbol="₦",
+            shipping_fee=0
+        )
+
+    return JsonResponse({
+        "currency": settings.currency,
+        "currency_symbol": settings.currency_symbol,
+        "shipping_fee": float(settings.shipping_fee),
+    })
+    
 
 def wishlist(request):    
     return render(request, 'wishlist.html')
+
+def order(request):
+ return render(request, 'order-confirmation.html')
 
 def logout_view(request):
     logout(request)
@@ -260,3 +285,74 @@ def logout_view(request):
 
 def product(request):    
     return render(request, 'product.html')
+    
+    
+
+
+
+def flash_sale_api(request):
+
+    now = timezone.now()
+
+    # Get the flash sale settings
+    settings = FlashSaleSettings.objects.first()
+
+    # No settings created
+    if not settings:
+        return JsonResponse({
+            "active": False,
+            "products": []
+        })
+
+    # Check whether the sale is currently active
+    if not (
+        settings.is_active
+        and settings.start_time <= now <= settings.end_time
+    ):
+        return JsonResponse({
+            "active": False,
+            "products": []
+        })
+
+    # Get products marked as "flash"
+    products = Product.objects.filter(
+        tag="flash",
+        stock__gt=0
+    )
+
+    # No flash-sale products
+    if not products.exists():
+        return JsonResponse({
+            "active": False,
+            "products": []
+        })
+
+    data = []
+
+    for product in products:
+
+        data.append({
+            "id": product.id,
+            "name": product.product_name,
+            "price": float(product.new_product_price),
+            "old_price": float(
+                product.old_product_price or 0
+            ),
+            "image": (
+                product.product_image.url
+                if product.product_image
+                else ""
+            ),
+            "category": product.product_category,
+            "stock": product.stock,
+        })
+
+    return JsonResponse({
+        "active": True,
+
+        # Used by JavaScript countdown
+        "start_time": settings.start_time.isoformat(),
+        "end_time": settings.end_time.isoformat(),
+
+        "products": data
+    })

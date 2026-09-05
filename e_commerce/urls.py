@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from. import views
-from .views import check_out, home, login_view, signup_view, about, api_shop, shop, blog, contact, faq, account_view, cart, wishlist, product, logout_view, add_to_cart
+from .views import check_out, home, login_view, signup_view, about, api_shop, shop, blog, contact, faq, account_view, cart, wishlist, product, logout_view, add_to_cart, flash_sale_api, order
 
 urlpatterns = [
     path('', home, name='home'),
@@ -27,4 +27,20 @@ urlpatterns = [
     
     path("api/cart/update/", views.update_cart_item, name="update_cart_item"),
     path("api/cart/remove/", views.remove_cart_item, name="remove_cart_item"),
+    path(
+    "api/flash-sale/",
+    flash_sale_api,
+    name="flash_sale_api"
+),
+    path(
+    "confirm-order",
+    order,
+    name="order"
+),
+    path(
+    "api/store-settings/",
+    views.store_settings_api,
+    name="store_settings_api"
+)
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

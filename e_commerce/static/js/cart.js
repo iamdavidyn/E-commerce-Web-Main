@@ -1,724 +1,971 @@
 /* ============================================
-   LUXE — Cart page logic
-   Django database cart for logged-in users
-   ============================================ */
+LUXE — Cart page logic
+Django database cart for logged-in users
+Shipping fee controlled by Django Admin
+============================================ */
 
-const SHIPPING_FLAT = 9.99;
-const FREE_SHIP_THRESHOLD = 50;
 const TAX_RATE = 0.08;
 
 let databaseCart = [];
 
-const PROMOS = {
-  LUXE15: 0.15,
-  SAVE10: 0.10
-};
-
-let activePromo = 0;
-let promoCode = "";
-
 
 /* ============================================
-   CSRF
+CSRF
 ============================================ */
 
 function getCSRFToken() {
-  const name = "csrftoken=";
-  const cookies = document.cookie.split(";");
 
-  for (let cookie of cookies) {
-    cookie = cookie.trim();
+const name = "csrftoken=";
 
-    if (cookie.startsWith(name)) {
-      return decodeURIComponent(
-        cookie.substring(name.length)
-      );
-    }
-  }
+const cookies =
+document.cookie.split(";");
 
-  return "";
+
+for (let cookie of cookies) {
+
+cookie = cookie.trim();
+
+
+if (cookie.startsWith(name)) {
+
+return decodeURIComponent(
+cookie.substring(name.length)
+);
+
+}
+
+}
+
+
+return "";
+
 }
 
 
 /* ============================================
-   LOAD CART FROM DJANGO
+LOAD CART FROM DJANGO
 ============================================ */
 
 async function loadDatabaseCart() {
-  try {
-    const response = await fetch("/api/cart/", {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        "Accept": "application/json"
-      }
-    });
 
-    if (!response.ok) {
-      throw new Error("Could not load cart");
-    }
+try {
 
-    const data = await response.json();
+const response =
+await fetch(
+"/api/cart/",
+{
+method: "GET",
 
-    if (!data.success) {
-      throw new Error(data.message || "Could not load cart");
-    }
+credentials:
+"same-origin",
 
-    databaseCart = data.items || [];
+headers: {
+"Accept":
+"application/json"
+}
+}
+);
 
-    renderCart();
 
-  } catch (error) {
-    console.error("Cart loading error:", error);
+if (!response.ok) {
 
-    const layout = document.querySelector("#cart-layout");
+throw new Error(
+"Could not load cart"
+);
 
-    if (layout) {
-      layout.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <h3>Unable to load cart</h3>
-          <p>Please refresh the page and try again.</p>
-        </div>
-      `;
-    }
-  }
+}
+
+
+const data =
+await response.json();
+
+
+if (!data.success) {
+
+throw new Error(
+data.message ||
+"Could not load cart"
+);
+
+}
+
+
+databaseCart =
+data.items || [];
+
+
+renderCart();
+
+
+} catch (error) {
+
+console.error(
+"Cart loading error:",
+error
+);
+
+
+const layout =
+document.querySelector(
+"#cart-layout"
+);
+
+
+if (layout) {
+
+layout.innerHTML = `
+
+<div
+  class="empty-state"
+  style="grid-column:1/-1"
+>
+
+  <h3>
+    Unable to load cart
+  </h3>
+
+  <p>
+    Please refresh the page and try again.
+  </p>
+
+</div>
+
+`;
+
+}
+
+}
+
 }
 
 
 /* ============================================
-   CART DATA
+CART DATA
 ============================================ */
 
 function cartDetailed() {
-  return databaseCart.map((item) => ({
-    id: Number(item.id),
-    name: item.name || "Unknown Product",
-    price: Number(item.price) || 0,
-    img: item.img || "",
-    cat: item.cat || "N/A",
-    qty: Number(item.qty) || 1
-  }));
+
+return databaseCart.map(
+(item) => ({
+
+  id:
+    Number(item.id),
+
+  name:
+    item.name ||
+    "Unknown Product",
+
+  price:
+    Number(item.price) ||
+    0,
+
+  img:
+    item.img ||
+    "",
+
+  cat:
+    item.cat ||
+    "N/A",
+
+  qty:
+    Number(item.qty) ||
+    1
+
+})
+);
+
 }
 
 
 /* ============================================
-   TOTALS
+TOTALS
+Shipping comes directly from Django Admin
 ============================================ */
 
-function cartTotals(promo = 0) {
-  const items = cartDetailed();
+function cartTotals() {
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  );
+const items =
+cartDetailed();
 
-  const shipping =
-    subtotal === 0 || subtotal >= FREE_SHIP_THRESHOLD
-      ? 0
-      : SHIPPING_FLAT;
 
-  const discount = subtotal * promo;
+const subtotal =
+items.reduce(
+(sum, item) =>
+sum +
+item.price *
+item.qty,
+0
+);
 
-  const taxed = subtotal - discount;
 
-  const tax = taxed * TAX_RATE;
+/*
+ * IMPORTANT:
+ *
+ * There is NO free shipping threshold.
+ *
+ * Django Admin controls:
+ *
+ * STORE_SETTINGS.shipping_fee
+ *
+ * Example:
+ *
+ * shipping_fee = 2000
+ *
+ * Cart shipping = ₦2,000.00
+ */
 
-  const total = taxed + tax + shipping;
+const shipping =
+subtotal > 0
+? Number(
+STORE_SETTINGS?.shipping_fee
+) || 0
+: 0;
 
-  return {
-    items,
-    subtotal,
-    shipping,
-    discount,
-    tax,
-    total
-  };
+
+const taxed =
+subtotal;
+
+
+const tax =
+taxed * TAX_RATE;
+
+
+const total =
+taxed +
+tax +
+shipping;
+
+
+return {
+
+items,
+
+subtotal,
+
+shipping,
+
+discount: 0,
+
+tax,
+
+total
+
+};
+
 }
 
 
 /* ============================================
-   RENDER CART
+RENDER CART
 ============================================ */
 
 function renderCart() {
-  const items = cartDetailed();
 
-  const layout = document.querySelector("#cart-layout");
+const items =
+cartDetailed();
 
-  if (!layout) {
-    return;
-  }
 
-  if (!items.length) {
-    layout.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">
-          ${icon("cart")}
-        </div>
+const layout =
+document.querySelector(
+"#cart-layout"
+);
 
-        <h3>Your cart is empty</h3>
 
-        <p>
-          Looks like you haven't added anything yet.
-          Let's fix that.
-        </p>
+if (!layout) {
 
-        <a href="/shop" class="btn btn-primary btn-lg">
-          Start Shopping
+return;
+
+}
+
+
+/* ============================================
+EMPTY CART
+============================================ */
+
+if (!items.length) {
+
+layout.innerHTML = `
+
+<div
+  class="empty-state"
+  style="grid-column:1/-1"
+>
+
+  <div class="empty-icon">
+    ${icon("cart")}
+  </div>
+
+
+  <h3>
+    Your cart is empty
+  </h3>
+
+
+  <p>
+    Looks like you haven't added anything yet.
+    Let's fix that.
+  </p>
+
+
+  <a
+    href="/shop"
+    class="btn btn-primary btn-lg"
+  >
+    Start Shopping
+  </a>
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+const t =
+cartTotals();
+
+
+/* ============================================
+CART HTML
+============================================ */
+
+layout.innerHTML = `
+
+<div class="cart-items">
+
+
+  ${items.map(
+    (item) => `
+
+    <div
+      class="cart-row"
+      data-id="${item.id}"
+    >
+
+
+      <a
+        href="/product?id=${item.id}"
+        class="cart-thumb"
+      >
+
+        ${
+          item.img
+
+            ? `
+
+              <img
+                src="${item.img}"
+                alt="${item.name}"
+              >
+
+            `
+
+            : ""
+        }
+
+      </a>
+
+
+      <div class="cart-row-info">
+
+
+        <a
+          href="/product?id=${item.id}"
+          class="cart-row-name"
+        >
+          ${item.name}
         </a>
-      </div>
-    `;
-
-    return;
-  }
-
-  const t = cartTotals(activePromo);
-
-  const remaining =
-    FREE_SHIP_THRESHOLD - t.subtotal;
 
 
-  layout.innerHTML = `
-    <div class="cart-items">
-
-      ${
-        remaining > 0
-          ? `
-            <div class="ship-progress">
-              <p>
-                ${icon("truck")}
-                Add
-                <strong>
-                  ${PRICE_FMT(remaining)}
-                </strong>
-                more to get
-                <strong>FREE shipping</strong>
-              </p>
-
-              <div class="ship-bar">
-                <span
-                  style="
-                    width:${Math.min(
-                      100,
-                      (t.subtotal / FREE_SHIP_THRESHOLD) * 100
-                    )}%
-                  "
-                ></span>
-              </div>
-            </div>
-          `
-          : `
-            <div class="ship-progress done">
-              <p>
-                ${icon("check")}
-                Congrats! You've unlocked
-                <strong>FREE shipping</strong>.
-              </p>
-            </div>
-          `
-      }
+        <span class="product-cat">
+          ${item.cat}
+        </span>
 
 
-      ${items.map((item) => `
-        <div
-          class="cart-row"
+        <button
+          class="link-btn danger js-remove"
           data-id="${item.id}"
         >
 
-          <a
-            href="/product?id=${item.id}"
-            class="cart-thumb"
-          >
-            ${
-              item.img
-                ? `<img src="${item.img}" alt="${item.name}">`
-                : ""
-            }
-          </a>
+          ${icon("trash")}
+
+          Remove
+
+        </button>
 
 
-          <div class="cart-row-info">
-
-            <a
-              href="/product?id=${item.id}"
-              class="cart-row-name"
-            >
-              ${item.name}
-            </a>
-
-            <span class="product-cat">
-              ${item.cat}
-            </span>
-
-            <button
-              class="link-btn danger js-remove"
-              data-id="${item.id}"
-            >
-              ${icon("trash")}
-              Remove
-            </button>
-
-          </div>
+      </div>
 
 
-          <div
-            class="qty-stepper sm"
-            aria-label="Quantity"
-          >
-
-            <button
-              class="js-cart-dec"
-              data-id="${item.id}"
-              aria-label="Decrease"
-            >
-              ${icon("chevron")}
-            </button>
-
-            <input
-              type="text"
-              value="${item.qty}"
-              data-id="${item.id}"
-              class="js-cart-qty"
-              aria-label="Quantity"
-            >
-
-            <button
-              class="js-cart-inc"
-              data-id="${item.id}"
-              aria-label="Increase"
-            >
-              ${icon("plus")}
-            </button>
-
-          </div>
-
-
-          <div class="cart-row-price">
-
-            <strong>
-              ${PRICE_FMT(item.price * item.qty)}
-            </strong>
-
-            ${
-              item.qty > 1
-                ? `
-                  <small>
-                    ${PRICE_FMT(item.price)} each
-                  </small>
-                `
-                : ""
-            }
-
-          </div>
-
-        </div>
-      `).join("")}
-
-
-      <a
-        href="/shop"
-        class="link-btn"
+      <div
+        class="qty-stepper sm"
+        aria-label="Quantity"
       >
-        ${icon("arrowLeft")}
-        Continue shopping
-      </a>
-
-    </div>
 
 
-    <aside class="cart-summary">
+        <button
+          class="js-cart-dec"
+          data-id="${item.id}"
+          aria-label="Decrease"
+        >
 
-      <h2>Order Summary</h2>
+          ${icon("chevron")}
 
+        </button>
 
-      <div class="promo-box">
 
         <input
           type="text"
-          id="promo-input"
-          placeholder="Promo code"
-          value="${promoCode}"
-          aria-label="Promo code"
+          value="${item.qty}"
+          data-id="${item.id}"
+          class="js-cart-qty"
+          aria-label="Quantity"
         >
+
 
         <button
-          class="btn btn-dark js-apply-promo"
+          class="js-cart-inc"
+          data-id="${item.id}"
+          aria-label="Increase"
         >
-          Apply
+
+          ${icon("plus")}
+
         </button>
 
+
       </div>
 
 
-      ${
-        activePromo
-          ? `
-            <p class="promo-applied">
-              ${icon("check")}
-              Code "${promoCode}" applied
-              (${activePromo * 100}% off)
-            </p>
-          `
-          : `
-            <p class="promo-hint">
-              Try code LUXE15 for 15% off
-            </p>
-          `
-      }
-
-
-      <div class="summary-line">
-        <span>Subtotal</span>
-        <span>
-          ${PRICE_FMT(t.subtotal)}
-        </span>
-      </div>
-
-
-      ${
-        t.discount
-          ? `
-            <div class="summary-line discount">
-              <span>Discount</span>
-              <span>
-                -${PRICE_FMT(t.discount)}
-              </span>
-            </div>
-          `
-          : ""
-      }
-
-
-      <div class="summary-line">
-        <span>Shipping</span>
-        <span>
-          ${
-            t.shipping
-              ? PRICE_FMT(t.shipping)
-              : "FREE"
-          }
-        </span>
-      </div>
-
-
-      <div class="summary-line">
-        <span>Tax (8%)</span>
-        <span>
-          ${PRICE_FMT(t.tax)}
-        </span>
-      </div>
-
-
-      <div class="summary-total">
-        <span>Total</span>
-        <span>
-          ${PRICE_FMT(t.total)}
-        </span>
-      </div>
-
-
-      <a
-        href="/checkout"
-        class="btn btn-primary btn-lg btn-block"
+      <div
+        class="cart-row-price"
       >
-        Proceed to Checkout
-      </a>
+
+        <strong>
+          ${PRICE_FMT(
+            item.price *
+            item.qty
+          )}
+        </strong>
 
 
-      <div class="secure-note">
-        ${icon("shield")}
-        Secure checkout • SSL encrypted
+        ${
+          item.qty > 1
+
+            ? `
+
+              <small>
+                ${PRICE_FMT(
+                  item.price
+                )}
+                each
+              </small>
+
+            `
+
+            : ""
+        }
+
       </div>
 
-    </aside>
-  `;
 
-  bindCartEvents();
+    </div>
+
+  `
+  ).join("")}
+
+
+  <a
+    href="/shop"
+    class="link-btn"
+  >
+
+    ${icon("arrowLeft")}
+
+    Continue shopping
+
+  </a>
+
+
+</div>
+
+
+<aside class="cart-summary">
+
+
+  <h2>
+    Order Summary
+  </h2>
+
+
+  <div class="summary-line">
+
+    <span>
+      Subtotal
+    </span>
+
+    <span>
+      ${PRICE_FMT(
+        t.subtotal
+      )}
+    </span>
+
+  </div>
+
+
+  <div class="summary-line">
+
+    <span>
+      Shipping
+    </span>
+
+    <span>
+
+      ${
+        t.shipping > 0
+
+          ? PRICE_FMT(
+              t.shipping
+            )
+
+          : "FREE"
+      }
+
+    </span>
+
+  </div>
+
+
+  <div class="summary-line">
+
+    <span>
+      Tax (8%)
+    </span>
+
+    <span>
+      ${PRICE_FMT(
+        t.tax
+      )}
+    </span>
+
+  </div>
+
+
+  <div class="summary-total">
+
+    <span>
+      Total
+    </span>
+
+    <span>
+      ${PRICE_FMT(
+        t.total
+      )}
+    </span>
+
+  </div>
+
+
+  <a
+    href="/checkout"
+    class="btn btn-primary btn-lg btn-block"
+  >
+
+    Proceed to Checkout
+
+  </a>
+
+
+  <div class="secure-note">
+
+    ${icon("shield")}
+
+    Secure checkout • SSL encrypted
+
+  </div>
+
+
+</aside>
+
+`;
+
+
+bindCartEvents();
+
 }
 
 
 /* ============================================
-   UPDATE QUANTITY
+UPDATE QUANTITY
 ============================================ */
 
-async function setQty(id, qty) {
+async function setQty(
+id,
+qty
+) {
 
-  qty = parseInt(qty);
-
-  if (isNaN(qty) || qty < 1) {
-    qty = 1;
-  }
-
-  try {
-
-    const formData = new FormData();
-
-    formData.append("product_id", id);
-    formData.append("quantity", qty);
+qty =
+parseInt(qty);
 
 
-    const response = await fetch(
-      "/api/cart/update/",
-      {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "X-CSRFToken": getCSRFToken()
-        },
-        body: formData
-      }
-    );
+if (
+isNaN(qty) ||
+qty < 1
+) {
+
+qty = 1;
+
+}
 
 
-    const data = await response.json();
+try {
+
+const formData =
+new FormData();
 
 
-    if (!data.success) {
-      throw new Error(
-        data.message || "Unable to update cart"
-      );
-    }
+formData.append(
+"product_id",
+id
+);
 
 
-    await loadDatabaseCart();
+formData.append(
+"quantity",
+qty
+);
 
-  } catch (error) {
 
-    console.error("Quantity update error:", error);
+const response =
+await fetch(
+"/api/cart/update/",
+{
 
-    toast(
-      "Unable to update quantity",
-      "close"
-    );
-  }
+method: "POST",
+
+credentials:
+"same-origin",
+
+headers: {
+
+"X-CSRFToken":
+getCSRFToken()
+
+},
+
+body:
+formData
+
+}
+);
+
+
+const data =
+await response.json();
+
+
+if (!data.success) {
+
+throw new Error(
+data.message ||
+"Unable to update cart"
+);
+
+}
+
+
+await loadDatabaseCart();
+
+
+} catch (error) {
+
+console.error(
+"Quantity update error:",
+error
+);
+
+
+toast(
+"Unable to update quantity",
+"close"
+);
+
+}
+
 }
 
 
 /* ============================================
-   REMOVE ITEM
+REMOVE ITEM
 ============================================ */
 
 async function removeFromCart(id) {
 
-  try {
+try {
 
-    const formData = new FormData();
-
-    formData.append("product_id", id);
-
-
-    const response = await fetch(
-      "/api/cart/remove/",
-      {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "X-CSRFToken": getCSRFToken()
-        },
-        body: formData
-      }
-    );
+const formData =
+new FormData();
 
 
-    const data = await response.json();
+formData.append(
+"product_id",
+id
+);
 
 
-    if (!data.success) {
-      throw new Error(
-        data.message || "Unable to remove item"
-      );
-    }
+const response =
+await fetch(
+"/api/cart/remove/",
+{
+
+method: "POST",
+
+credentials:
+"same-origin",
+
+headers: {
+
+"X-CSRFToken":
+getCSRFToken()
+
+},
+
+body:
+formData
+
+}
+);
 
 
-    toast(
-      "Item removed from cart",
-      "trash"
-    );
+const data =
+await response.json();
 
 
-    await loadDatabaseCart();
+if (!data.success) {
 
-  } catch (error) {
+throw new Error(
+data.message ||
+"Unable to remove item"
+);
 
-    console.error("Remove cart error:", error);
+}
 
-    toast(
-      "Unable to remove item",
-      "close"
-    );
-  }
+
+toast(
+"Item removed from cart",
+"trash"
+);
+
+
+await loadDatabaseCart();
+
+
+} catch (error) {
+
+console.error(
+"Remove cart error:",
+error
+);
+
+
+toast(
+"Unable to remove item",
+"close"
+);
+
+}
+
 }
 
 
 /* ============================================
-   EVENTS
+EVENTS
 ============================================ */
 
 function bindCartEvents() {
 
-  document
-    .querySelectorAll(".js-remove")
-    .forEach((button) => {
 
-      button.addEventListener(
-        "click",
-        () => {
-          removeFromCart(button.dataset.id);
-        }
-      );
+/* ---------- REMOVE ---------- */
 
-    });
+document
+.querySelectorAll(
+".js-remove"
+)
+.forEach(
+(button) => {
 
+button.addEventListener(
+"click",
+() => {
 
-  document
-    .querySelectorAll(".js-cart-inc")
-    .forEach((button) => {
+removeFromCart(
+button.dataset.id
+);
 
-      button.addEventListener(
-        "click",
-        () => {
+}
+);
 
-          const item = databaseCart.find(
-            (item) =>
-              Number(item.id) ===
-              Number(button.dataset.id)
-          );
-
-          if (!item) {
-            return;
-          }
-
-          setQty(
-            button.dataset.id,
-            Number(item.qty) + 1
-          );
-
-        }
-      );
-
-    });
+}
+);
 
 
-  document
-    .querySelectorAll(".js-cart-dec")
-    .forEach((button) => {
+/* ---------- INCREASE ---------- */
 
-      button.addEventListener(
-        "click",
-        () => {
+document
+.querySelectorAll(
+".js-cart-inc"
+)
+.forEach(
+(button) => {
 
-          const item = databaseCart.find(
-            (item) =>
-              Number(item.id) ===
-              Number(button.dataset.id)
-          );
+button.addEventListener(
+"click",
+() => {
 
-          if (!item) {
-            return;
-          }
-
-          const newQty =
-            Math.max(
-              1,
-              Number(item.qty) - 1
-            );
-
-          setQty(
-            button.dataset.id,
-            newQty
-          );
-
-        }
-      );
-
-    });
+const item =
+databaseCart.find(
+(item) =>
+Number(item.id) ===
+Number(
+button.dataset.id
+)
+);
 
 
-  document
-    .querySelectorAll(".js-cart-qty")
-    .forEach((input) => {
+if (!item) {
 
-      input.addEventListener(
-        "change",
-        () => {
+return;
 
-          const value =
-            parseInt(
-              input.value.replace(/\D/g, "")
-            ) || 1;
-
-          setQty(
-            input.dataset.id,
-            value
-          );
-
-        }
-      );
-
-    });
+}
 
 
-  const applyBtn =
-    document.querySelector(
-      ".js-apply-promo"
-    );
+setQty(
+button.dataset.id,
+Number(item.qty) + 1
+);
+
+}
+);
+
+}
+);
 
 
-  if (applyBtn) {
+/* ---------- DECREASE ---------- */
 
-    applyBtn.addEventListener(
-      "click",
-      () => {
+document
+.querySelectorAll(
+".js-cart-dec"
+)
+.forEach(
+(button) => {
 
-        const input =
-          document.querySelector(
-            "#promo-input"
-          );
+button.addEventListener(
+"click",
+() => {
 
-        const code =
-          input.value
-            .trim()
-            .toUpperCase();
+const item =
+databaseCart.find(
+(item) =>
+Number(item.id) ===
+Number(
+button.dataset.id
+)
+);
 
 
-        if (PROMOS[code]) {
+if (!item) {
 
-          activePromo =
-            PROMOS[code];
+return;
 
-          promoCode = code;
+}
 
-          toast(
-            `Promo "${code}" applied!`,
-            "check"
-          );
 
-        } else {
+const newQty =
+Math.max(
+1,
+Number(item.qty) - 1
+);
 
-          activePromo = 0;
-          promoCode = "";
 
-          toast(
-            "Invalid promo code",
-            "close"
-          );
-        }
+setQty(
+button.dataset.id,
+newQty
+);
 
-        renderCart();
+}
+);
 
-      }
-    );
+}
+);
 
-  }
+
+/* ---------- MANUAL QUANTITY ---------- */
+
+document
+.querySelectorAll(
+".js-cart-qty"
+)
+.forEach(
+(input) => {
+
+input.addEventListener(
+"change",
+() => {
+
+const value =
+parseInt(
+input.value.replace(
+/\D/g,
+""
+)
+) || 1;
+
+
+setQty(
+input.dataset.id,
+value
+);
+
+}
+);
+
+}
+);
+
 }
 
 
 /* ============================================
-   START
+START
+Wait for Django store settings first
 ============================================ */
 
 document.addEventListener(
-  "DOMContentLoaded",
-  loadDatabaseCart
+"DOMContentLoaded",
+async () => {
+
+
+/*
+ * main.js provides loadStoreSettings().
+ *
+ * Wait for the Django currency and
+ * shipping settings before rendering.
+ */
+
+if (
+typeof loadStoreSettings ===
+"function"
+) {
+
+await loadStoreSettings();
+
+}
+
+
+await loadDatabaseCart();
+
+}
 );

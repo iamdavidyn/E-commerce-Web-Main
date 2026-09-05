@@ -5,6 +5,88 @@
 
 
 /* =========================================================
+   STORE SETTINGS
+   Django controls currency + shipping fee
+========================================================= */
+
+let STORE_SETTINGS = {
+  currency: "NGN",
+  currency_symbol: "₦",
+  shipping_fee: 0
+};
+
+
+/* =========================================================
+   LOAD STORE SETTINGS
+========================================================= */
+
+async function loadStoreSettings() {
+
+  try {
+
+    const response = await fetch(
+      "/api/store-settings/",
+      {
+        credentials: "same-origin"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Store settings request failed: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    STORE_SETTINGS = {
+      currency:
+        data.currency || "NGN",
+
+      currency_symbol:
+        data.currency_symbol || "₦",
+
+      shipping_fee:
+        Number(data.shipping_fee) || 0
+    };
+
+  } catch (error) {
+
+    console.error(
+      "STORE SETTINGS ERROR:",
+      error
+    );
+
+    /*
+     * Safe fallback.
+     */
+
+    STORE_SETTINGS = {
+      currency: "NGN",
+      currency_symbol: "₦",
+      shipping_fee: 0
+    };
+  }
+}
+
+
+/* =========================================================
+   PRICE FORMATTER
+========================================================= */
+
+const PRICE_FMT = (n) => {
+
+  const amount =
+    Number(n || 0);
+
+  return (
+    STORE_SETTINGS.currency_symbol +
+    amount.toFixed(2)
+  );
+};
+
+
+/* =========================================================
    ICON SET
 ========================================================= */
 
@@ -79,6 +161,7 @@ const ICONS = {
   youtube: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
 };
 
+
 function icon(name) {
   return ICONS[name] || '';
 }
@@ -93,49 +176,94 @@ const DESC =
 
 let PRODUCTS = [];
 
+
 fetch("/api/shop/")
-  .then(response => response.json())
+  .then(response => {
+
+    if (!response.ok) {
+      throw new Error(
+        `Product API failed: ${response.status}`
+      );
+    }
+
+    return response.json();
+  })
+
   .then(data => {
 
     PRODUCTS = data.map(item => ({
+
       id: item.id,
+
       name: item.name,
+
       cat: item.cat,
-      price: Number(item.price) || 0,
-      old: Number(item.old) || 0,
+
+      price:
+        Number(item.price) || 0,
+
+      old:
+        Number(item.old) || 0,
+
       img: item.img,
+
       badge: item.badge,
+
       tags: item.tags,
+
       desc: item.desc,
-      rating: item.rating || 5,
-      reviews: item.reviews || 0,
-      stock: item.stock || 1
+
+      rating: item.rating,
+
+      reviews: item.reviews,
+
+      stock:
+        item.stock || 1
+
     }));
 
+
     document.dispatchEvent(
-      new CustomEvent('products:loaded', {
-        detail: PRODUCTS
-      })
+      new CustomEvent(
+        'products:loaded',
+        {
+          detail: PRODUCTS
+        }
+      )
     );
 
-    const id = Number(getParam("id"));
-    const p = findProduct(id);
+
+    const id =
+      Number(getParam("id"));
+
+    const p =
+      findProduct(id);
+
 
     if (!p) {
       return;
     }
 
-    if (typeof renderDetail === "function") {
+
+    if (
+      typeof renderDetail ===
+      "function"
+    ) {
+
       renderDetail(p);
+
     }
+
   })
+
   .catch(error => {
-    console.error("PRODUCT API ERROR:", error);
+
+    console.error(
+      "PRODUCT API ERROR:",
+      error
+    );
+
   });
-
-
-const PRICE_FMT = (n) =>
-  '$' + Number(n || 0).toFixed(2);
 
 
 /* =========================================================
@@ -145,42 +273,66 @@ const PRICE_FMT = (n) =>
 const Store = {
 
   get cart() {
+
     try {
+
       return JSON.parse(
-        localStorage.getItem('luxe_cart') || '[]'
+        localStorage.getItem(
+          'luxe_cart'
+        ) || '[]'
       );
+
     } catch {
+
       return [];
+
     }
+
   },
 
+
   set cart(value) {
+
     localStorage.setItem(
       'luxe_cart',
       JSON.stringify(value)
     );
 
     updateBadges();
+
   },
+
 
   get wishlist() {
+
     try {
+
       return JSON.parse(
-        localStorage.getItem('luxe_wishlist') || '[]'
+        localStorage.getItem(
+          'luxe_wishlist'
+        ) || '[]'
       );
+
     } catch {
+
       return [];
+
     }
+
   },
 
+
   set wishlist(value) {
+
     localStorage.setItem(
       'luxe_wishlist',
       JSON.stringify(value)
     );
 
     updateBadges();
+
   }
+
 };
 
 
@@ -189,9 +341,12 @@ const Store = {
 ========================================================= */
 
 function findProduct(id) {
+
   return PRODUCTS.find(
-    p => p.id === Number(id)
+    p =>
+      p.id === Number(id)
   );
+
 }
 
 
@@ -203,27 +358,48 @@ function getCookie(name) {
 
   let cookieValue = null;
 
-  if (document.cookie && document.cookie !== "") {
 
-    const cookies = document.cookie.split(";");
+  if (
+    document.cookie &&
+    document.cookie !== ""
+  ) {
 
-    for (let cookie of cookies) {
+    const cookies =
+      document.cookie.split(";");
 
-      cookie = cookie.trim();
+
+    for (
+      let cookie of cookies
+    ) {
+
+      cookie =
+        cookie.trim();
+
 
       if (
-        cookie.startsWith(name + "=")
+        cookie.startsWith(
+          name + "="
+        )
       ) {
-        cookieValue = decodeURIComponent(
-          cookie.substring(name.length + 1)
-        );
+
+        cookieValue =
+          decodeURIComponent(
+            cookie.substring(
+              name.length + 1
+            )
+          );
 
         break;
+
       }
+
     }
+
   }
 
+
   return cookieValue;
+
 }
 
 
@@ -236,17 +412,24 @@ function updateCartBadge(count) {
   const numericCount =
     Number(count) || 0;
 
+
   document
-    .querySelectorAll('[data-cart-count]')
+    .querySelectorAll(
+      '[data-cart-count]'
+    )
     .forEach(el => {
 
-      el.textContent = numericCount;
+      el.textContent =
+        numericCount;
+
 
       el.style.display =
         numericCount > 0
           ? 'grid'
           : 'none';
+
     });
+
 }
 
 
@@ -254,57 +437,77 @@ function updateCartBadge(count) {
    ADD TO CART
 ========================================================= */
 
-async function addToCart(id, qty = 1) {
+async function addToCart(
+  id,
+  qty = 1
+) {
 
-  const productId = Number(id);
-  const quantity = Number(qty) || 1;
+  const productId =
+    Number(id);
 
-  const product = findProduct(productId);
 
-  /*
-   * First try Django.
-   *
-   * Logged-in users will get a JSON response.
-   * Guest users will normally be redirected to login
-   * because the Django view has @login_required.
-   */
+  const quantity =
+    Number(qty) || 1;
+
+
+  const product =
+    findProduct(productId);
+
 
   try {
 
-    const response = await fetch(
-      "/cart/add/",
-      {
-        method: "POST",
+    const response =
+      await fetch(
+        "/cart/add/",
+        {
 
-        headers: {
-          "X-CSRFToken": getCookie("csrftoken"),
-          "X-Requested-With": "XMLHttpRequest",
-          "Content-Type":
-            "application/x-www-form-urlencoded; charset=UTF-8"
-        },
+          method: "POST",
 
-        body: new URLSearchParams({
-          product_id: productId,
-          quantity: quantity
-        }),
+          headers: {
 
-        credentials: "same-origin",
+            "X-CSRFToken":
+              getCookie(
+                "csrftoken"
+              ),
 
-        redirect: "follow"
-      }
-    );
+            "X-Requested-With":
+              "XMLHttpRequest",
+
+            "Content-Type":
+              "application/x-www-form-urlencoded; charset=UTF-8"
+
+          },
+
+          body:
+            new URLSearchParams({
+
+              product_id:
+                productId,
+
+              quantity:
+                quantity
+
+            }),
+
+          credentials:
+            "same-origin",
+
+          redirect:
+            "follow"
+
+        }
+      );
 
 
     /*
-     * If Django redirected us to login,
-     * this is a guest user.
-     *
-     * Use localStorage for guests.
+     * Guest user.
      */
 
     if (
       response.redirected &&
-      response.url.includes("/login")
+      response.url.includes(
+        "/login"
+      )
     ) {
 
       addGuestCart(
@@ -314,6 +517,7 @@ async function addToCart(id, qty = 1) {
       );
 
       return;
+
     }
 
 
@@ -323,20 +527,22 @@ async function addToCart(id, qty = 1) {
 
     let data;
 
+
     try {
 
-      data = JSON.parse(text);
+      data =
+        JSON.parse(text);
 
-    } catch (error) {
+    } catch {
 
       console.error(
         "Invalid Django response:",
         text
       );
 
+
       /*
-       * If Django returned HTML instead of JSON,
-       * use guest cart as fallback.
+       * Fallback to guest cart.
        */
 
       addGuestCart(
@@ -346,10 +552,14 @@ async function addToCart(id, qty = 1) {
       );
 
       return;
+
     }
 
 
-    if (!response.ok || !data.success) {
+    if (
+      !response.ok ||
+      !data.success
+    ) {
 
       toast(
         data.message ||
@@ -358,12 +568,13 @@ async function addToCart(id, qty = 1) {
       );
 
       return;
+
     }
 
 
     /*
-     * IMPORTANT:
-     * Django is the source of truth for logged-in users.
+     * Django is the source of truth
+     * for logged-in users.
      */
 
     updateCartBadge(
@@ -372,7 +583,7 @@ async function addToCart(id, qty = 1) {
 
 
     /*
-     * Do NOT put the logged-in item
+     * Do NOT save logged-in cart
      * into localStorage.
      */
 
@@ -383,7 +594,6 @@ async function addToCart(id, qty = 1) {
       "cart"
     );
 
-
   } catch (error) {
 
     console.error(
@@ -391,16 +601,14 @@ async function addToCart(id, qty = 1) {
       error
     );
 
-    /*
-     * If network/server request fails,
-     * don't silently pretend it was saved.
-     */
 
     toast(
       "Unable to add product to cart.",
       "close"
     );
+
   }
+
 }
 
 
@@ -414,7 +622,9 @@ function addGuestCart(
   product
 ) {
 
-  const cart = Store.cart;
+  const cart =
+    Store.cart;
+
 
   const existing =
     cart.find(
@@ -425,42 +635,59 @@ function addGuestCart(
 
   if (existing) {
 
-    existing.qty += quantity;
+    existing.qty +=
+      quantity;
 
   } else {
 
     cart.push({
 
-      id: productId,
+      id:
+        productId,
 
-      qty: quantity,
+      qty:
+        quantity,
 
       name:
         product?.name ||
         "Unknown Product",
 
       price:
-        Number(product?.price) || 0,
+        Number(
+          product?.price
+        ) || 0,
 
       img:
-        product?.img || "",
+        product?.img ||
+        "",
 
       cat:
-        product?.cat || "",
+        product?.cat ||
+        ""
 
     });
+
   }
 
 
-  Store.cart = cart;
+  Store.cart =
+    cart;
 
 
   updateCartBadge(
+
     cart.reduce(
-      (total, item) =>
-        total + Number(item.qty || 0),
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.qty || 0
+        ),
       0
     )
+
   );
 
 
@@ -470,6 +697,7 @@ function addGuestCart(
       : "Product added to cart",
     "cart"
   );
+
 }
 
 
@@ -479,22 +707,34 @@ function addGuestCart(
 
 function toggleWishlist(id) {
 
-  let prodId = id;
-  let metaName = null;
+  let prodId =
+    id;
 
-  if (id && id.dataset) {
+  let metaName =
+    null;
 
-    prodId = id.dataset.id;
+
+  if (
+    id &&
+    id.dataset
+  ) {
+
+    prodId =
+      id.dataset.id;
 
     metaName =
       id.dataset.name;
+
   }
+
 
   const normalizedId =
     Number(prodId);
 
+
   let wishlist =
     Store.wishlist;
+
 
   const exists =
     wishlist.includes(
@@ -515,6 +755,7 @@ function toggleWishlist(id) {
     wishlist.push(
       normalizedId
     );
+
   }
 
 
@@ -535,14 +776,18 @@ function toggleWishlist(id) {
 
 
   toast(
+
     exists
       ? `${name} removed from wishlist`
       : `${name} added to wishlist`,
+
     "heart"
+
   );
 
 
   return !exists;
+
 }
 
 
@@ -553,13 +798,20 @@ function toggleWishlist(id) {
 function updateBadges() {
 
   /*
-   * Local cart is only used for guests.
+   * Local cart is only used
+   * for guests.
    */
 
   const cartCount =
     Store.cart.reduce(
-      (total, item) =>
-        total + Number(item.qty || 0),
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.qty || 0
+        ),
       0
     );
 
@@ -581,10 +833,12 @@ function updateBadges() {
       el.textContent =
         cartCount;
 
+
       el.style.display =
         cartCount
           ? 'grid'
           : 'none';
+
     });
 
 
@@ -601,11 +855,14 @@ function updateBadges() {
       el.textContent =
         wishlistCount;
 
+
       el.style.display =
         wishlistCount
           ? 'grid'
           : 'none';
+
     });
+
 }
 
 
@@ -634,6 +891,7 @@ function starsHTML(
       i <= Math.round(rating)
         ? icon('star')
         : icon('starOff');
+
   }
 
 
@@ -643,6 +901,7 @@ function starsHTML(
 
     html +=
       `<span class="rating-count">(${count})</span>`;
+
   }
 
 
@@ -651,6 +910,7 @@ function starsHTML(
 
 
   return html;
+
 }
 
 
@@ -668,6 +928,7 @@ function productCard(p) {
 
   const badge =
     p.badge
+
       ? `<span class="badge badge-${p.badge}">
           ${
             p.badge === 'sale'
@@ -677,14 +938,17 @@ function productCard(p) {
                 : 'Hot'
           }
         </span>`
+
       : '';
 
 
   const oldPrice =
     p.old
+
       ? `<span class="price-old">
           ${PRICE_FMT(p.old)}
         </span>`
+
       : '';
 
 
@@ -697,6 +961,7 @@ function productCard(p) {
       <div class="product-badges">
         ${badge}
       </div>
+
 
       <div class="product-actions">
 
@@ -781,6 +1046,7 @@ function productCard(p) {
       >
 
         ${icon('cart')}
+
         Add to Cart
 
       </button>
@@ -790,6 +1056,7 @@ function productCard(p) {
   </article>
 
   `;
+
 }
 
 
@@ -815,6 +1082,7 @@ function renderProducts(
     list
       .map(productCard)
       .join('');
+
 }
 
 
@@ -840,12 +1108,15 @@ function toast(
         'div'
       );
 
+
     container.className =
       'toast-container';
+
 
     document.body.appendChild(
       container
     );
+
   }
 
 
@@ -891,6 +1162,7 @@ function toast(
     }, 400);
 
   }, 2600);
+
 }
 
 
@@ -899,6 +1171,7 @@ function toast(
 ========================================================= */
 
 const CATEGORIES = [
+
   'Electronics',
   'Fashion',
   'Home & Living',
@@ -906,6 +1179,7 @@ const CATEGORIES = [
   'Sports',
   'Toys',
   'Groceries'
+
 ];
 
 
@@ -971,8 +1245,9 @@ function buildHeader() {
       <div class="container">
 
         <span>
-          Free shipping on orders over $50 • 30-day returns
+          Free shipping on orders over ${PRICE_FMT(50)} • 30-day returns
         </span>
+
 
         <div class="topbar-links">
 
@@ -1024,6 +1299,7 @@ function buildHeader() {
           aria-label="Search products"
         >
 
+
         <button
           type="submit"
           aria-label="Search"
@@ -1044,6 +1320,7 @@ function buildHeader() {
 
           ${icon('heart')}
 
+
           <span
             class="count"
             data-wishlist-count
@@ -1063,6 +1340,7 @@ function buildHeader() {
 
           ${icon('cart')}
 
+
           <span
             class="count"
             data-cart-count
@@ -1079,7 +1357,9 @@ function buildHeader() {
           class="icon-btn"
           aria-label="Account"
         >
+
           ${icon('user')}
+
         </a>
 
       </div>
@@ -1096,7 +1376,9 @@ function buildHeader() {
           <button class="nav-cats">
 
             ${icon('grid')}
+
             Categories
+
             ${icon('chevron')}
 
           </button>
@@ -1160,9 +1442,10 @@ function buildHeader() {
 
       <input
         type="search"
-        placeholder="Search products..."
+        placeholder="Search for products..."
         aria-label="Search"
       >
+
 
       <button
         type="submit"
@@ -1207,6 +1490,7 @@ function buildHeader() {
   <div class="drawer-overlay js-overlay"></div>
 
   `;
+
 }
 
 
@@ -1233,6 +1517,7 @@ function buildFooter() {
     <div>
 
       <h4>${title}</h4>
+
 
       <ul class="footer-links">
 
@@ -1288,6 +1573,7 @@ function buildFooter() {
               placeholder="Your email address"
               aria-label="Email"
             >
+
 
             <button class="js-newsletter">
               Subscribe
@@ -1360,17 +1646,25 @@ function buildFooter() {
       <div class="footer-bottom">
 
         <span>
+
           © ${new Date().getFullYear()}
-          LUXE Store. All rights reserved.
+
+          LUXE Store.
+          All rights reserved.
+
         </span>
 
 
         <div class="payment-icons">
 
           <span>VISA</span>
+
           <span>MASTERCARD</span>
+
           <span>AMEX</span>
+
           <span>PAYPAL</span>
+
           <span>APPLE PAY</span>
 
         </div>
@@ -1382,6 +1676,7 @@ function buildFooter() {
   </footer>
 
   `;
+
 }
 
 
@@ -1437,6 +1732,7 @@ function setupBackToTop() {
 
     }
   );
+
 }
 
 
@@ -1467,10 +1763,13 @@ function setupDrawer() {
       'open'
     );
 
+
     if (overlay) {
+
       overlay.classList.add(
         'open'
       );
+
     }
 
   };
@@ -1482,10 +1781,13 @@ function setupDrawer() {
       'open'
     );
 
+
     if (overlay) {
+
       overlay.classList.remove(
         'open'
       );
+
     }
 
   };
@@ -1525,6 +1827,7 @@ function setupDrawer() {
     );
 
   }
+
 }
 
 
@@ -1556,17 +1859,23 @@ function setupSearch() {
 
           window.location.href =
             '/shop' +
+
             (
+
               q
+
                 ? '?q=' +
                   encodeURIComponent(q)
+
                 : ''
+
             );
 
         }
       );
 
     });
+
 }
 
 
@@ -1589,7 +1898,9 @@ function setupNewsletter() {
 
         const input =
           el.tagName === 'FORM'
+
             ? el.querySelector('input')
+
             : el
                 .closest(
                   '.footer-newsletter, .newsletter-form'
@@ -1600,7 +1911,9 @@ function setupNewsletter() {
         if (
           input &&
           /^[^@\s]+@[^@\s]+\.[^@\s]+$/
-            .test(input.value)
+            .test(
+              input.value
+            )
         ) {
 
           toast(
@@ -1642,6 +1955,7 @@ function setupNewsletter() {
       }
 
     });
+
 }
 
 
@@ -1655,7 +1969,9 @@ function setupReveal() {
     typeof IntersectionObserver ===
     'undefined'
   ) {
+
     return;
+
   }
 
 
@@ -1672,6 +1988,7 @@ function setupReveal() {
             en.target.classList.add(
               'in'
             );
+
 
             obs.unobserve(
               en.target
@@ -1696,6 +2013,7 @@ function setupReveal() {
       el =>
         obs.observe(el)
     );
+
 }
 
 
@@ -1712,7 +2030,9 @@ function setupGlobalClicks() {
   if (
     globalClicksRegistered
   ) {
+
     return;
+
   }
 
 
@@ -1730,11 +2050,14 @@ function setupGlobalClicks() {
 
         e.preventDefault();
 
+
         addToCart(
           addBtn.dataset.id
         );
 
+
         return;
+
       }
 
 
@@ -1768,6 +2091,7 @@ function setupGlobalClicks() {
 
   globalClicksRegistered =
     true;
+
 }
 
 
@@ -1780,6 +2104,7 @@ function getParam(name) {
   return new URLSearchParams(
     window.location.search
   ).get(name);
+
 }
 
 
@@ -1789,7 +2114,15 @@ function getParam(name) {
 
 document.addEventListener(
   'DOMContentLoaded',
-  () => {
+  async () => {
+
+    /*
+     * Load currency and shipping
+     * BEFORE building the header/footer.
+     */
+
+    await loadStoreSettings();
+
 
     buildHeader();
 
@@ -1806,6 +2139,7 @@ document.addEventListener(
     setupGlobalClicks();
 
     updateBadges();
+
 
     setTimeout(
       setupReveal,

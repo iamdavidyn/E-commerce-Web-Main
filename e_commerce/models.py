@@ -12,6 +12,7 @@ class Product(models.Model):
     )
 
     TAG_CHOICES = (
+        ('featured', 'featured'),
         ('flash', 'flash'),
         ('best', 'best'),
         ('new', 'new'),
@@ -71,3 +72,59 @@ class Cart_Items(models.Model):
 
     def __str__(self):
         return f"{self.product.product_name} x {self.quantity}"
+        
+        
+class FlashSaleSettings(models.Model):
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Flash Sale: {self.start_time} - {self.end_time}"
+
+    @property
+    def currently_active(self):
+        from django.utils import timezone
+
+        now = timezone.now()
+
+        return (
+            self.is_active
+            and self.start_time <= now <= self.end_time
+        )
+        
+        
+class StoreSettings(models.Model):
+    CURRENCY_CHOICES = [
+        ("NGN", "Nigerian Naira (₦)"),
+        ("USD", "US Dollar ($)"),
+        ("GBP", "British Pound (£)"),
+        ("EUR", "Euro (€)"),
+        ("CAD", "Canadian Dollar (C$)"),
+        ("AUD", "Australian Dollar (A$)"),
+    ]
+
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default="NGN"
+    )
+
+    currency_symbol = models.CharField(
+        max_length=5,
+        default="₦"
+    )
+
+    shipping_fee = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Store Settings ({self.currency})"
