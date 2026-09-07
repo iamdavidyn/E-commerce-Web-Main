@@ -58,241 +58,123 @@ function renderFeatures() {
 
 /* =========================================================
    CATEGORIES
+   Only categories with uploaded products are shown.
+   No fake item numbers.
 ========================================================= */
 
-const HOME_CATS = [
-  {
-    name: 'Electronics',
-    count: '480+ items',
-    img: 'static/images/categories/electronics.png'
-  },
-  {
-    name: 'Fashion',
-    count: '650+ items',
-    img: 'static/images/categories/fashion.png'
-  },
-  {
-    name: 'Home & Living',
-    count: '320+ items',
-    img: 'static/images/categories/home.png'
-  },
-  {
-    name: 'Beauty',
-    count: '210+ items',
-    img: 'static/images/categories/beauty.png'
-  },
-];
+
+/*
+ * Category images.
+ *
+ * These are only used for the categories that already
+ * have images in your project.
+ */
+const CATEGORY_IMAGES = {
+  'Electronics':
+    'static/images/categories/electronics.png',
+
+  'Fashion':
+    'static/images/categories/fashion.png',
+
+  'Home & Living':
+    'static/images/categories/home.png',
+
+  'Beauty':
+    'static/images/categories/beauty.png',
+};
+
 
 
 function renderCategories() {
 
-  const el = document.querySelector('#cat-grid');
+  const el =
+    document.querySelector('#cat-grid');
 
   if (!el) return;
 
-  el.innerHTML = HOME_CATS.map((c) => `
-    <a
-      class="category-card reveal"
-      href="/shop?cat=${encodeURIComponent(c.name)}"
-    >
 
-      <img
-        src="${c.img}"
-        alt="${c.name}"
-        loading="lazy"
+  /*
+   * PRODUCTS is loaded from Django by main.js.
+   *
+   * If products haven't loaded yet, don't show
+   * any categories.
+   */
+  if (
+    typeof PRODUCTS === 'undefined' ||
+    !Array.isArray(PRODUCTS)
+  ) {
+
+    el.innerHTML = '';
+
+    return;
+
+  }
+
+
+  /*
+   * Get categories from the products that actually
+   * exist in the database.
+   *
+   * Set automatically removes duplicates.
+   */
+  const categories = [
+    ...new Set(
+      PRODUCTS
+        .map((product) =>
+          String(product.cat || '').trim()
+        )
+        .filter(Boolean)
+    )
+  ];
+
+
+  /*
+   * If there are no uploaded products,
+   * don't display anything.
+   */
+  if (categories.length === 0) {
+
+    el.innerHTML = '';
+
+    return;
+
+  }
+
+
+  /*
+   * Render only categories that have products.
+   *
+   * There is intentionally NO item count here.
+   */
+  el.innerHTML = categories.map((category) => {
+
+    const image =
+      CATEGORY_IMAGES[category] ||
+      'static/images/categories/default.png';
+
+
+    return `
+      <a
+        class="category-card reveal"
+        href="/shop?cat=${encodeURIComponent(category)}"
       >
 
-      <div class="category-overlay">
-
-        <h3>${c.name}</h3>
-
-        <span>${c.count}</span>
-
-      </div>
-
-    </a>
-  `).join('');
-
-}
-
-
-
-/* =========================================================
-   TESTIMONIALS
-========================================================= */
-
-const TESTIMONIALS = [
-
-  {
-    name: 'Sophie Carter',
-    role: 'Verified Buyer',
-    avatar: 'static/images/avatars/avatar1.png',
-    rating: 5,
-    text: 'Absolutely love the quality! My order arrived two days early and everything was packaged beautifully. LUXE is now my go-to store.'
-  },
-
-  {
-    name: 'Marcus Reed',
-    role: 'Verified Buyer',
-    avatar: 'static/images/avatars/avatar2.png',
-    rating: 5,
-    text: 'The customer service is outstanding. Had a question about my smartwatch and they responded within minutes. Highly recommend.'
-  },
-
-  {
-    name: 'Daniel Kim',
-    role: 'Verified Buyer',
-    avatar: 'static/images/avatars/avatar3.png',
-    rating: 4,
-    text: 'Great selection and fair prices. The flash deals are genuinely good savings. Will definitely be shopping here again soon.'
-  },
-
-];
-
-
-function renderTestimonials() {
-
-  const track =
-    document.querySelector('#testi-track');
-
-  if (!track) return;
-
-
-  track.innerHTML =
-    TESTIMONIALS.map((t) => `
-
-      <div class="testi-card">
-
-        <div
-          class="stars"
-          style="margin-bottom:1rem"
+        <img
+          src="${image}"
+          alt="${category}"
+          loading="lazy"
         >
 
-          ${
-            Array.from(
-              { length: 5 },
-              (_, i) =>
-                i < t.rating
-                  ? icon('star')
-                  : icon('starOff')
-            ).join('')
-          }
+        <div class="category-overlay">
+
+          <h3>${category}</h3>
 
         </div>
 
+      </a>
+    `;
 
-        <p class="testi-text">
-          "${t.text}"
-        </p>
-
-
-        <div class="testi-author">
-
-          <img
-            src="${t.avatar}"
-            alt="${t.name}"
-            loading="lazy"
-          >
-
-
-          <div>
-
-            <strong>${t.name}</strong>
-
-            <span>${t.role}</span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    `).join('');
-
-
-  let index = 0;
-
-
-  const prev =
-    document.querySelector('#testi-prev');
-
-  const next =
-    document.querySelector('#testi-next');
-
-
-  if (prev) {
-
-    prev.innerHTML =
-      icon('arrowLeft');
-
-  }
-
-
-  if (next) {
-
-    next.innerHTML =
-      icon('arrowRight');
-
-  }
-
-
-  const update = () => {
-
-    track.style.transform =
-      `translateX(-${index * 100}%)`;
-
-  };
-
-
-  if (prev) {
-
-    prev.addEventListener('click', () => {
-
-      index =
-        (
-          index -
-          1 +
-          TESTIMONIALS.length
-        ) %
-        TESTIMONIALS.length;
-
-      update();
-
-    });
-
-  }
-
-
-  if (next) {
-
-    next.addEventListener('click', () => {
-
-      index =
-        (
-          index +
-          1
-        ) %
-        TESTIMONIALS.length;
-
-      update();
-
-    });
-
-  }
-
-
-  setInterval(() => {
-
-    index =
-      (
-        index +
-        1
-      ) %
-      TESTIMONIALS.length;
-
-    update();
-
-  }, 6000);
+  }).join('');
 
 }
 
@@ -902,8 +784,10 @@ document.addEventListener(
 
     /*
      * Categories
+     *
+     * PRODUCTS may not have loaded yet.
+     * If it hasn't, this safely renders nothing.
      */
-
     renderCategories();
 
 
@@ -915,13 +799,6 @@ document.addEventListener(
      */
 
     renderHomeSections();
-
-
-    /*
-     * Testimonials
-     */
-
-    renderTestimonials();
 
 
     /*
@@ -952,6 +829,16 @@ document.addEventListener(
 document.addEventListener(
   'products:loaded',
   () => {
+
+    /*
+     * IMPORTANT:
+     *
+     * PRODUCTS is now available.
+     * Render categories from the actual
+     * products uploaded by the admin.
+     */
+    renderCategories();
+
 
     /*
      * Render all tagged products.

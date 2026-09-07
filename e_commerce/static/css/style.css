@@ -1494,84 +1494,6 @@ button {
   }
 }
 
-/* ---------- 12. Testimonials ---------- */
-.testimonials {
-  background: var(--color-surface);
-}
-
-.testi-track {
-  display: flex;
-  gap: var(--space-5);
-  transition: transform 0.5s ease;
-}
-
-.testi-viewport {
-  overflow: hidden;
-}
-
-.testi-card {
-  background: var(--color-bg);
-  border-radius: var(--radius);
-  padding: var(--space-6);
-  min-width: calc((100% - var(--space-5) * 2) / 3);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.testi-card .quote {
-  color: var(--color-charcoal-light);
-  font-style: italic;
-}
-
-.testi-author {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.testi-author img {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-full);
-  object-fit: cover;
-}
-
-.testi-author strong {
-  display: block;
-  color: var(--color-charcoal);
-}
-
-.testi-author span {
-  font-size: 0.82rem;
-  color: var(--color-muted);
-}
-
-.testi-nav {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-
-.testi-nav button {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-full);
-  border: 1.5px solid var(--color-border);
-  display: grid;
-  place-items: center;
-  color: var(--color-charcoal);
-  transition: all var(--transition);
-}
-
-.testi-nav button:hover {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
-}
-
 /* ---------- 13. Brands ---------- */
 .brands {
   display: flex;
@@ -3569,10 +3491,6 @@ html[data-theme="dark"] .status-pill.processing {
   .feature+.feature {
     border-left: none;
     padding-left: 0;
-  }
-
-  .testi-card {
-    min-width: 100%;
   }
 
   .shop-products,
@@ -6282,3 +6200,1002 @@ body {
 /* =========================================================================
    ============================  END CHECKOUT  ==============================
    ========================================================================= */
+
+
+
+/* =========================================================
+   LUXE ACCOUNT DASHBOARD — MOBILE RESPONSIVENESS
+========================================================= */
+
+@media (max-width: 768px) {
+
+  /* ---------- Page hero ---------- */
+
+  .page-hero {
+    padding: 28px 0 24px;
+  }
+
+  .page-hero .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+
+  .page-hero h1 {
+    font-size: 28px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .page-hero p {
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 100%;
+  }
+
+
+  /* ---------- Main section ---------- */
+
+  .section {
+    padding-top: 24px;
+    padding-bottom: 40px;
+  }
+
+  .account-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+
+  /* ---------- Account navigation ---------- */
+
+  .account-nav {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .account-user {
+    padding: 18px 16px;
+  }
+
+  .account-user img {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  .account-user strong {
+    font-size: 15px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .account-user span {
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 3px;
+  }
+
+  .account-nav > a {
+    display: block;
+    width: 100%;
+    padding: 13px 16px;
+    font-size: 13px;
+  }
+
+
+  /* ---------- Main content ---------- */
+
+  .account-main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .panel {
+    width: 100%;
+    min-width: 0;
+    padding: 18px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .panel h2 {
+    font-size: 19px;
+    line-height: 1.3;
+    margin-bottom: 18px;
+  }
+
+  .panel p {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+
+  /* ---------- Statistics ---------- */
+
+  .stat-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .stat-card {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .stat-card .num {
+    font-size: 24px;
+  }
+
+  .stat-card .label {
+    font-size: 12px;
+  }
+
+
+  /* ---------- Orders ---------- */
+
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .order-table {
+    width: 650px;
+    min-width: 650px;
+    font-size: 12px;
+  }
+
+  .order-table th,
+  .order-table td {
+    padding: 12px 10px;
+    white-space: nowrap;
+  }
+
+  .status-pill {
+    white-space: nowrap;
+  }
+
+
+  /* ---------- Addresses ---------- */
+
+  .address-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .address-card {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .address-card strong {
+    font-size: 14px;
+  }
+
+  .address-card p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+
+  /* ---------- Account settings ---------- */
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .form-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .form-field label {
+    font-size: 12px;
+    margin-bottom: 7px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    width: 100%;
+    max-width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  .form-row .btn {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 2px;
+  }
+
+
+  /* ---------- Theme toggle ---------- */
+
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .page-hero {
+    padding: 22px 0 20px;
+  }
+
+  .page-hero h1 {
+    font-size: 24px;
+  }
+
+  .page-hero p {
+    font-size: 13px;
+  }
+
+  .section {
+    padding-top: 18px;
+  }
+
+  .panel {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  .panel h2 {
+    font-size: 17px;
+  }
+
+  .account-user {
+    padding: 15px;
+  }
+
+  .account-user img {
+    width: 42px;
+    height: 42px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-card .num {
+    font-size: 22px;
+  }
+
+  .stat-card .label {
+    font-size: 11px;
+  }
+
+  .address-card {
+    padding: 14px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    min-height: 46px;
+    font-size: 14px;
+  }
+}
+
+
+/* ============================================
+   LUXE — PRODUCT REVIEWS
+   ============================================ */
+
+.product-reviews {
+  width: 100%;
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border);
+}
+
+
+/* ============================================
+   REVIEWS HEADER
+   ============================================ */
+
+.reviews-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.reviews-section-head h2 {
+  margin: 0.35rem 0 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.reviews-count {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+
+/* ============================================
+   REVIEWS GRID
+   ============================================ */
+
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+
+/* ============================================
+   REVIEW CARD
+   ============================================ */
+
+.review-card {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 190px;
+
+  padding: 1.35rem;
+
+  background: var(--background);
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+
+/* Top accent */
+
+.review-card::before {
+  content: '';
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 3px;
+
+  background: var(--primary);
+
+  opacity: 0;
+
+  transition: opacity 0.25s ease;
+}
+
+
+/* Hover */
+
+.review-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.09);
+
+  border-color: var(--primary);
+}
+
+.review-card:hover::before {
+  opacity: 1;
+}
+
+
+/* ============================================
+   REVIEW CUSTOMER HEADER
+   ============================================ */
+
+.review-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 1rem;
+}
+
+
+/* Customer */
+
+.review-customer {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 0.75rem;
+}
+
+
+/* ============================================
+   AVATAR
+   ============================================ */
+
+.review-avatar {
+  width: 46px;
+  height: 46px;
+
+  flex: 0 0 46px;
+
+  overflow: hidden;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: var(--muted);
+
+  color: var(--foreground);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.review-avatar img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.review-avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+}
+
+
+/* ============================================
+   CUSTOMER NAME
+   ============================================ */
+
+.review-customer-info {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  gap: 0.15rem;
+}
+
+.review-customer-info strong {
+  overflow: hidden;
+
+  color: var(--foreground);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* Verified customer */
+
+.review-verified {
+  color: var(--muted-foreground);
+
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+
+/* ============================================
+   REVIEW DATE
+   ============================================ */
+
+.review-date {
+  flex-shrink: 0;
+
+  color: var(--muted-foreground);
+
+  font-size: 0.72rem;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================
+   REVIEW STARS
+   ============================================ */
+
+.review-stars {
+  display: flex;
+  align-items: center;
+
+  gap: 3px;
+
+  margin-top: 1rem;
+}
+
+.review-stars svg {
+  width: 17px;
+  height: 17px;
+
+  flex-shrink: 0;
+}
+
+
+/* ============================================
+   REVIEW COMMENT
+   ============================================ */
+
+.review-comment {
+  margin: 0.8rem 0 0;
+
+  color: var(--muted-foreground);
+
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+
+  line-height: 1.65;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+
+/* ============================================
+   NO REVIEWS
+   ============================================ */
+
+/*
+   Normally this will never be displayed because
+   JavaScript does not create the review section
+   when there are no reviews.
+
+   These rules are only a fallback.
+*/
+
+.no-reviews {
+  display: none;
+}
+
+
+/* ============================================
+   LOADING
+   ============================================ */
+
+.reviews-loading {
+  display: none;
+}
+
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+
+[data-theme="dark"] .review-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .review-card:hover {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ============================================
+   TABLET
+   ============================================ */
+
+@media (max-width: 900px) {
+
+  .reviews-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .review-card {
+    padding: 1.15rem;
+  }
+
+}
+
+
+/* ============================================
+   MOBILE
+   ============================================ */
+
+@media (max-width: 700px) {
+
+  .product-reviews {
+    margin-top: 2rem;
+    padding-top: 2rem;
+  }
+
+
+  .reviews-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 0.5rem;
+
+    margin-bottom: 1.25rem;
+  }
+
+
+  .reviews-section-head h2 {
+    font-size: 1.35rem;
+  }
+
+
+  .reviews-count {
+    font-size: 0.82rem;
+  }
+
+
+  .reviews-grid {
+    grid-template-columns: 1fr;
+
+    gap: 1rem;
+  }
+
+
+  .review-card {
+    min-height: 0;
+
+    padding: 1.1rem;
+
+    border-radius: 15px;
+  }
+
+
+  .review-card:hover {
+    transform: none;
+  }
+
+
+  .review-card-top {
+    gap: 0.75rem;
+  }
+
+
+  .review-avatar {
+    width: 43px;
+    height: 43px;
+
+    flex-basis: 43px;
+  }
+
+
+  .review-customer-info strong {
+    font-size: 0.9rem;
+  }
+
+
+  .review-verified {
+    font-size: 0.7rem;
+  }
+
+
+  .review-date {
+    font-size: 0.68rem;
+  }
+
+
+  .review-stars {
+    margin-top: 0.85rem;
+  }
+
+
+  .review-stars svg {
+    width: 16px;
+    height: 16px;
+  }
+
+
+  .review-comment {
+    margin-top: 0.7rem;
+
+    font-size: 0.86rem;
+
+    line-height: 1.6;
+
+    -webkit-line-clamp: 5;
+  }
+
+}
+
+
+/* ============================================
+   SMALL MOBILE
+   ============================================ */
+
+@media (max-width: 480px) {
+
+  .product-reviews {
+    margin-top: 1.75rem;
+    padding-top: 1.75rem;
+  }
+
+
+  .reviews-section-head h2 {
+    font-size: 1.25rem;
+  }
+
+
+  .review-card {
+    padding: 1rem;
+
+    border-radius: 14px;
+  }
+
+
+  .review-card-top {
+    align-items: center;
+  }
+
+
+  .review-avatar {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+
+    font-size: 0.9rem;
+  }
+
+
+  .review-customer {
+    gap: 0.65rem;
+  }
+
+
+  .review-date {
+    font-size: 0.65rem;
+  }
+
+
+  .review-comment {
+    font-size: 0.84rem;
+  }
+
+}
+/* ============================================
+   LUXE — REVIEW CARD FINAL FIX
+   Uses the actual LUXE design tokens from this stylesheet.
+   ============================================ */
+
+.product-detail {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pd-gallery,
+.pd-info {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.product-reviews {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.reviews-grid {
+  width: 100%;
+  min-width: 0;
+}
+
+.review-card {
+  min-width: 0;
+  max-width: 100%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-card::before {
+  background: var(--color-primary);
+}
+
+.review-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.review-avatar {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.review-customer-info strong {
+  color: var(--color-charcoal);
+  font-family: var(--font-heading);
+}
+
+.review-verified,
+.review-date,
+.review-comment,
+.reviews-count {
+  color: var(--color-muted);
+}
+
+.review-stars svg {
+  color: var(--color-star);
+  stroke: currentColor;
+}
+
+/* Keep customer-generated text inside the card on narrow screens. */
+.review-card-top,
+.review-customer,
+.review-customer-info,
+.review-comment {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.review-date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 38%;
+}
+
+@media (max-width: 700px) {
+  .product-reviews {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+  }
+
+  .review-card {
+    padding: 1rem;
+    border-radius: var(--radius);
+  }
+
+  .review-card-top {
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .review-customer {
+    flex: 1 1 auto;
+  }
+
+  .review-date {
+    flex: 0 1 auto;
+    max-width: 34%;
+    white-space: normal;
+    text-align: right;
+    line-height: 1.25;
+  }
+
+  .review-comment {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .review-card-top {
+    align-items: flex-start;
+  }
+
+  .review-date {
+    max-width: 32%;
+    font-size: 0.65rem;
+  }
+}
+
+/* ============================================
+   LUXE — PRODUCT PRICE MOBILE OVERFLOW FIX
+   ============================================ */
+
+.pd-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  gap: 0.65rem;
+  overflow: hidden;
+}
+
+.pd-price .price-now {
+  min-width: 0;
+  max-width: 100%;
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.pd-price .price-old {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 700px) {
+  .pd-price {
+    gap: 0.45rem;
+  }
+
+  .pd-price .price-now {
+    font-size: clamp(1.55rem, 8vw, 2.2rem);
+  }
+
+  .pd-price .price-old {
+    font-size: clamp(0.72rem, 3.2vw, 0.95rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .pd-price {
+    gap: 0.35rem;
+  }
+
+  .pd-price .price-now {
+    font-size: clamp(1.4rem, 8vw, 2rem);
+  }
+
+  .pd-price .price-old {
+    font-size: 0.72rem;
+  }
+}

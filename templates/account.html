@@ -1,181 +1,686 @@
 <!DOCTYPE html>
 {% load static %}
+
 <html lang="en" class="bg-background">
 
 <head>
-  <script>
-    // Set theme before first paint to avoid a light/dark flash.
-    (function () {
-      try {
-        var saved = localStorage.getItem('luxe-theme');
-        var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch (e) {}
-    })();
-  </script>
+
+    <!-- Apply theme before first paint -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('luxe-theme');
+
+                var theme = saved || (
+                    window.matchMedia &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches
+                        ? 'dark'
+                        : 'light'
+                );
+
+                document.documentElement.setAttribute('data-theme', theme);
+
+            } catch (e) {}
+        })();
+    </script>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ff6b00">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#ff6b00"
+    >
+
     <title>Account Dashboard | LUXE</title>
-    <meta name="description"
-        content="Manage your profile, orders, saved addresses and account settings in the LUXE dashboard.">
+
+    <meta
+        name="description"
+        content="Manage your profile, orders, saved addresses and account settings in the LUXE dashboard."
+    >
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        rel="stylesheet"
+    >
+
+    <!-- Main stylesheet -->
+    <link
+        rel="stylesheet"
+        href="{% static 'css/style.css' %}"
+    >
+
 </head>
 
+
 <body data-page="account">
-  <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
+
+    <!-- Theme Toggle -->
+    <button
+        type="button"
+        class="theme-toggle"
+        id="theme-toggle"
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
+    >
+
+        <svg
+            class="icon-sun"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <circle
+                cx="12"
+                cy="12"
+                r="4"
+            ></circle>
+
+            <path
+                d="M12 2v2
+                   M12 20v2
+                   M4.93 4.93l1.41 1.41
+                   M17.66 17.66l1.41 1.41
+                   M2 12h2
+                   M20 12h2
+                   M6.34 17.66l-1.41 1.41
+                   M19.07 4.93l-1.41 1.41"
+            ></path>
+        </svg>
+
+
+        <svg
+            class="icon-moon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path
+                d="M21 12.79A9 9 0 1 1 11.21 3
+                   7 7 0 0 0 21 12.79z"
+            ></path>
+        </svg>
+
+    </button>
+
+
+    <!-- Header -->
     <div id="site-header"></div>
 
+
     <main>
+
+        <!-- =====================================================
+             PAGE HERO
+        ====================================================== -->
+
         <section class="page-hero">
+
             <div class="container">
-                <nav class="breadcrumb" aria-label="Breadcrumb">
-                    <a href="/">Home</a> <span>/</span> <span>My Account</span>
+
+                <nav
+                    class="breadcrumb"
+                    aria-label="Breadcrumb"
+                >
+
+                    <a href="/">Home</a>
+
+                    <span>/</span>
+
+                    <span>My Account</span>
+
                 </nav>
-                <h1>Account Dashboard</h1>
-                <p>Your hub for order history, saved addresses, wishlist management and account preferences.</p>
+
+
+                <h1>
+                    Account Dashboard
+                </h1>
+
+
+                <p>
+                    Your hub for order history, saved addresses,
+                    wishlist management and account preferences.
+                </p>
+
             </div>
+
         </section>
+
+
+
+        <!-- =====================================================
+             ACCOUNT SECTION
+        ====================================================== -->
 
         <section class="section">
+
             <div class="container account-layout">
+
+
+                <!-- =================================================
+                     ACCOUNT NAVIGATION
+                ================================================== -->
+
                 <aside class="account-nav">
+
                     <div class="account-user">
-                        <img src="static/images/avatars/avatar1.png" alt="User avatar">
+
+                        <img
+                            src="{% static 'images/avatars/avatar1.png' %}"
+                            alt="User avatar"
+                        >
+
+
                         <div>
-                            <strong>{{user.username}}</strong>
-                            <span>Premium member since 2024</span>
+
+                            <strong>
+                                {{ user.username }}
+                            </strong>
+
+
+                            <span>
+                                Member since {{ user.date_joined|date:"F Y" }}
+                            </span>
+
                         </div>
+
                     </div>
-                    <a href="#overview" class="active">Overview</a>
-                    <a href="#orders">Order History</a>
-                    <a href="#addresses">Saved Addresses</a>
-                    <a href="#settings">Account Settings</a>
-                    <a href="/wishlist">Wishlist</a>
+
+
+                    <a
+                        href="#overview"
+                        class="active"
+                    >
+                        Overview
+                    </a>
+
+
+                    <a href="#orders">
+                        Order History
+                    </a>
+
+
+                    <a href="#addresses">
+                        Saved Addresses
+                    </a>
+
+
+                    <a href="#settings">
+                        Account Settings
+                    </a>
+
+
+                    <a href="/wishlist">
+                        Wishlist
+                    </a>
+
                 </aside>
 
+
+
+                <!-- =================================================
+                     ACCOUNT MAIN
+                ================================================== -->
+
                 <div class="account-main">
-                    <section id="overview" class="panel">
-                        <h2>Welcome back, {{user.username}}</h2>
+
+
+                    <!-- =================================================
+                         OVERVIEW
+                    ================================================== -->
+
+                    <section
+                        id="overview"
+                        class="panel"
+                    >
+
+                        <h2>
+                            Welcome back, {{ user.username }}
+                        </h2>
+
+
                         <div class="stat-cards">
+
+
                             <div class="stat-card">
-                                <div class="num">26</div>
-                                <div class="label">Orders completed</div>
+
+                                <div class="num">
+                                    26
+                                </div>
+
+                                <div class="label">
+                                    Orders completed
+                                </div>
+
                             </div>
+
+
+
                             <div class="stat-card">
-                                <div class="num">$1,420</div>
-                                <div class="label">Spent this year</div>
+
+                                <div class="num">
+                                    $1,420
+                                </div>
+
+                                <div class="label">
+                                    Spent this year
+                                </div>
+
                             </div>
+
+
+
                             <div class="stat-card">
-                                <div class="num">12</div>
-                                <div class="label">Wishlist items</div>
+
+                                <div class="num">
+                                    12
+                                </div>
+
+                                <div class="label">
+                                    Wishlist items
+                                </div>
+
                             </div>
+
                         </div>
-                        <p>Keep your profile up to date and enjoy faster checkout with saved addresses, payment
-                            preferences, and exclusive offers.</p>
+
+
+                        <p>
+                            Keep your profile up to date and enjoy
+                            faster checkout with saved addresses,
+                            payment preferences, and exclusive offers.
+                        </p>
+
                     </section>
 
-                    <section id="orders" class="panel">
-                        <h2>Recent Orders</h2>
+
+
+                    <!-- =================================================
+                         ORDERS
+                    ================================================== -->
+
+                    <section
+                        id="orders"
+                        class="panel"
+                    >
+
+                        <h2>
+                            Recent Orders
+                        </h2>
+
+
                         <div class="table-wrap">
+
                             <table class="order-table">
+
                                 <thead>
+
                                     <tr>
-                                        <th>Order</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Total</th>
+
+                                        <th>
+                                            Order
+                                        </th>
+
+                                        <th>
+                                            Date
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+                                        <th>
+                                            Total
+                                        </th>
+
                                     </tr>
+
                                 </thead>
+
+
                                 <tbody>
+
+
                                     <tr>
-                                        <td>#LX004912</td>
-                                        <td>May 27, 2026</td>
-                                        <td><span class="status-pill delivered">Delivered</span></td>
-                                        <td>$249.00</td>
+
+                                        <td>
+                                            #LX004912
+                                        </td>
+
+                                        <td>
+                                            May 27, 2026
+                                        </td>
+
+                                        <td>
+
+                                            <span class="status-pill delivered">
+                                                Delivered
+                                            </span>
+
+                                        </td>
+
+                                        <td>
+                                            $249.00
+                                        </td>
+
                                     </tr>
+
+
+
                                     <tr>
-                                        <td>#LX004813</td>
-                                        <td>May 14, 2026</td>
-                                        <td><span class="status-pill shipped">Shipped</span></td>
-                                        <td>$89.99</td>
+
+                                        <td>
+                                            #LX004813
+                                        </td>
+
+                                        <td>
+                                            May 14, 2026
+                                        </td>
+
+                                        <td>
+
+                                            <span class="status-pill shipped">
+                                                Shipped
+                                            </span>
+
+                                        </td>
+
+                                        <td>
+                                            $89.99
+                                        </td>
+
                                     </tr>
+
+
+
                                     <tr>
-                                        <td>#LX004702</td>
-                                        <td>Apr 30, 2026</td>
-                                        <td><span class="status-pill processing">Processing</span></td>
-                                        <td>$134.50</td>
+
+                                        <td>
+                                            #LX004702
+                                        </td>
+
+                                        <td>
+                                            Apr 30, 2026
+                                        </td>
+
+                                        <td>
+
+                                            <span class="status-pill processing">
+                                                Processing
+                                            </span>
+
+                                        </td>
+
+                                        <td>
+                                            $134.50
+                                        </td>
+
                                     </tr>
+
+
                                 </tbody>
+
                             </table>
+
                         </div>
+
                     </section>
 
-                    <section id="addresses" class="panel">
-                        <h2>Saved Addresses</h2>
+
+
+                    <!-- =================================================
+                         SAVED ADDRESSES
+                    ================================================== -->
+
+                    <section
+                        id="addresses"
+                        class="panel"
+                    >
+
+                        <h2>
+                            Saved Addresses
+                        </h2>
+
+
                         <div class="address-grid">
+
+
                             <div class="address-card default">
-                                <strong>Home Address</strong>
-                                <p>42 Orchard Lane<br>Brooklyn, NY 11201</p>
-                                <span class="tag">Default</span>
+
+                                <strong>
+                                    Home Address
+                                </strong>
+
+
+                                <p>
+                                    42 Orchard Lane<br>
+                                    Brooklyn, NY 11201
+                                </p>
+
+
+                                <span class="tag">
+                                    Default
+                                </span>
+
                             </div>
+
+
+
                             <div class="address-card">
-                                <strong>Work Address</strong>
-                                <p>88 Market Street<br>San Francisco, CA 94103</p>
+
+                                <strong>
+                                    Work Address
+                                </strong>
+
+
+                                <p>
+                                    88 Market Street<br>
+                                    San Francisco, CA 94103
+                                </p>
+
                             </div>
+
+
                         </div>
+
                     </section>
 
-                    <section id="settings" class="panel">
-                        <h2>Account Settings</h2>
-                        <form class="form-row">
+
+
+                    <!-- =================================================
+                         ACCOUNT SETTINGS
+                    ================================================== -->
+
+                    <section
+                        id="settings"
+                        class="panel"
+                    >
+
+                        <h2>
+                            Account Settings
+                        </h2>
+
+
+                        <form
+                            class="form-row"
+                            method="post"
+                        >
+
+                            {% csrf_token %}
+
+
+                            <!-- Full Name -->
+
                             <div class="form-field">
-                                <label for="name">Full name</label>
-                                <input type="text" id="name" value="Avery Morgan">
+
+                                <label for="name">
+                                    Full name
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="full_name"
+                                    value="{{ user.full_name|default:'' }}"
+                                    autocomplete="name"
+                                    placeholder="Enter your full name"
+                                >
+
                             </div>
+
+
+
+                            <!-- Email -->
+
                             <div class="form-field">
-                                <label for="email">Email address</label>
-                                <input type="email" id="email" value="avery@example.com">
+
+                                <label for="email">
+                                    Email address
+                                </label>
+
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value="{{ user.email|default:'' }}"
+                                    autocomplete="email"
+                                    placeholder="Enter your email address"
+                                >
+
                             </div>
+
+
+
+                            <!-- New Password -->
+
                             <div class="form-field">
-                                <label for="phone">Phone number</label>
-                                <input type="tel" id="phone" value="(555) 123-4567">
+
+                                <label for="password">
+                                    New Password
+                                </label>
+
+
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    autocomplete="new-password"
+                                    placeholder="Enter new password"
+                                >
+
                             </div>
+
+
+
+                            <!-- Confirm Password -->
+
                             <div class="form-field">
-                                <label for="password">Password</label>
-                                <input type="password" id="password" value="********">
+
+                                <label for="confirm_password">
+                                    Confirm Password
+                                </label>
+
+
+                                <input
+                                    type="password"
+                                    id="confirm_password"
+                                    name="confirm_password"
+                                    autocomplete="new-password"
+                                    placeholder="Confirm new password"
+                                >
+
                             </div>
-                            <button type="button" class="btn btn-primary">Save changes</button>
+
+
+
+                            <!-- Save Button -->
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Save changes
+                            </button>
+
                         </form>
+
                     </section>
+
+
                 </div>
+
             </div>
+
         </section>
+
     </main>
 
+
+    <!-- Footer -->
     <div id="site-footer"></div>
 
+
+
+    <!-- Main JavaScript -->
     <script src="{% static 'js/main.js' %}"></script>
-  <script>
-    (function () {
-      var btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-      btn.addEventListener('click', function () {
-        var html = document.documentElement;
-        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        try { localStorage.setItem('luxe-theme', next); } catch (e) {}
-      });
-    })();
-  </script>
+
+
+
+    <!-- Theme Toggle -->
+    <script>
+
+        (function () {
+
+            var btn = document.getElementById('theme-toggle');
+
+            if (!btn) return;
+
+
+            btn.addEventListener('click', function () {
+
+                var html = document.documentElement;
+
+
+                var next =
+                    html.getAttribute('data-theme') === 'dark'
+                        ? 'light'
+                        : 'dark';
+
+
+                html.setAttribute(
+                    'data-theme',
+                    next
+                );
+
+
+                try {
+
+                    localStorage.setItem(
+                        'luxe-theme',
+                        next
+                    );
+
+                } catch (e) {}
+
+            });
+
+        })();
+
+    </script>
+
 </body>
 
 </html>

@@ -1,104 +1,1188 @@
 {% load static %}
-<!DOCTYPE html>
-<html lang="en" class="bg-background">
 
-<head>
-  <script>
-    // Set theme before first paint to avoid a light/dark flash.
+<!DOCTYPE html><html lang="en" class="bg-background"><head><script>
+    // Apply theme before first paint
     (function () {
-      try {
-        var saved = localStorage.getItem('luxe-theme');
-        var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch (e) {}
+        try {
+            var saved = localStorage.getItem('luxe-theme');
+
+            var theme = saved || (
+                window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light'
+            );
+
+            document.documentElement.setAttribute('data-theme', theme);
+
+        } catch (e) {}
     })();
-  </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ff6b00">
-    <title>Login | LUXE</title>
-    <meta name="description"
-        content="Sign in to your LUXE account and access your orders, wishlist and saved addresses.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</script>
 
-    <style>
-        .message {
-            padding: 14px 16px;
-            border-radius: 14px;
-            margin-bottom: 12px;
-            font-weight: 600;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ff6b00">
+
+<title>Sign In | LUXE</title>
+
+<meta name="description"
+    content="Sign in to your LUXE account and access your orders, wishlist and saved preferences.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+    rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+
+<style>
+
+    /* =========================================================
+       LUXE — MODERN LOGIN PAGE
+    ========================================================= */
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Inter", sans-serif;
+    }
+
+
+    /* =========================================================
+       PAGE
+    ========================================================= */
+
+    .login-page {
+        min-height: 100vh;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 32px 20px;
+
+        position: relative;
+        overflow: hidden;
+    }
+
+
+    .login-page::before {
+        content: "";
+
+        position: fixed;
+
+        width: 420px;
+        height: 420px;
+
+        border-radius: 50%;
+
+        background: rgba(255, 107, 0, 0.08);
+
+        top: -180px;
+        left: -160px;
+
+        pointer-events: none;
+    }
+
+
+    .login-page::after {
+        content: "";
+
+        position: fixed;
+
+        width: 360px;
+        height: 360px;
+
+        border-radius: 50%;
+
+        background: rgba(255, 107, 0, 0.06);
+
+        bottom: -180px;
+        right: -140px;
+
+        pointer-events: none;
+    }
+
+
+    .login-container {
+        width: 100%;
+        max-width: 440px;
+
+        position: relative;
+        z-index: 2;
+    }
+
+
+    /* =========================================================
+       BRAND
+    ========================================================= */
+
+    .login-brand {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+
+    .login-brand a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+
+    .login-brand-name {
+        font-family: "Poppins", sans-serif;
+
+        font-size: 30px;
+        font-weight: 800;
+
+        letter-spacing: 5px;
+
+        margin: 0;
+    }
+
+
+    .login-brand-dot {
+        color: #ff6b00;
+    }
+
+
+    /* =========================================================
+       CARD
+    ========================================================= */
+
+    .login-card {
+        border: 1px solid rgba(128, 128, 128, 0.18);
+
+        border-radius: 26px;
+
+        padding: 34px;
+
+        background: var(
+            --card-bg,
+            rgba(255, 255, 255, 0.92)
+        );
+
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.08);
+
+        backdrop-filter: blur(16px);
+    }
+
+
+    [data-theme="dark"] .login-card {
+        background: rgba(25, 25, 25, 0.88);
+
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+
+    /* =========================================================
+       HEADING
+    ========================================================= */
+
+    .login-heading {
+        text-align: center;
+
+        margin-bottom: 28px;
+    }
+
+
+    .login-heading h1 {
+        margin: 0 0 9px;
+
+        font-family: "Poppins", sans-serif;
+
+        font-size: 28px;
+        font-weight: 700;
+
+        letter-spacing: -0.5px;
+    }
+
+
+    .login-heading p {
+        margin: 0;
+
+        opacity: 0.65;
+
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       GOOGLE
+    ========================================================= */
+
+    .google-btn {
+        width: 100%;
+
+        min-height: 52px;
+
+        border: 1px solid rgba(128, 128, 128, 0.25);
+
+        border-radius: 14px;
+
+        background: transparent;
+
+        color: inherit;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 12px;
+
+        font-family: "Inter", sans-serif;
+
+        font-size: 14px;
+        font-weight: 600;
+
+        text-decoration: none;
+
+        cursor: pointer;
+
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .google-btn:hover {
+        transform: translateY(-1px);
+
+        border-color: rgba(255, 107, 0, 0.45);
+
+        background: rgba(255, 107, 0, 0.04);
+    }
+
+
+    .google-icon {
+        width: 19px;
+        height: 19px;
+
+        flex-shrink: 0;
+    }
+
+
+    /* =========================================================
+       DIVIDER
+    ========================================================= */
+
+    .login-divider {
+        display: flex;
+
+        align-items: center;
+
+        gap: 14px;
+
+        margin: 25px 0;
+
+        font-size: 12px;
+
+        opacity: 0.55;
+    }
+
+
+    .login-divider::before,
+    .login-divider::after {
+        content: "";
+
+        height: 1px;
+
+        flex: 1;
+
+        background: currentColor;
+
+        opacity: 0.25;
+    }
+
+
+    /* =========================================================
+       FORM
+    ========================================================= */
+
+    .login-form {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 18px;
+    }
+
+
+    .form-field {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 8px;
+    }
+
+
+    .form-field label {
+        font-size: 13px;
+
+        font-weight: 600;
+    }
+
+
+    .input-wrap {
+        position: relative;
+    }
+
+
+    .login-input {
+        width: 100%;
+
+        height: 54px;
+
+        border: 1px solid rgba(128, 128, 128, 0.25);
+
+        border-radius: 14px;
+
+        padding: 0 16px;
+
+        outline: none;
+
+        background: transparent;
+
+        color: inherit;
+
+        font-family: "Inter", sans-serif;
+
+        font-size: 14px;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .login-input::placeholder {
+        opacity: 0.45;
+    }
+
+
+    .login-input:focus {
+        border-color: #ff6b00;
+
+        box-shadow:
+            0 0 0 4px rgba(255, 107, 0, 0.10);
+    }
+
+
+    .password-input {
+        padding-right: 52px;
+    }
+
+
+    /* =========================================================
+       PASSWORD TOGGLE
+    ========================================================= */
+
+    .password-toggle {
+        position: absolute;
+
+        right: 7px;
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        width: 40px;
+        height: 40px;
+
+        border: 0;
+
+        background: transparent;
+
+        color: inherit;
+
+        opacity: 0.55;
+
+        cursor: pointer;
+
+        border-radius: 10px;
+    }
+
+
+    .password-toggle:hover {
+        background: rgba(128, 128, 128, 0.10);
+
+        opacity: 1;
+    }
+
+
+    .password-toggle svg {
+        width: 19px;
+        height: 19px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.8;
+    }
+
+
+    /* =========================================================
+       OPTIONS
+    ========================================================= */
+
+    .login-options {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 15px;
+
+        margin-top: -2px;
+    }
+
+
+    .remember {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        font-size: 12px;
+
+        opacity: 0.72;
+
+        cursor: pointer;
+    }
+
+
+    .remember input {
+        width: 15px;
+        height: 15px;
+
+        accent-color: #ff6b00;
+
+        cursor: pointer;
+    }
+
+
+    .forgot-link {
+        color: #ff6b00;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        text-decoration: none;
+    }
+
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+
+    /* =========================================================
+       SUBMIT
+    ========================================================= */
+
+    .login-submit {
+        width: 100%;
+
+        height: 54px;
+
+        border: 0;
+
+        border-radius: 14px;
+
+        background: #ff6b00;
+
+        color: #fff;
+
+        font-family: "Inter", sans-serif;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        box-shadow:
+            0 10px 24px rgba(255, 107, 0, 0.20);
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .login-submit:hover {
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 14px 30px rgba(255, 107, 0, 0.28);
+
+        background: #f46100;
+    }
+
+
+    .login-submit:active {
+        transform: translateY(0);
+    }
+
+
+    /* =========================================================
+       MESSAGES
+    ========================================================= */
+
+    .messages {
+        margin-bottom: 20px;
+    }
+
+
+    .message {
+        padding: 13px 14px;
+
+        border-radius: 12px;
+
+        font-size: 13px;
+
+        font-weight: 500;
+    }
+
+
+    .message.error {
+        background: rgba(207, 4, 4, 0.08);
+
+        color: #cf0404;
+
+        border: 1px solid rgba(207, 4, 4, 0.18);
+    }
+
+
+    .message.success {
+        background: rgba(39, 161, 23, 0.10);
+
+        color: #229116;
+
+        border: 1px solid rgba(39, 161, 23, 0.20);
+    }
+
+
+    /* =========================================================
+       CREATE ACCOUNT
+    ========================================================= */
+
+    .login-footer {
+        text-align: center;
+
+        margin-top: 25px;
+
+        font-size: 13px;
+
+        opacity: 0.7;
+    }
+
+
+    .login-footer a {
+        color: #ff6b00;
+
+        font-weight: 700;
+
+        text-decoration: none;
+    }
+
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+
+
+    /* =========================================================
+       SECURITY
+    ========================================================= */
+
+    .login-security {
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-top: 22px;
+
+        font-size: 11px;
+
+        opacity: 0.45;
+    }
+
+
+    .login-security svg {
+        width: 14px;
+        height: 14px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.8;
+    }
+
+
+    /* =========================================================
+       THEME TOGGLE
+    ========================================================= */
+
+    .login-theme-toggle {
+        position: fixed;
+
+        top: 20px;
+        right: 20px;
+
+        width: 42px;
+        height: 42px;
+
+        border-radius: 50%;
+
+        border: 1px solid rgba(128, 128, 128, 0.20);
+
+        background: rgba(255, 255, 255, 0.55);
+
+        color: inherit;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        cursor: pointer;
+
+        z-index: 10;
+
+        backdrop-filter: blur(10px);
+    }
+
+
+    [data-theme="dark"] .login-theme-toggle {
+        background: rgba(30, 30, 30, 0.65);
+    }
+
+
+    .login-theme-toggle svg {
+        width: 19px;
+        height: 19px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.7;
+    }
+
+
+    /* =========================================================
+       MOBILE
+    ========================================================= */
+
+    @media (max-width: 520px) {
+
+        .login-page {
+            padding: 20px 14px;
         }
 
-        .message.error {
-            background: rgba(49, 5, 5, 0.16);
-            color: #cf0404;
-            margin-top: 20px;
-            border: 1px solid rgba(190, 0, 0, 0.25);
+
+        .login-card {
+            padding: 26px 20px;
+
+            border-radius: 22px;
         }
 
-        .message.success {
-            background: rgba(39, 161, 23, 0.16);
-            color: #5af199;
-            margin-top: 20px;
-            border: 1px solid rgba(48, 172, 58, 0.966);
+
+        .login-brand {
+            margin-bottom: 22px;
         }
-    </style>
-</head>
 
-<body data-page="login">
-  <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
-    <div id="site-header"></div>
 
-    <main>
-        <section class="auth-wrap">
-            <div class="auth-card">
+        .login-brand-name {
+            font-size: 26px;
+        }
+
+
+        .login-heading h1 {
+            font-size: 25px;
+        }
+
+
+        .login-theme-toggle {
+            top: 14px;
+            right: 14px;
+        }
+
+    }
+
+</style>
+
+</head><body data-page="login"><!-- =========================================================
+     THEME TOGGLE
+========================================================= -->
+
+<button
+    type="button"
+    class="login-theme-toggle"
+    id="theme-toggle"
+    aria-label="Toggle dark mode"
+    title="Toggle dark mode">
+
+    <svg class="icon-sun" viewBox="0 0 24 24">
+
+        <circle
+            cx="12"
+            cy="12"
+            r="4">
+        </circle>
+
+        <path d="
+            M12 2v2
+            M12 20v2
+            M4.93 4.93l1.41 1.41
+            M17.66 17.66l1.41 1.41
+            M2 12h2
+            M20 12h2
+            M6.34 17.66l-1.41 1.41
+            M19.07 4.93l-1.41 1.41
+        "/>
+
+    </svg>
+
+
+    <svg class="icon-moon" viewBox="0 0 24 24">
+
+        <path d="
+            M21 12.79
+            A9 9 0 1 1
+            11.21 3
+            A7 7 0 0 0
+            21 12.79z
+        "/>
+
+    </svg>
+
+</button>
+
+
+
+<!-- =========================================================
+     LOGIN PAGE
+========================================================= -->
+
+<main class="login-page">
+
+    <div class="login-container">
+
+
+        <!-- BRAND -->
+
+        <div class="login-brand">
+
+            <a href="/">
+
+                <h2 class="login-brand-name">
+                    LUXE<span class="login-brand-dot">.</span>
+                </h2>
+
+            </a>
+
+        </div>
+
+
+
+        <!-- LOGIN CARD -->
+
+        <div class="login-card">
+
+
+            <!-- HEADING -->
+
+            <div class="login-heading">
+
                 <h1>Welcome back</h1>
 
-                {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                    <div class="message {{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <p class="sub">Sign in to manage your orders, wishlist and saved preferences.</p>
-                <form class="form-row" method="post">
-                    {% csrf_token %}
-                    <div class="form-field"><label for="login-email">Email address</label><input id="login-email"
-                            type="email" placeholder="you@example.com"></div>
-                    <div class="form-field"><label for="login-password">Password</label><input id="login-password"
-                            type="password" placeholder="Enter your password"></div>
-                    <div class="form-aux"><a href="forgot-password.html">Forgot password?</a></div>
-                    <button type="submit" class="btn btn-primary btn-lg btn-block">Sign In</button>
-                </form>
-                <div class="auth-foot">Don’t have an account? <a href="/signup">Create one</a></div>
+                <p>
+                    Sign in to continue to your LUXE account.
+                </p>
+
             </div>
-        </section>
-    </main>
 
-    <div id="site-footer"></div>
 
-    <script src="{% static 'js/main.js' %}"></script>
-  <script>
+
+            <!-- DJANGO MESSAGES -->
+
+            {% if messages %}
+
+            <div class="messages">
+
+                {% for message in messages %}
+
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+
+
+            <!-- GOOGLE LOGIN -->
+
+            <a
+                href="/accounts/google/login/"
+                class="google-btn">
+
+                <svg
+                    class="google-icon"
+                    viewBox="0 0 24 24">
+
+                    <path
+                        fill="#4285F4"
+                        d="M21.35 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.42z"/>
+
+                    <path
+                        fill="#34A853"
+                        d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.75z"/>
+
+                    <path
+                        fill="#FBBC05"
+                        d="M6.54 13.84A5.86 5.86 0 0 1 6.23 12c0-.64.11-1.26.31-1.84V7.63H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.37l3.25-2.53z"/>
+
+                    <path
+                        fill="#EA4335"
+                        d="M12 6.13c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.15 14.63 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.38l3.25 2.53C7.31 7.85 9.46 6.13 12 6.13z"/>
+
+                </svg>
+
+                Continue with Google
+
+            </a>
+
+
+
+            <!-- DIVIDER -->
+
+            <div class="login-divider">
+
+                <span>
+                    OR CONTINUE WITH EMAIL
+                </span>
+
+            </div>
+
+
+
+            <!-- LOGIN FORM -->
+
+            <form
+                class="login-form"
+                method="post">
+
+                {% csrf_token %}
+
+                <!-- Preserve original destination -->
+                <input
+                    type="hidden"
+                    name="next"
+                    value="{{ request.GET.next }}">
+
+
+                <!-- EMAIL -->
+
+                <div class="form-field">
+
+                    <label for="login-email">
+                        Email address
+                    </label>
+
+                    <input
+                        id="login-email"
+                        name="email"
+                        class="login-input"
+                        type="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required>
+
+                </div>
+
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-field">
+
+                    <label for="login-password">
+                        Password
+                    </label>
+
+
+                    <div class="input-wrap">
+
+                        <input
+                            id="login-password"
+                            name="password"
+                            class="login-input password-input"
+                            type="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required>
+
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            id="password-toggle"
+                            aria-label="Show password">
+
+                            <svg viewBox="0 0 24 24">
+
+                                <path d="
+                                    M2 12s3.5-6 10-6
+                                    10 6 10 6
+                                    -3.5 6-10 6
+                                    S2 12 2 12z
+                                "/>
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="2.5"/>
+
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- OPTIONS -->
+
+                <div class="login-options">
+
+                    <label class="remember">
+
+                        <input
+                            type="checkbox"
+                            name="remember_me">
+
+                        <span>
+                            Remember me
+                        </span>
+
+                    </label>
+
+
+                    <a
+                        href="/forgot-password/"
+                        class="forgot-link">
+
+                        Forgot password?
+
+                    </a>
+
+                </div>
+
+
+
+                <!-- SUBMIT -->
+
+                <button
+                    type="submit"
+                    class="login-submit">
+
+                    Sign In
+
+                </button>
+
+            </form>
+
+
+
+            <!-- SIGN UP -->
+
+            <div class="login-footer">
+
+                Don't have an account?
+
+                <a href="/signup">
+                    Create one
+                </a>
+
+            </div>
+
+
+
+            <!-- SECURITY -->
+
+            <div class="login-security">
+
+                <svg viewBox="0 0 24 24">
+
+                    <rect
+                        x="5"
+                        y="10"
+                        width="14"
+                        height="10"
+                        rx="2"/>
+
+                    <path
+                        d="M8 10V7a4 4 0 0 1 8 0v3"/>
+
+                </svg>
+
+                <span>
+                    Your information is securely protected
+                </span>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</main>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="{% static 'js/main.js' %}"></script>
+
+
+<script>
+
+    /* =========================================================
+       THEME TOGGLE
+    ========================================================= */
+
     (function () {
-      var btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-      btn.addEventListener('click', function () {
-        var html = document.documentElement;
-        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        try { localStorage.setItem('luxe-theme', next); } catch (e) {}
-      });
-    })();
-  </script>
-</body>
 
-</html>
+        var btn =
+            document.getElementById('theme-toggle');
+
+        if (!btn) return;
+
+
+        btn.addEventListener('click', function () {
+
+            var html =
+                document.documentElement;
+
+
+            var next =
+                html.getAttribute('data-theme') === 'dark'
+                    ? 'light'
+                    : 'dark';
+
+
+            html.setAttribute(
+                'data-theme',
+                next
+            );
+
+
+            try {
+
+                localStorage.setItem(
+                    'luxe-theme',
+                    next
+                );
+
+            } catch (e) {}
+
+        });
+
+    })();
+
+
+
+    /* =========================================================
+       SHOW / HIDE PASSWORD
+    ========================================================= */
+
+    (function () {
+
+        var password =
+            document.getElementById(
+                'login-password'
+            );
+
+
+        var toggle =
+            document.getElementById(
+                'password-toggle'
+            );
+
+
+        if (!password || !toggle) return;
+
+
+        toggle.addEventListener(
+            'click',
+            function () {
+
+                if (
+                    password.type ===
+                    'password'
+                ) {
+
+                    password.type =
+                        'text';
+
+                    toggle.setAttribute(
+                        'aria-label',
+                        'Hide password'
+                    );
+
+                } else {
+
+                    password.type =
+                        'password';
+
+                    toggle.setAttribute(
+                        'aria-label',
+                        'Show password'
+                    );
+
+                }
+
+            }
+        );
+
+    })();
+
+</script>
+
+</body></html>

@@ -1,13 +1,14 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 from. import views
-from .views import check_out, home, login_view, signup_view, about, api_shop, shop, blog, contact, faq, account_view, cart, wishlist, product, logout_view, add_to_cart, flash_sale_api, order
+from .views import check_out, home, Login_view, signup_view, about, api_shop, shop, blog, contact, faq, account_view, cart, wishlist, product, logout_view, add_to_cart, flash_sale_api, order, shipping_api
 
 urlpatterns = [
     path('', home, name='home'),
     path('logout', logout_view, name='logout'),
-    path('login/', login_view, name='login'),
+    path('login/', Login_view.as_view(), name='login'),
     path('signup/', signup_view, name='signup'),
     path('about/', about, name='about'),
     path('shop/', shop, name='shop'),          # HTML page
@@ -41,6 +42,8 @@ urlpatterns = [
     "api/store-settings/",
     views.store_settings_api,
     name="store_settings_api"
-)
+),
+    path("api/shipping/", shipping_api, name="shipping_api")
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

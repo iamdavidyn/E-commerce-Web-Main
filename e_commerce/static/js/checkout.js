@@ -5,16 +5,31 @@
    Uses:
    - main.js
    - Django cart API
-   - Django StoreSettings
+   - Django shipping API
+   - JSON
    - PRICE_FMT()
-   - STORE_SETTINGS
+   - Paystack
 
    Does NOT use:
    - React
    - localStorage cart
    - promo codes
-   - Store.cart
-   - fake order success
+   - manual card fields
+   - PayPal
+   - Apple Pay
+   - tax
+
+   SHIPPING FLOW:
+
+   Django Database
+          ↓
+   /api/shipping/
+          ↓
+       JSON
+          ↓
+   checkout.js
+          ↓
+   shippingFee
 
 ========================================================= */
 
@@ -24,8 +39,7 @@
 ========================================================= */
 
 let checkoutItems = [];
-
-let selectedPayment = "card";
+let shippingFee = null;
 
 
 /* =========================================================
@@ -39,26 +53,19 @@ function getCheckoutCSRFToken() {
     const cookies =
         document.cookie.split(";");
 
-
     for (let cookie of cookies) {
 
         cookie = cookie.trim();
 
-
-        if (
-            cookie.startsWith(name)
-        ) {
+        if (cookie.startsWith(name)) {
 
             return decodeURIComponent(
-                cookie.substring(
-                    name.length
-                )
+                cookie.substring(name.length)
             );
 
         }
 
     }
-
 
     return "";
 
@@ -71,12 +78,185 @@ function getCheckoutCSRFToken() {
 
 function escapeCheckoutHTML(value) {
 
-    return String(value || "")
+    return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   PRICE FORMAT
+========================================================= */
+
+function checkoutPrice(amount) {
+
+    const value =
+        Number(amount || 0);
+
+    if (
+        typeof PRICE_FMT ===
+        "function"
+    ) {
+
+        return PRICE_FMT(value);
+
+    }
+
+    const settings =
+        window.STORE_SETTINGS || {};
+
+    const symbol =
+        settings.currency_symbol || "₦";
+
+    return (
+        symbol +
+        value.toFixed(2)
+    );
+
+}
+
+
+/* =========================================================
+   FETCH SHIPPING FEE FROM DJANGO
+========================================================= */
+
+async function loadShippingFee() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/shipping/",
+                {
+                    method: "GET",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Unable to load shipping fee (${response.status}).`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Shipping API response:",
+            data
+        );
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to load shipping fee."
+            );
+
+        }
+
+
+        /*
+         * Django sends:
+         *
+         * {
+         *     "success": true,
+         *     "shipping_fee": 2500
+         * }
+         */
+
+        const fee =
+            Number(data.shipping_fee);
+
+
+        if (
+            !Number.isFinite(fee) ||
+            fee < 0
+        ) {
+
+            throw new Error(
+                "Invalid shipping fee received from server."
+            );
+
+        }
+
+
+        shippingFee = fee;
+
+
+        console.log(
+            "Shipping fee:",
+            shippingFee
+        );
+
+
+        return shippingFee;
+
+
+    } catch (error) {
+
+        console.error(
+            "SHIPPING API ERROR:",
+            error
+        );
+
+
+        shippingFee = null;
+
+
+        throw error;
+
+    }
+
+}
+
+
+/* =========================================================
+   GET SHIPPING FEE
+========================================================= */
+
+function getCheckoutShipping() {
+
+    if (!checkoutItems.length) {
+
+        return 0;
+
+    }
+
+
+    /*
+     * Do not silently assume
+     * shipping is free.
+     */
+
+    if (shippingFee === null) {
+
+        throw new Error(
+            "Shipping fee has not been loaded."
+        );
+
+    }
+
+
+    return Number(shippingFee);
 
 }
 
@@ -168,7 +348,7 @@ async function loadCheckoutCart() {
     } catch (error) {
 
         console.error(
-            "Checkout cart error:",
+            "CHECKOUT CART ERROR:",
             error
         );
 
@@ -195,15 +375,15 @@ function showCheckoutError(message) {
 
 
     if (!root) {
+
         return;
+
     }
 
 
     root.innerHTML = `
 
-        <div
-            class="empty-state"
-        >
+        <div class="empty-state">
 
             <h3>
                 Something went wrong
@@ -236,7 +416,7 @@ function showCheckoutError(message) {
 
         retry.addEventListener(
             "click",
-            loadCheckoutCart
+            initializeCheckout
         );
 
     }
@@ -259,8 +439,8 @@ function getCheckoutTotals() {
 
                 return total +
                     (
-                        item.price *
-                        item.qty
+                        Number(item.price) *
+                        Number(item.qty)
                     );
 
             },
@@ -269,65 +449,27 @@ function getCheckoutTotals() {
 
 
     const shipping =
-        subtotal > 0
-            ? Number(
-                window.STORE_SETTINGS &&
-                STORE_SETTINGS.shipping_fee
-              ) || 0
+        checkoutItems.length
+            ? getCheckoutShipping()
             : 0;
 
 
-    const tax =
-        subtotal * 0.08;
-
+    /*
+     * TAX IS REMOVED.
+     */
 
     const total =
         subtotal +
-        shipping +
-        tax;
+        shipping;
 
 
     return {
 
         subtotal,
         shipping,
-        tax,
         total
 
     };
-
-}
-
-
-/* =========================================================
-   PRICE FORMAT
-========================================================= */
-
-function checkoutPrice(amount) {
-
-    if (
-        typeof PRICE_FMT ===
-        "function"
-    ) {
-
-        return PRICE_FMT(
-            amount
-        );
-
-    }
-
-
-    const symbol =
-        window.STORE_SETTINGS &&
-        STORE_SETTINGS.currency_symbol
-            ? STORE_SETTINGS.currency_symbol
-            : "₦";
-
-
-    return (
-        symbol +
-        Number(amount || 0).toFixed(2)
-    );
 
 }
 
@@ -345,7 +487,6 @@ function buildCheckoutSummary() {
     return `
 
         <aside class="checkout-summary">
-
 
             <h2>
                 Order Summary
@@ -365,21 +506,18 @@ function buildCheckoutSummary() {
                                     class="checkout-item"
                                 >
 
-
                                     <div
                                         class="checkout-item-img"
                                     >
 
                                         ${
                                             item.img
-
                                                 ? `
                                                     <img
                                                         src="${escapeCheckoutHTML(item.img)}"
                                                         alt="${escapeCheckoutHTML(item.name)}"
                                                     >
                                                   `
-
                                                 : ""
                                         }
 
@@ -389,7 +527,6 @@ function buildCheckoutSummary() {
                                         >
                                             ${item.qty}
                                         </span>
-
 
                                     </div>
 
@@ -410,7 +547,6 @@ function buildCheckoutSummary() {
                                         )}
                                     </strong>
 
-
                                 </div>
 
                             `
@@ -423,9 +559,7 @@ function buildCheckoutSummary() {
 
             <!-- SUBTOTAL -->
 
-            <div
-                class="summary-line"
-            >
+            <div class="summary-line">
 
                 <span>
                     Subtotal
@@ -442,42 +576,15 @@ function buildCheckoutSummary() {
 
             <!-- SHIPPING -->
 
-            <div
-                class="summary-line"
-            >
+            <div class="summary-line">
 
                 <span>
                     Shipping
                 </span>
 
                 <span>
-                    ${
-                        totals.shipping > 0
-
-                            ? checkoutPrice(
-                                totals.shipping
-                              )
-
-                            : checkoutPrice(0)
-                    }
-                </span>
-
-            </div>
-
-
-            <!-- TAX -->
-
-            <div
-                class="summary-line"
-            >
-
-                <span>
-                    Tax
-                </span>
-
-                <span>
                     ${checkoutPrice(
-                        totals.tax
+                        totals.shipping
                     )}
                 </span>
 
@@ -486,9 +593,7 @@ function buildCheckoutSummary() {
 
             <!-- TOTAL -->
 
-            <div
-                class="summary-total"
-            >
+            <div class="summary-total">
 
                 <span>
                     Total
@@ -505,9 +610,7 @@ function buildCheckoutSummary() {
 
             <!-- SECURITY -->
 
-            <div
-                class="secure-note"
-            >
+            <div class="secure-note">
 
                 ${
                     typeof icon ===
@@ -516,7 +619,7 @@ function buildCheckoutSummary() {
                         : ""
                 }
 
-                Secure checkout
+                Secure checkout with Paystack
 
             </div>
 
@@ -551,21 +654,17 @@ function renderCheckout() {
     }
 
 
-    /* EMPTY CART */
+    /* =====================================================
+       EMPTY CART
+    ===================================================== */
 
-    if (
-        !checkoutItems.length
-    ) {
+    if (!checkoutItems.length) {
 
         root.innerHTML = `
 
-            <div
-                class="empty-state"
-            >
+            <div class="empty-state">
 
-                <div
-                    class="empty-icon"
-                >
+                <div class="empty-icon">
 
                     ${
                         typeof icon ===
@@ -603,18 +702,20 @@ function renderCheckout() {
     }
 
 
-    /* CHECKOUT */
+    const deliveryPrice =
+        checkoutPrice(
+            getCheckoutShipping()
+        );
+
 
     root.innerHTML = `
 
-        <div
-            class="checkout-layout"
-        >
+        <div class="checkout-layout">
 
 
-            <!-- =====================================
-                 FORM
-            ====================================== -->
+            <!-- =========================================
+                 CHECKOUT FORM
+            ========================================== -->
 
             <form
                 class="checkout-form"
@@ -623,19 +724,15 @@ function renderCheckout() {
             >
 
 
-                <!-- =================================
-                     CONTACT
-                ================================== -->
+                <!-- =====================================
+                     STEP 1 — CONTACT
+                ====================================== -->
 
-                <div
-                    class="checkout-card"
-                >
+                <div class="checkout-card">
 
                     <h2>
 
-                        <span
-                            class="step-num"
-                        >
+                        <span class="step-num">
                             1
                         </span>
 
@@ -644,42 +741,32 @@ function renderCheckout() {
                     </h2>
 
 
-                    <div
-                        class="form-row"
-                    >
+                    <div class="field">
+
+                        <label for="email">
+                            Email address
+                        </label>
 
 
-                        <div
-                            class="field"
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            autocomplete="email"
+                            placeholder="you@example.com"
                         >
 
-                            <label
-                                for="email"
-                            >
-                                Email address
-                            </label>
+                    </div>
 
 
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                required
-                                autocomplete="email"
-                                placeholder="you@example.com"
-                            >
-
-                        </div>
+                    <div class="form-row">
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="phone"
-                            >
-                                Phone number
+                            <label for="phone">
+                                Your phone number
                             </label>
 
 
@@ -689,7 +776,28 @@ function renderCheckout() {
                                 name="phone"
                                 required
                                 autocomplete="tel"
-                                placeholder="Phone number"
+                                inputmode="tel"
+                                placeholder="Your phone number"
+                            >
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label for="alternate-phone">
+                                Alternative phone number
+                            </label>
+
+
+                            <input
+                                type="tel"
+                                id="alternate-phone"
+                                name="alternate_phone"
+                                required
+                                autocomplete="tel"
+                                inputmode="tel"
+                                placeholder="Someone close to you"
                             >
 
                         </div>
@@ -697,22 +805,45 @@ function renderCheckout() {
 
                     </div>
 
+
+                    <div class="field">
+
+                        <label
+                            for="alternate-contact-name"
+                        >
+                            Alternative contact name
+                        </label>
+
+
+                        <input
+                            type="text"
+                            id="alternate-contact-name"
+                            name="alternate_contact_name"
+                            required
+                            autocomplete="name"
+                            placeholder="Full name of contact person"
+                        >
+
+
+                        <small>
+                            We may contact this person if we cannot reach you.
+                        </small>
+
+                    </div>
+
+
                 </div>
 
 
-                <!-- =================================
-                     ADDRESS
-                ================================== -->
+                <!-- =====================================
+                     STEP 2 — SHIPPING ADDRESS
+                ====================================== -->
 
-                <div
-                    class="checkout-card"
-                >
+                <div class="checkout-card">
 
                     <h2>
 
-                        <span
-                            class="step-num"
-                        >
+                        <span class="step-num">
                             2
                         </span>
 
@@ -721,18 +852,12 @@ function renderCheckout() {
                     </h2>
 
 
-                    <div
-                        class="form-row"
-                    >
+                    <div class="form-row">
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="fname"
-                            >
+                            <label for="fname">
                                 First name
                             </label>
 
@@ -743,18 +868,15 @@ function renderCheckout() {
                                 name="first_name"
                                 required
                                 autocomplete="given-name"
+                                placeholder="First name"
                             >
 
                         </div>
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="lname"
-                            >
+                            <label for="lname">
                                 Last name
                             </label>
 
@@ -765,6 +887,7 @@ function renderCheckout() {
                                 name="last_name"
                                 required
                                 autocomplete="family-name"
+                                placeholder="Last name"
                             >
 
                         </div>
@@ -773,13 +896,9 @@ function renderCheckout() {
                     </div>
 
 
-                    <div
-                        class="field"
-                    >
+                    <div class="field">
 
-                        <label
-                            for="address"
-                        >
+                        <label for="address">
                             Street address
                         </label>
 
@@ -796,18 +915,12 @@ function renderCheckout() {
                     </div>
 
 
-                    <div
-                        class="form-row"
-                    >
+                    <div class="form-row">
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="city"
-                            >
+                            <label for="city">
                                 City
                             </label>
 
@@ -818,19 +931,16 @@ function renderCheckout() {
                                 name="city"
                                 required
                                 autocomplete="address-level2"
+                                placeholder="City"
                             >
 
                         </div>
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="state"
-                            >
-                                State
+                            <label for="state">
+                                State / Region
                             </label>
 
 
@@ -840,6 +950,7 @@ function renderCheckout() {
                                 name="state"
                                 required
                                 autocomplete="address-level1"
+                                placeholder="State / Region"
                             >
 
                         </div>
@@ -848,18 +959,12 @@ function renderCheckout() {
                     </div>
 
 
-                    <div
-                        class="form-row"
-                    >
+                    <div class="form-row">
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="zip"
-                            >
+                            <label for="zip">
                                 ZIP / Postal code
                             </label>
 
@@ -870,18 +975,15 @@ function renderCheckout() {
                                 name="zip"
                                 required
                                 autocomplete="postal-code"
+                                placeholder="Postal code"
                             >
 
                         </div>
 
 
-                        <div
-                            class="field"
-                        >
+                        <div class="field">
 
-                            <label
-                                for="country"
-                            >
+                            <label for="country">
                                 Country
                             </label>
 
@@ -893,68 +995,41 @@ function renderCheckout() {
                                 autocomplete="country"
                             >
 
-                                <option
-                                    value=""
-                                >
+                                <option value="">
                                     Select country
                                 </option>
 
-
-                                <option
-                                    value="Nigeria"
-                                >
+                                <option value="Nigeria">
                                     Nigeria
                                 </option>
 
-
-                                <option
-                                    value="United States"
-                                >
+                                <option value="United States">
                                     United States
                                 </option>
 
-
-                                <option
-                                    value="Canada"
-                                >
+                                <option value="Canada">
                                     Canada
                                 </option>
 
-
-                                <option
-                                    value="United Kingdom"
-                                >
+                                <option value="United Kingdom">
                                     United Kingdom
                                 </option>
 
-
-                                <option
-                                    value="Australia"
-                                >
+                                <option value="Australia">
                                     Australia
                                 </option>
 
-
-                                <option
-                                    value="Germany"
-                                >
+                                <option value="Germany">
                                     Germany
                                 </option>
 
-
-                                <option
-                                    value="France"
-                                >
+                                <option value="France">
                                     France
                                 </option>
 
-
-                                <option
-                                    value="Ghana"
-                                >
+                                <option value="Ghana">
                                     Ghana
                                 </option>
-
 
                             </select>
 
@@ -966,19 +1041,15 @@ function renderCheckout() {
                 </div>
 
 
-                <!-- =================================
-                     DELIVERY
-                ================================== -->
+                <!-- =====================================
+                     STEP 3 — DELIVERY
+                ====================================== -->
 
-                <div
-                    class="checkout-card"
-                >
+                <div class="checkout-card">
 
                     <h2>
 
-                        <span
-                            class="step-num"
-                        >
+                        <span class="step-num">
                             3
                         </span>
 
@@ -987,10 +1058,7 @@ function renderCheckout() {
                     </h2>
 
 
-                    <div
-                        class="delivery-options"
-                    >
-
+                    <div class="delivery-options">
 
                         <label
                             class="delivery-opt"
@@ -1010,6 +1078,7 @@ function renderCheckout() {
                                     Standard Delivery
                                 </strong>
 
+
                                 <small>
                                     Delivery time will be confirmed after order processing
                                 </small>
@@ -1020,252 +1089,56 @@ function renderCheckout() {
                             <span
                                 class="delivery-price"
                             >
-
-                                ${
-                                    Number(
-                                        STORE_SETTINGS?.shipping_fee
-                                    ) > 0
-
-                                        ? checkoutPrice(
-                                            STORE_SETTINGS.shipping_fee
-                                          )
-
-                                        : checkoutPrice(0)
-                                }
-
+                                ${deliveryPrice}
                             </span>
-
 
                         </label>
 
-
                     </div>
 
                 </div>
 
 
-                <!-- =================================
-                     PAYMENT
-                ================================== -->
+                <!-- =====================================
+                     FINAL BUTTON
+                ====================================== -->
 
-                <div
-                    class="checkout-card"
-                >
+                <div class="checkout-final">
 
-                    <h2>
-
-                        <span
-                            class="step-num"
-                        >
-                            4
-                        </span>
-
-                        Payment
-
-                    </h2>
-
-
-                    <div
-                        class="pay-methods"
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-lg btn-block"
+                        id="place-order"
                     >
 
+                        ${
+                            typeof icon ===
+                            "function"
+                                ? icon("shield")
+                                : ""
+                        }
 
-                        <button
-                            type="button"
-                            class="pay-method active"
-                            data-payment="card"
-                        >
+                        Place Order & Pay with Paystack
 
-                            ${
-                                typeof icon ===
-                                "function"
-                                    ? icon("shield")
-                                    : ""
-                            }
-
-                            Credit Card
-
-                        </button>
+                    </button>
 
 
-                        <button
-                            type="button"
-                            class="pay-method"
-                            data-payment="paypal"
-                        >
-
-                            PayPal
-
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="pay-method"
-                            data-payment="applepay"
-                        >
-
-                            Apple Pay
-
-                        </button>
-
-
-                    </div>
-
-
-                    <div
+                    <p
                         class="payment-message"
-                        id="payment-message"
                     >
 
-                        Your payment will be processed securely.
+                        Your payment will be processed
+                        securely by Paystack.
 
-                    </div>
-
-
-                    <!-- CARD -->
-
-                    <div
-                        id="card-fields"
-                    >
-
-
-                        <div
-                            class="field"
-                        >
-
-                            <label
-                                for="cardname"
-                            >
-                                Name on card
-                            </label>
-
-
-                            <input
-                                type="text"
-                                id="cardname"
-                                name="cardname"
-                                autocomplete="cc-name"
-                                placeholder="Name on card"
-                            >
-
-                        </div>
-
-
-                        <div
-                            class="field"
-                        >
-
-                            <label
-                                for="card"
-                            >
-                                Card number
-                            </label>
-
-
-                            <input
-                                type="text"
-                                id="card"
-                                name="card"
-                                inputmode="numeric"
-                                autocomplete="cc-number"
-                                placeholder="1234 5678 9012 3456"
-                                maxlength="19"
-                            >
-
-                        </div>
-
-
-                        <div
-                            class="form-row"
-                        >
-
-
-                            <div
-                                class="field"
-                            >
-
-                                <label
-                                    for="exp"
-                                >
-                                    Expiry date
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    id="exp"
-                                    name="exp"
-                                    inputmode="numeric"
-                                    autocomplete="cc-exp"
-                                    placeholder="MM/YY"
-                                    maxlength="5"
-                                >
-
-                            </div>
-
-
-                            <div
-                                class="field"
-                            >
-
-                                <label
-                                    for="cvc"
-                                >
-                                    CVC
-                                </label>
-
-
-                                <input
-                                    type="password"
-                                    id="cvc"
-                                    name="cvc"
-                                    inputmode="numeric"
-                                    autocomplete="cc-csc"
-                                    placeholder="123"
-                                    maxlength="4"
-                                >
-
-                            </div>
-
-
-                        </div>
-
-
-                    </div>
-
+                    </p>
 
                 </div>
-
-
-                <!-- =================================
-                     PLACE ORDER
-                ================================== -->
-
-                <button
-                    type="submit"
-                    class="btn btn-primary btn-lg btn-block"
-                    id="place-order"
-                >
-
-                    ${
-                        typeof icon ===
-                        "function"
-                            ? icon("shield")
-                            : ""
-                    }
-
-                    Place Order
-
-                </button>
 
 
             </form>
 
 
-            <!-- =====================================
-                 SUMMARY
-            ====================================== -->
+            <!-- ORDER SUMMARY -->
 
             ${buildCheckoutSummary()}
 
@@ -1276,190 +1149,6 @@ function renderCheckout() {
 
 
     setupCheckoutForm();
-
-}
-
-
-/* =========================================================
-   PAYMENT METHOD
-========================================================= */
-
-function setupPaymentMethods() {
-
-    const buttons =
-        document.querySelectorAll(
-            ".pay-method"
-        );
-
-
-    const cardFields =
-        document.querySelector(
-            "#card-fields"
-        );
-
-
-    buttons.forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    buttons.forEach(
-                        item => {
-
-                            item.classList.remove(
-                                "active"
-                            );
-
-                        }
-                    );
-
-
-                    button.classList.add(
-                        "active"
-                    );
-
-
-                    selectedPayment =
-                        button.dataset.payment;
-
-
-                    if (cardFields) {
-
-                        cardFields.style.display =
-                            selectedPayment === "card"
-                                ? ""
-                                : "none";
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CARD NUMBER
-========================================================= */
-
-function setupCardNumber() {
-
-    const card =
-        document.querySelector(
-            "#card"
-        );
-
-
-    if (!card) {
-        return;
-    }
-
-
-    card.addEventListener(
-        "input",
-        function () {
-
-            let value =
-                card.value
-                    .replace(/\D/g, "")
-                    .slice(0, 16);
-
-
-            card.value =
-                value
-                    .replace(
-                        /(.{4})/g,
-                        "$1 "
-                    )
-                    .trim();
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   EXPIRY
-========================================================= */
-
-function setupExpiry() {
-
-    const input =
-        document.querySelector(
-            "#exp"
-        );
-
-
-    if (!input) {
-        return;
-    }
-
-
-    input.addEventListener(
-        "input",
-        function () {
-
-            let value =
-                input.value
-                    .replace(/\D/g, "")
-                    .slice(0, 4);
-
-
-            if (
-                value.length >= 3
-            ) {
-
-                value =
-                    value.substring(0, 2) +
-                    "/" +
-                    value.substring(2);
-
-            }
-
-
-            input.value =
-                value;
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CVC
-========================================================= */
-
-function setupCVC() {
-
-    const input =
-        document.querySelector(
-            "#cvc"
-        );
-
-
-    if (!input) {
-        return;
-    }
-
-
-    input.addEventListener(
-        "input",
-        function () {
-
-            input.value =
-                input.value
-                    .replace(/\D/g, "")
-                    .slice(0, 4);
-
-        }
-    );
 
 }
 
@@ -1481,36 +1170,6 @@ function validateCheckoutForm(form) {
         )
         .forEach(
             input => {
-
-                /*
-                 * Card fields only matter
-                 * when Credit Card is selected.
-                 */
-
-                const isCardField =
-                    [
-                        "card",
-                        "exp",
-                        "cvc",
-                        "cardname"
-                    ].includes(
-                        input.id
-                    );
-
-
-                if (
-                    isCardField &&
-                    selectedPayment !== "card"
-                ) {
-
-                    input.classList.remove(
-                        "invalid"
-                    );
-
-                    return;
-
-                }
-
 
                 const value =
                     input.value.trim();
@@ -1534,11 +1193,14 @@ function validateCheckoutForm(form) {
                 }
 
 
-                /* CARD */
+                /* PHONE */
 
                 if (
-                    input.id === "card" &&
-                    selectedPayment === "card"
+                    (
+                        input.id === "phone" ||
+                        input.id === "alternate-phone"
+                    ) &&
+                    fieldValid
                 ) {
 
                     const digits =
@@ -1549,35 +1211,22 @@ function validateCheckoutForm(form) {
 
 
                     fieldValid =
-                        digits.length === 16;
+                        digits.length >= 7 &&
+                        digits.length <= 15;
 
                 }
 
 
-                /* EXPIRY */
+                /* ALTERNATIVE CONTACT */
 
                 if (
-                    input.id === "exp" &&
-                    selectedPayment === "card"
+                    input.id ===
+                    "alternate-contact-name" &&
+                    fieldValid
                 ) {
 
                     fieldValid =
-                        /^\d{2}\/\d{2}$/
-                            .test(value);
-
-                }
-
-
-                /* CVC */
-
-                if (
-                    input.id === "cvc" &&
-                    selectedPayment === "card"
-                ) {
-
-                    fieldValid =
-                        /^\d{3,4}$/
-                            .test(value);
+                        value.length >= 2;
 
                 }
 
@@ -1628,7 +1277,7 @@ function validateCheckoutForm(form) {
 
 
 /* =========================================================
-   COLLECT FORM DATA
+   COLLECT CHECKOUT DATA
 ========================================================= */
 
 function getCheckoutData() {
@@ -1648,6 +1297,18 @@ function getCheckoutData() {
         phone:
             document.querySelector(
                 "#phone"
+            )?.value.trim() || "",
+
+
+        alternate_phone:
+            document.querySelector(
+                "#alternate-phone"
+            )?.value.trim() || "",
+
+
+        alternate_contact_name:
+            document.querySelector(
+                "#alternate-contact-name"
             )?.value.trim() || "",
 
 
@@ -1699,21 +1360,19 @@ function getCheckoutData() {
             )?.value || "standard",
 
 
-        payment_method:
-            selectedPayment,
-
+        /*
+         * These values are sent as JSON.
+         *
+         * IMPORTANT:
+         * Django should recalculate the final
+         * amount from its own database.
+         */
 
         subtotal:
             totals.subtotal,
 
-
         shipping:
             totals.shipping,
-
-
-        tax:
-            totals.tax,
-
 
         total:
             totals.total,
@@ -1750,7 +1409,9 @@ async function placeOrder() {
 
 
     if (!button) {
+
         return;
+
     }
 
 
@@ -1763,13 +1424,19 @@ async function placeOrder() {
 
 
     button.innerHTML =
-        "Processing...";
+        "Preparing secure payment...";
 
 
     try {
 
         const checkoutData =
             getCheckoutData();
+
+
+        console.log(
+            "Checkout JSON:",
+            checkoutData
+        );
 
 
         const response =
@@ -1836,19 +1503,35 @@ async function placeOrder() {
 
             throw new Error(
                 data.message ||
-                "Order could not be created."
+                "Unable to initialize payment."
             );
 
         }
 
 
         /*
-         * ONLY show success when Django
-         * confirms the order.
+         * Paystack authorization URL.
          */
 
-        showOrderSuccess(
-            data
+        const paymentURL =
+            data.payment_url ||
+            data.authorization_url ||
+            data.data?.authorization_url ||
+            "";
+
+
+        if (paymentURL) {
+
+            window.location.href =
+                paymentURL;
+
+            return;
+
+        }
+
+
+        throw new Error(
+            "Paystack payment could not be initialized."
         );
 
 
@@ -1875,7 +1558,7 @@ async function placeOrder() {
 
             toast(
                 error.message ||
-                "Unable to place order.",
+                "Unable to start payment.",
                 "close"
             );
 
@@ -1883,7 +1566,7 @@ async function placeOrder() {
 
             alert(
                 error.message ||
-                "Unable to place order."
+                "Unable to start payment."
             );
 
         }
@@ -1894,225 +1577,10 @@ async function placeOrder() {
 
 
 /* =========================================================
-   SUCCESS
-========================================================= */
-
-function showOrderSuccess(data) {
-
-    const root =
-        document.querySelector(
-            "#checkout-root"
-        );
-
-
-    if (!root) {
-        return;
-    }
-
-
-    const totals =
-        getCheckoutTotals();
-
-
-    const orderNumber =
-        data.order_number ||
-        data.order_id ||
-        "Created";
-
-
-    const total =
-        Number(
-            data.total ??
-            totals.total
-        );
-
-
-    root.innerHTML = `
-
-        <div
-            class="order-success"
-        >
-
-
-            <div
-                class="success-check"
-            >
-
-                ${
-                    typeof icon ===
-                    "function"
-                        ? icon("check")
-                        : "✓"
-                }
-
-            </div>
-
-
-            <h1>
-                Order Confirmed!
-            </h1>
-
-
-            <p>
-
-                Thank you for your purchase.
-
-                Your order
-
-                <strong>
-                    #${escapeCheckoutHTML(
-                        orderNumber
-                    )}
-                </strong>
-
-                has been received.
-
-            </p>
-
-
-            <div
-                class="success-detail"
-            >
-
-
-                <div>
-
-                    <span>
-                        Order number
-                    </span>
-
-                    <strong>
-                        #${escapeCheckoutHTML(
-                            orderNumber
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Total
-                    </span>
-
-                    <strong>
-                        ${checkoutPrice(
-                            total
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Payment
-                    </span>
-
-                    <strong>
-                        ${escapeCheckoutHTML(
-                            selectedPayment
-                        )}
-                    </strong>
-
-                </div>
-
-
-            </div>
-
-
-            ${
-                data.payment_url
-
-                    ? `
-
-                        <p
-                            class="success-note"
-                        >
-                            Continue to the secure payment page.
-                        </p>
-
-
-                        <div
-                            class="success-actions"
-                        >
-
-                            <a
-                                href="${escapeCheckoutHTML(
-                                    data.payment_url
-                                )}"
-                                class="btn btn-primary btn-lg"
-                            >
-                                Continue to Payment
-                            </a>
-
-                        </div>
-
-                      `
-
-                    : `
-
-                        <p
-                            class="success-note"
-                        >
-                            Your order has been successfully received.
-                        </p>
-
-
-                        <div
-                            class="success-actions"
-                        >
-
-                            <a
-                                href="/shop/"
-                                class="btn btn-primary btn-lg"
-                            >
-                                Continue Shopping
-                            </a>
-
-
-                            <a
-                                href="/account/orders/"
-                                class="btn btn-outline btn-lg"
-                            >
-                                View Orders
-                            </a>
-
-                        </div>
-
-                      `
-            }
-
-
-        </div>
-
-    `;
-
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
-}
-
-
-/* =========================================================
    FORM SETUP
 ========================================================= */
 
 function setupCheckoutForm() {
-
-    setupPaymentMethods();
-
-    setupCardNumber();
-
-    setupExpiry();
-
-    setupCVC();
-
 
     const form =
         document.querySelector(
@@ -2121,13 +1589,15 @@ function setupCheckoutForm() {
 
 
     if (!form) {
+
         return;
+
     }
 
 
     form.addEventListener(
         "submit",
-        async function (event) {
+        async function(event) {
 
             event.preventDefault();
 
@@ -2166,48 +1636,50 @@ function setupCheckoutForm() {
 
 
 /* =========================================================
-   START CHECKOUT
+   INITIALIZE CHECKOUT
+========================================================= */
+
+async function initializeCheckout() {
+
+    try {
+
+        /*
+         * 1. Get shipping fee from Django.
+         */
+
+        await loadShippingFee();
+
+
+        /*
+         * 2. Load cart from Django.
+         */
+
+        await loadCheckoutCart();
+
+
+    } catch (error) {
+
+        console.error(
+            "CHECKOUT START ERROR:",
+            error
+        );
+
+
+        showCheckoutError(
+            error.message ||
+            "Unable to initialize checkout."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   START
 ========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
-    async function () {
-
-        try {
-
-            /*
-             * Load currency + shipping
-             * from Django Admin.
-             */
-
-            if (
-                typeof loadStoreSettings ===
-                "function"
-            ) {
-
-                await loadStoreSettings();
-
-            }
-
-
-            /*
-             * Load the real Django cart.
-             */
-
-            await loadCheckoutCart();
-
-        } catch (error) {
-
-            console.error(
-                "CHECKOUT START ERROR:",
-                error
-            );
-
-            showCheckoutError(
-                "Unable to initialize checkout."
-            );
-
-        }
-
-    }
+    initializeCheckout
 );

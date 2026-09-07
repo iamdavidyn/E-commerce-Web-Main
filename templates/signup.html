@@ -1,106 +1,1146 @@
-<!DOCTYPE html>
 {% load static %}
-<html lang="en" class="bg-background">
 
-<head>
-  <script>
-    // Set theme before first paint to avoid a light/dark flash.
+<!DOCTYPE html><html lang="en" class="bg-background"><head><!-- Theme before first paint -->
+<script>
     (function () {
-      try {
-        var saved = localStorage.getItem('luxe-theme');
-        var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch (e) {}
+        try {
+            var saved = localStorage.getItem('luxe-theme');
+
+            var theme = saved || (
+                window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light'
+            );
+
+            document.documentElement.setAttribute('data-theme', theme);
+
+        } catch (e) {}
     })();
-  </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ff6b00">
-    <title>Sign Up | LUXE</title>
-    <meta name="description"
-        content="Create a new LUXE account for faster checkout, order tracking and wishlist management.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</script>
 
-    <style>
-        .message {
-            padding: 14px 16px;
-            border-radius: 14px;
-            margin-bottom: 12px;
-            font-weight: 600;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ff6b00">
+
+<title>Create Account | LUXE</title>
+
+<meta name="description"
+    content="Create a new LUXE account for faster checkout, order tracking and wishlist management.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+    rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+
+<style>
+
+    /* =========================================================
+       LUXE — MODERN SIGN UP PAGE
+    ========================================================= */
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Inter", sans-serif;
+    }
+
+
+    /* =========================================================
+       PAGE
+    ========================================================= */
+
+    .signup-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+
+    /* Decorative background */
+
+    .signup-page::before {
+        content: "";
+        position: fixed;
+
+        width: 420px;
+        height: 420px;
+
+        border-radius: 50%;
+
+        background: rgba(255, 107, 0, 0.08);
+
+        top: -180px;
+        left: -160px;
+
+        pointer-events: none;
+    }
+
+
+    .signup-page::after {
+        content: "";
+        position: fixed;
+
+        width: 360px;
+        height: 360px;
+
+        border-radius: 50%;
+
+        background: rgba(255, 107, 0, 0.06);
+
+        bottom: -180px;
+        right: -140px;
+
+        pointer-events: none;
+    }
+
+
+    .signup-container {
+        width: 100%;
+        max-width: 440px;
+
+        position: relative;
+        z-index: 2;
+    }
+
+
+    /* =========================================================
+       BRAND
+    ========================================================= */
+
+    .signup-brand {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+
+    .signup-brand a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+
+    .signup-brand-name {
+        margin: 0;
+
+        font-family: "Poppins", sans-serif;
+
+        font-size: 30px;
+        font-weight: 800;
+
+        letter-spacing: 5px;
+    }
+
+
+    .signup-brand-dot {
+        color: #ff6b00;
+    }
+
+
+    /* =========================================================
+       CARD
+    ========================================================= */
+
+    .signup-card {
+        border: 1px solid rgba(128, 128, 128, 0.18);
+
+        border-radius: 26px;
+
+        padding: 34px;
+
+        background: var(
+            --card-bg,
+            rgba(255, 255, 255, 0.92)
+        );
+
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.08);
+
+        backdrop-filter: blur(16px);
+    }
+
+
+    [data-theme="dark"] .signup-card {
+        background: rgba(25, 25, 25, 0.88);
+
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+
+    /* =========================================================
+       HEADING
+    ========================================================= */
+
+    .signup-heading {
+        text-align: center;
+        margin-bottom: 27px;
+    }
+
+
+    .signup-heading h1 {
+        margin: 0 0 9px;
+
+        font-family: "Poppins", sans-serif;
+
+        font-size: 28px;
+        font-weight: 700;
+
+        letter-spacing: -0.5px;
+    }
+
+
+    .signup-heading p {
+        margin: 0;
+
+        opacity: 0.65;
+
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       GOOGLE
+    ========================================================= */
+
+    .google-btn {
+        width: 100%;
+
+        min-height: 52px;
+
+        border: 1px solid rgba(128, 128, 128, 0.25);
+
+        border-radius: 14px;
+
+        background: transparent;
+
+        color: inherit;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 12px;
+
+        font-family: "Inter", sans-serif;
+
+        font-size: 14px;
+        font-weight: 600;
+
+        text-decoration: none;
+
+        cursor: pointer;
+
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .google-btn:hover {
+        transform: translateY(-1px);
+
+        border-color: rgba(255, 107, 0, 0.45);
+
+        background: rgba(255, 107, 0, 0.04);
+    }
+
+
+    .google-icon {
+        width: 19px;
+        height: 19px;
+        flex-shrink: 0;
+    }
+
+
+    /* =========================================================
+       DIVIDER
+    ========================================================= */
+
+    .signup-divider {
+        display: flex;
+
+        align-items: center;
+
+        gap: 14px;
+
+        margin: 25px 0;
+
+        font-size: 11px;
+
+        opacity: 0.55;
+
+        letter-spacing: 0.3px;
+    }
+
+
+    .signup-divider::before,
+    .signup-divider::after {
+        content: "";
+
+        height: 1px;
+
+        flex: 1;
+
+        background: currentColor;
+
+        opacity: 0.25;
+    }
+
+
+    /* =========================================================
+       FORM
+    ========================================================= */
+
+    .signup-form {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 17px;
+    }
+
+
+    .form-field {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 8px;
+    }
+
+
+    .form-field label {
+        font-size: 13px;
+
+        font-weight: 600;
+    }
+
+
+    .input-wrap {
+        position: relative;
+    }
+
+
+    .signup-input {
+        width: 100%;
+
+        height: 54px;
+
+        border: 1px solid rgba(128, 128, 128, 0.25);
+
+        border-radius: 14px;
+
+        padding: 0 16px;
+
+        outline: none;
+
+        background: transparent;
+
+        color: inherit;
+
+        font-family: "Inter", sans-serif;
+
+        font-size: 14px;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .signup-input::placeholder {
+        opacity: 0.45;
+    }
+
+
+    .signup-input:focus {
+        border-color: #ff6b00;
+
+        box-shadow:
+            0 0 0 4px rgba(255, 107, 0, 0.10);
+    }
+
+
+    .password-input {
+        padding-right: 52px;
+    }
+
+
+    /* =========================================================
+       PASSWORD TOGGLE
+    ========================================================= */
+
+    .password-toggle {
+        position: absolute;
+
+        right: 7px;
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        width: 40px;
+        height: 40px;
+
+        border: 0;
+
+        background: transparent;
+
+        color: inherit;
+
+        opacity: 0.55;
+
+        cursor: pointer;
+
+        border-radius: 10px;
+    }
+
+
+    .password-toggle:hover {
+        background: rgba(128, 128, 128, 0.10);
+
+        opacity: 1;
+    }
+
+
+    .password-toggle svg {
+        width: 19px;
+        height: 19px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.8;
+    }
+
+
+    /* =========================================================
+       PASSWORD HINT
+    ========================================================= */
+
+    .password-hint {
+        font-size: 11px;
+
+        opacity: 0.5;
+
+        margin-top: -2px;
+    }
+
+
+    /* =========================================================
+       SUBMIT
+    ========================================================= */
+
+    .signup-submit {
+        width: 100%;
+
+        height: 54px;
+
+        border: 0;
+
+        border-radius: 14px;
+
+        background: #ff6b00;
+
+        color: #fff;
+
+        font-family: "Inter", sans-serif;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        box-shadow:
+            0 10px 24px rgba(255, 107, 0, 0.20);
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .signup-submit:hover {
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 14px 30px rgba(255, 107, 0, 0.28);
+
+        background: #f46100;
+    }
+
+
+    .signup-submit:active {
+        transform: translateY(0);
+    }
+
+
+    /* =========================================================
+       DJANGO MESSAGES
+    ========================================================= */
+
+    .messages {
+        margin-bottom: 20px;
+    }
+
+
+    .message {
+        padding: 13px 14px;
+
+        border-radius: 12px;
+
+        font-size: 13px;
+
+        font-weight: 500;
+    }
+
+
+    .message.error {
+        background: rgba(207, 4, 4, 0.08);
+
+        color: #cf0404;
+
+        border: 1px solid rgba(207, 4, 4, 0.18);
+    }
+
+
+    .message.success {
+        background: rgba(39, 161, 23, 0.10);
+
+        color: #229116;
+
+        border: 1px solid rgba(39, 161, 23, 0.20);
+    }
+
+
+    /* =========================================================
+       LOGIN LINK
+    ========================================================= */
+
+    .signup-footer {
+        text-align: center;
+
+        margin-top: 25px;
+
+        font-size: 13px;
+
+        opacity: 0.7;
+    }
+
+
+    .signup-footer a {
+        color: #ff6b00;
+
+        font-weight: 700;
+
+        text-decoration: none;
+    }
+
+
+    .signup-footer a:hover {
+        text-decoration: underline;
+    }
+
+
+    /* =========================================================
+       SECURITY
+    ========================================================= */
+
+    .signup-security {
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-top: 22px;
+
+        font-size: 11px;
+
+        opacity: 0.45;
+    }
+
+
+    .signup-security svg {
+        width: 14px;
+        height: 14px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.8;
+    }
+
+
+    /* =========================================================
+       THEME TOGGLE
+    ========================================================= */
+
+    .signup-theme-toggle {
+        position: fixed;
+
+        top: 20px;
+        right: 20px;
+
+        width: 42px;
+        height: 42px;
+
+        border-radius: 50%;
+
+        border: 1px solid rgba(128, 128, 128, 0.20);
+
+        background: rgba(255, 255, 255, 0.55);
+
+        color: inherit;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        cursor: pointer;
+
+        z-index: 10;
+
+        backdrop-filter: blur(10px);
+    }
+
+
+    [data-theme="dark"] .signup-theme-toggle {
+        background: rgba(30, 30, 30, 0.65);
+    }
+
+
+    .signup-theme-toggle svg {
+        width: 19px;
+        height: 19px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.7;
+    }
+
+
+    /* =========================================================
+       MOBILE
+    ========================================================= */
+
+    @media (max-width: 520px) {
+
+        .signup-page {
+            padding: 20px 14px;
         }
 
-        .message.error {
-            background: rgba(49, 5, 5, 0.16);
-            color: #cf0404;
-            margin-top: 20px;
-            border: 1px solid rgba(190, 0, 0, 0.25);
+
+        .signup-card {
+            padding: 26px 20px;
+
+            border-radius: 22px;
         }
 
-        .message.success {
-            background: rgba(39, 161, 23, 0.16);
-            color: #5af199;
-            margin-top: 20px;
-            border: 1px solid rgba(48, 172, 58, 0.966);
+
+        .signup-brand {
+            margin-bottom: 22px;
         }
-    </style>
-</head>
 
-<body data-page="signup">
-  <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
-    <div id="site-header"></div>
 
-    <main>
-        <section class="auth-wrap">
-            <div class="auth-card">
+        .signup-brand-name {
+            font-size: 26px;
+        }
+
+
+        .signup-heading h1 {
+            font-size: 25px;
+        }
+
+
+        .signup-theme-toggle {
+            top: 14px;
+            right: 14px;
+        }
+
+    }
+
+</style>
+
+</head><body data-page="signup"><!-- =========================================================
+     THEME TOGGLE
+========================================================= -->
+
+<button
+    type="button"
+    class="signup-theme-toggle"
+    id="theme-toggle"
+    aria-label="Toggle dark mode"
+    title="Toggle dark mode">
+
+    <svg class="icon-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4"></circle>
+
+        <path d="
+            M12 2v2
+            M12 20v2
+            M4.93 4.93l1.41 1.41
+            M17.66 17.66l1.41 1.41
+            M2 12h2
+            M20 12h2
+            M6.34 17.66l-1.41 1.41
+            M19.07 4.93l-1.41 1.41
+        "/>
+    </svg>
+
+
+    <svg class="icon-moon" viewBox="0 0 24 24">
+        <path d="
+            M21 12.79
+            A9 9 0 1 1
+            11.21 3
+            A7 7 0 0 0
+            21 12.79z
+        "/>
+    </svg>
+
+</button>
+
+
+
+<!-- =========================================================
+     SIGN UP
+========================================================= -->
+
+<main class="signup-page">
+
+    <div class="signup-container">
+
+
+        <!-- BRAND -->
+
+        <div class="signup-brand">
+
+            <a href="/">
+
+                <h2 class="signup-brand-name">
+                    LUXE<span class="signup-brand-dot">.</span>
+                </h2>
+
+            </a>
+
+        </div>
+
+
+
+        <!-- CARD -->
+
+        <div class="signup-card">
+
+
+            <!-- HEADING -->
+
+            <div class="signup-heading">
+
                 <h1>Create your account</h1>
-                  {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                    <div class="message {{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <p class="sub">Sign up and start saving favorites, tracking orders, and checking out faster.</p>
-                <form class="form-row" method="post">
-                    {% csrf_token %}
-                    <div class="form-field"><label for="signup-name">Full name</label><input id="signup-name"
-                            type="text" name="full_name" placeholder="Your name"></div>
-                    <div class="form-field"><label for="signup-email">Email address</label><input id="signup-email"
-                            type="email" name="email" placeholder="you@example.com"></div>
-                    <div class="form-field"><label for="signup-email">Username:</label><input id="signup-email"
-                            type="username" name="username" placeholder="username"></div>
-                    <div class="form-field"><label for="signup-password">Password</label><input id="signup-password"
-                            type="password" name="password" placeholder="Create a password"></div>
-                    <button type="submit" class="btn btn-primary btn-lg btn-block">Create Account</button>
-                </form>
-                <div class="auth-foot">Already have an account? <a href="login.html">Sign in</a></div>
+
+                <p>
+                    Join LUXE and enjoy faster checkout,
+                    order tracking and saved favorites.
+                </p>
+
             </div>
-        </section>
-    </main>
 
-    <div id="site-footer"></div>
 
-    <script src="{% static 'js/main.js' %}"></script>
-  <script>
+
+            <!-- DJANGO MESSAGES -->
+
+            {% if messages %}
+
+            <div class="messages">
+
+                {% for message in messages %}
+
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+
+
+            <!-- GOOGLE SIGN UP -->
+
+            <!-- Connect this URL to your Django Google OAuth setup -->
+
+            <a
+                href="/accounts/google/login/"
+                class="google-btn">
+
+                <svg
+                    class="google-icon"
+                    viewBox="0 0 24 24">
+
+                    <path
+                        fill="#4285F4"
+                        d="M21.35 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.42z"/>
+
+                    <path
+                        fill="#34A853"
+                        d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.75z"/>
+
+                    <path
+                        fill="#FBBC05"
+                        d="M6.54 13.84A5.86 5.86 0 0 1 6.23 12c0-.64.11-1.26.31-1.84V7.63H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.37l3.25-2.53z"/>
+
+                    <path
+                        fill="#EA4335"
+                        d="M12 6.13c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.15 14.63 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.38l3.25 2.53C7.31 7.85 9.46 6.13 12 6.13z"/>
+
+                </svg>
+
+                Continue with Google
+
+            </a>
+
+
+
+            <!-- DIVIDER -->
+
+            <div class="signup-divider">
+
+                <span>OR SIGN UP WITH EMAIL</span>
+
+            </div>
+
+
+
+            <!-- FORM -->
+
+            <form
+                class="signup-form"
+                method="post">
+
+                {% csrf_token %}
+
+
+
+                <!-- FULL NAME -->
+
+                <div class="form-field">
+
+                    <label for="signup-name">
+                        Full name
+                    </label>
+
+                    <input
+                        id="signup-name"
+                        class="signup-input"
+                        type="text"
+                        name="full_name"
+                        placeholder="Your full name"
+                        autocomplete="name"
+                        required>
+
+                </div>
+
+
+
+                <!-- EMAIL -->
+
+                <div class="form-field">
+
+                    <label for="signup-email">
+                        Email address
+                    </label>
+
+                    <input
+                        id="signup-email"
+                        class="signup-input"
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required>
+
+                </div>
+
+
+
+                <!-- USERNAME -->
+
+                <div class="form-field">
+
+                    <label for="signup-username">
+                        Username
+                    </label>
+
+                    <input
+                        id="signup-username"
+                        class="signup-input"
+                        type="text"
+                        name="username"
+                        placeholder="Choose a username"
+                        autocomplete="username"
+                        required>
+
+                </div>
+
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-field">
+
+                    <label for="signup-password">
+                        Password
+                    </label>
+
+
+                    <div class="input-wrap">
+
+                        <input
+                            id="signup-password"
+                            class="signup-input password-input"
+                            type="password"
+                            name="password"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
+                            required>
+
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            id="password-toggle"
+                            aria-label="Show password">
+
+                            <svg viewBox="0 0 24 24">
+
+                                <path d="
+                                    M2 12s3.5-6 10-6
+                                    10 6 10 6
+                                    -3.5 6-10 6
+                                    S2 12 2 12z
+                                "/>
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="2.5"/>
+
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="password-hint">
+                        Use a strong password with at least 8 characters.
+                    </div>
+
+                </div>
+
+
+
+                <!-- SUBMIT -->
+
+                <button
+                    type="submit"
+                    class="signup-submit">
+
+                    Create Account
+
+                </button>
+
+            </form>
+
+
+
+            <!-- LOGIN -->
+
+            <div class="signup-footer">
+
+                Already have an account?
+
+                <a href="/login">
+                    Sign in
+                </a>
+
+            </div>
+
+
+
+            <!-- SECURITY -->
+
+            <div class="signup-security">
+
+                <svg viewBox="0 0 24 24">
+
+                    <rect
+                        x="5"
+                        y="10"
+                        width="14"
+                        height="10"
+                        rx="2"/>
+
+                    <path
+                        d="M8 10V7a4 4 0 0 1 8 0v3"/>
+
+                </svg>
+
+                <span>
+                    Your information is securely protected
+                </span>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</main>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="{% static 'js/main.js' %}"></script>
+
+
+<script>
+
+    /* =========================================================
+       THEME
+    ========================================================= */
+
     (function () {
-      var btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-      btn.addEventListener('click', function () {
-        var html = document.documentElement;
-        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        try { localStorage.setItem('luxe-theme', next); } catch (e) {}
-      });
-    })();
-  </script>
-</body>
 
-</html>
+        var btn =
+            document.getElementById('theme-toggle');
+
+        if (!btn) return;
+
+
+        btn.addEventListener('click', function () {
+
+            var html =
+                document.documentElement;
+
+
+            var next =
+                html.getAttribute('data-theme') === 'dark'
+                    ? 'light'
+                    : 'dark';
+
+
+            html.setAttribute(
+                'data-theme',
+                next
+            );
+
+
+            try {
+
+                localStorage.setItem(
+                    'luxe-theme',
+                    next
+                );
+
+            } catch (e) {}
+
+        });
+
+    })();
+
+
+
+    /* =========================================================
+       SHOW / HIDE PASSWORD
+    ========================================================= */
+
+    (function () {
+
+        var password =
+            document.getElementById(
+                'signup-password'
+            );
+
+
+        var toggle =
+            document.getElementById(
+                'password-toggle'
+            );
+
+
+        if (!password || !toggle) return;
+
+
+        toggle.addEventListener(
+            'click',
+            function () {
+
+                if (
+                    password.type ===
+                    'password'
+                ) {
+
+                    password.type = 'text';
+
+                    toggle.setAttribute(
+                        'aria-label',
+                        'Hide password'
+                    );
+
+                } else {
+
+                    password.type =
+                        'password';
+
+                    toggle.setAttribute(
+                        'aria-label',
+                        'Show password'
+                    );
+
+                }
+
+            }
+        );
+
+    })();
+
+</script>
+
+</body></html>
