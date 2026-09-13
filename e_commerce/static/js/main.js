@@ -57,10 +57,6 @@ async function loadStoreSettings() {
       error
     );
 
-    /*
-     * Safe fallback.
-     */
-
     STORE_SETTINGS = {
       currency: "NGN",
       currency_symbol: "₦",
@@ -72,6 +68,7 @@ async function loadStoreSettings() {
 
 /* =========================================================
    PRICE FORMATTER
+   Comma formatting restored
 ========================================================= */
 
 const PRICE_FMT = (n) => {
@@ -81,8 +78,12 @@ const PRICE_FMT = (n) => {
 
   return (
     STORE_SETTINGS.currency_symbol +
-    amount.toFixed(2)
+    amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
   );
+
 };
 
 
@@ -114,7 +115,7 @@ const ICONS = {
 
   arrowLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
 
-  arrowRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  arrowRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 5"/></svg>',
 
   arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>',
 
@@ -159,6 +160,7 @@ const ICONS = {
   twitter: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
 
   youtube: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+
 };
 
 
@@ -268,6 +270,8 @@ fetch("/api/shop/")
 
 /* =========================================================
    LOCAL STORAGE
+   Wishlist remains local.
+   Guest cart uses luxe_guest_cart.
 ========================================================= */
 
 const Store = {
@@ -278,7 +282,7 @@ const Store = {
 
       return JSON.parse(
         localStorage.getItem(
-          'luxe_cart'
+          'luxe_guest_cart'
         ) || '[]'
       );
 
@@ -294,11 +298,9 @@ const Store = {
   set cart(value) {
 
     localStorage.setItem(
-      'luxe_cart',
+      'luxe_guest_cart',
       JSON.stringify(value)
     );
-
-    updateBadges();
 
   },
 
@@ -329,7 +331,7 @@ const Store = {
       JSON.stringify(value)
     );
 
-    updateBadges();
+    updateWishlistBadge();
 
   }
 
@@ -434,7 +436,108 @@ function updateCartBadge(count) {
 
 
 /* =========================================================
+   LOCAL CART COUNT
+   Only used for guests.
+========================================================= */
+
+function getLocalCartCount() {
+
+  return Store.cart.reduce(
+    (
+      total,
+      item
+    ) =>
+      total +
+      Number(
+        item.qty || 0
+      ),
+    0
+  );
+
+}
+
+
+/* =========================================================
+   LOAD DATABASE CART BADGE
+========================================================= */
+
+async function loadDatabaseCartBadge() {
+
+  const isAuthenticated =
+    document.body.dataset.authenticated === "true";
+
+
+  /* =====================================================
+     GUEST USER
+     Never call Django cart API.
+  ===================================================== */
+
+  if (!isAuthenticated) {
+
+    updateCartBadge(
+      getLocalCartCount()
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     LOGGED-IN USER
+     Get cart count from Django.
+  ===================================================== */
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/cart/",
+        {
+          method: "GET",
+          credentials: "same-origin",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+
+    if (!response.ok) {
+
+      return;
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (data.success) {
+
+      updateCartBadge(
+        data.cart_count || 0
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "DATABASE CART BADGE ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
    ADD TO CART
+   Django database is used for logged-in users.
+   localStorage is used for guest users.
 ========================================================= */
 
 async function addToCart(
@@ -450,9 +553,53 @@ async function addToCart(
     Number(qty) || 1;
 
 
+  if (!productId) {
+
+    console.error(
+      "Invalid product ID:",
+      id
+    );
+
+    return;
+
+  }
+
+
   const product =
     findProduct(productId);
 
+
+  /* =====================================================
+     CHECK LOGIN STATUS
+  ===================================================== */
+
+  const isAuthenticated =
+    document.body.dataset.authenticated === "true";
+
+
+  /* =====================================================
+     GUEST USER
+     Use localStorage only.
+     Do NOT call Django.
+  ===================================================== */
+
+  if (!isAuthenticated) {
+
+    addGuestCart(
+      productId,
+      quantity,
+      product
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     LOGGED-IN USER
+     Use Django database.
+  ===================================================== */
 
   try {
 
@@ -499,28 +646,6 @@ async function addToCart(
       );
 
 
-    /*
-     * Guest user.
-     */
-
-    if (
-      response.redirected &&
-      response.url.includes(
-        "/login"
-      )
-    ) {
-
-      addGuestCart(
-        productId,
-        quantity,
-        product
-      );
-
-      return;
-
-    }
-
-
     const text =
       await response.text();
 
@@ -533,28 +658,28 @@ async function addToCart(
       data =
         JSON.parse(text);
 
-    } catch {
+    } catch (error) {
 
       console.error(
-        "Invalid Django response:",
+        "INVALID DJANGO RESPONSE:",
         text
       );
 
 
-      /*
-       * Fallback to guest cart.
-       */
-
-      addGuestCart(
-        productId,
-        quantity,
-        product
+      toast(
+        "Unable to add product to cart.",
+        "close"
       );
+
 
       return;
 
     }
 
+
+    /* =====================================================
+       DJANGO ERROR
+    ===================================================== */
 
     if (
       !response.ok ||
@@ -567,25 +692,20 @@ async function addToCart(
         "close"
       );
 
+
       return;
 
     }
 
 
-    /*
-     * Django is the source of truth
-     * for logged-in users.
-     */
+    /* =====================================================
+       SUCCESS
+    ===================================================== */
 
     updateCartBadge(
-      data.cart_count
+      data.cart_count || 0
     );
 
-
-    /*
-     * Do NOT save logged-in cart
-     * into localStorage.
-     */
 
     toast(
       product
@@ -593,6 +713,7 @@ async function addToCart(
         : "Product added to cart",
       "cart"
     );
+
 
   } catch (error) {
 
@@ -614,6 +735,7 @@ async function addToCart(
 
 /* =========================================================
    GUEST CART
+   Uses the same localStorage key as cart.js.
 ========================================================= */
 
 function addGuestCart(
@@ -629,24 +751,26 @@ function addGuestCart(
   const existing =
     cart.find(
       item =>
-        item.id === productId
+        Number(item.id) ===
+        Number(productId)
     );
 
 
   if (existing) {
 
-    existing.qty +=
-      quantity;
+    existing.qty =
+      Number(existing.qty || 0) +
+      Number(quantity);
 
   } else {
 
     cart.push({
 
       id:
-        productId,
+        Number(productId),
 
       qty:
-        quantity,
+        Number(quantity),
 
       name:
         product?.name ||
@@ -675,19 +799,7 @@ function addGuestCart(
 
 
   updateCartBadge(
-
-    cart.reduce(
-      (
-        total,
-        item
-      ) =>
-        total +
-        Number(
-          item.qty || 0
-        ),
-      0
-    )
-
+    getLocalCartCount()
   );
 
 
@@ -792,59 +904,14 @@ function toggleWishlist(id) {
 
 
 /* =========================================================
-   UPDATE BADGES
+   UPDATE WISHLIST BADGE
 ========================================================= */
 
-function updateBadges() {
-
-  /*
-   * Local cart is only used
-   * for guests.
-   */
-
-  const cartCount =
-    Store.cart.reduce(
-      (
-        total,
-        item
-      ) =>
-        total +
-        Number(
-          item.qty || 0
-        ),
-      0
-    );
-
+function updateWishlistBadge() {
 
   const wishlistCount =
     Store.wishlist.length;
 
-
-  /*
-   * Cart badge.
-   */
-
-  document
-    .querySelectorAll(
-      '[data-cart-count]'
-    )
-    .forEach(el => {
-
-      el.textContent =
-        cartCount;
-
-
-      el.style.display =
-        cartCount
-          ? 'grid'
-          : 'none';
-
-    });
-
-
-  /*
-   * Wishlist badge.
-   */
 
   document
     .querySelectorAll(
@@ -862,6 +929,24 @@ function updateBadges() {
           : 'none';
 
     });
+
+}
+
+
+/* =========================================================
+   UPDATE BADGES
+========================================================= */
+
+function updateBadges() {
+
+  /*
+   * Do NOT use localStorage to overwrite
+   * the Django cart badge.
+   *
+   * Only update wishlist here.
+   */
+
+  updateWishlistBadge();
 
 }
 
@@ -2118,7 +2203,7 @@ document.addEventListener(
 
     /*
      * Load currency and shipping
-     * BEFORE building the header/footer.
+     * BEFORE building header/footer.
      */
 
     await loadStoreSettings();
@@ -2138,13 +2223,31 @@ document.addEventListener(
 
     setupGlobalClicks();
 
-    updateBadges();
+
+    /*
+     * Wishlist badge and cart badge.
+     */
+
+    updateWishlistBadge();
 
 
     setTimeout(
       setupReveal,
       50
     );
+
+
+    /*
+     * Load the correct cart count.
+     *
+     * Guest:
+     *    localStorage
+     *
+     * Logged in:
+     *    Django database
+     */
+
+    await loadDatabaseCartBadge();
 
   }
 );
@@ -2160,7 +2263,7 @@ document.addEventListener(
 
     setupGlobalClicks();
 
-    updateBadges();
+    updateWishlistBadge();
 
   }
 );

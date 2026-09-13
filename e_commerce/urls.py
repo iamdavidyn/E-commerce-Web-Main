@@ -43,7 +43,13 @@ urlpatterns = [
     views.store_settings_api,
     name="store_settings_api"
 ),
-    path("api/shipping/", shipping_api, name="shipping_api")
+    path("api/shipping/", shipping_api, name="shipping_api"),
+    
+   path(
+        "api/checkout/",
+        views.checkout,
+        name="checkout"
+    ),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

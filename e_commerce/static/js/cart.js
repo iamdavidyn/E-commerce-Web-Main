@@ -1,10 +1,9 @@
 /* ============================================
 LUXE — Cart page logic
 Django database cart for logged-in users
+localStorage cart for guest users
 Shipping fee controlled by Django Admin
 ============================================ */
-
-const TAX_RATE = 0.08;
 
 let databaseCart = [];
 
@@ -15,126 +14,189 @@ CSRF
 
 function getCSRFToken() {
 
-const name = "csrftoken=";
+    const name = "csrftoken=";
 
-const cookies =
-document.cookie.split(";");
+    const cookies =
+        document.cookie.split(";");
 
+    for (let cookie of cookies) {
 
-for (let cookie of cookies) {
+        cookie = cookie.trim();
 
-cookie = cookie.trim();
+        if (cookie.startsWith(name)) {
 
+            return decodeURIComponent(
+                cookie.substring(name.length)
+            );
 
-if (cookie.startsWith(name)) {
+        }
 
-return decodeURIComponent(
-cookie.substring(name.length)
-);
+    }
 
-}
-
-}
-
-
-return "";
+    return "";
 
 }
 
 
 /* ============================================
-LOAD CART FROM DJANGO
+GUEST CART — LOCAL STORAGE
+============================================ */
+
+function getGuestCart() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem("luxe_guest_cart") || "[]"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Guest cart loading error:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
+
+
+/* ============================================
+SAVE GUEST CART
+============================================ */
+
+function saveGuestCart(cart) {
+
+    localStorage.setItem(
+        "luxe_guest_cart",
+        JSON.stringify(cart)
+    );
+
+}
+
+
+/* ============================================
+LOAD CART FROM DJANGO / LOCAL STORAGE
 ============================================ */
 
 async function loadDatabaseCart() {
 
-try {
-
-const response =
-await fetch(
-"/api/cart/",
-{
-method: "GET",
-
-credentials:
-"same-origin",
-
-headers: {
-"Accept":
-"application/json"
-}
-}
-);
+    const isAuthenticated =
+        document.body.dataset.authenticated === "true";
 
 
-if (!response.ok) {
+    /* ============================================
+    GUEST USER
+    LOCAL STORAGE ONLY
+    ============================================ */
 
-throw new Error(
-"Could not load cart"
-);
+    if (!isAuthenticated) {
 
-}
+        databaseCart =
+            getGuestCart();
 
+        renderCart();
 
-const data =
-await response.json();
+        return;
 
-
-if (!data.success) {
-
-throw new Error(
-data.message ||
-"Could not load cart"
-);
-
-}
+    }
 
 
-databaseCart =
-data.items || [];
+    /* ============================================
+    LOGGED-IN USER
+    LOAD FROM DJANGO
+    ============================================ */
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/cart/",
+                {
+                    method: "GET",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
 
 
-renderCart();
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load cart"
+            );
+
+        }
 
 
-} catch (error) {
-
-console.error(
-"Cart loading error:",
-error
-);
+        const data =
+            await response.json();
 
 
-const layout =
-document.querySelector(
-"#cart-layout"
-);
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Could not load cart"
+            );
+
+        }
 
 
-if (layout) {
+        databaseCart =
+            data.items || [];
 
-layout.innerHTML = `
 
-<div
-  class="empty-state"
-  style="grid-column:1/-1"
->
+        renderCart();
 
-  <h3>
-    Unable to load cart
-  </h3>
 
-  <p>
-    Please refresh the page and try again.
-  </p>
+    } catch (error) {
 
-</div>
+        console.error(
+            "Cart loading error:",
+            error
+        );
 
-`;
 
-}
+        const layout =
+            document.querySelector(
+                "#cart-layout"
+            );
 
-}
+
+        if (layout) {
+
+            layout.innerHTML = `
+
+                <div
+                    class="empty-state"
+                    style="grid-column:1/-1"
+                >
+
+                    <h3>
+                        Unable to load cart
+                    </h3>
+
+                    <p>
+                        Please refresh the page and try again.
+                    </p>
+
+                </div>
+
+            `;
+
+        }
+
+    }
 
 }
 
@@ -145,112 +207,98 @@ CART DATA
 
 function cartDetailed() {
 
-return databaseCart.map(
-(item) => ({
+    return databaseCart.map(
+        (item) => ({
 
-  id:
-    Number(item.id),
+            id:
+                Number(item.id),
 
-  name:
-    item.name ||
-    "Unknown Product",
+            name:
+                item.name ||
+                "Unknown Product",
 
-  price:
-    Number(item.price) ||
-    0,
+            price:
+                Number(item.price) ||
+                0,
 
-  img:
-    item.img ||
-    "",
+            img:
+                item.img ||
+                "",
 
-  cat:
-    item.cat ||
-    "N/A",
+            cat:
+                item.cat ||
+                "N/A",
 
-  qty:
-    Number(item.qty) ||
-    1
+            qty:
+                Number(item.qty) ||
+                1
 
-})
-);
+        })
+    );
 
 }
 
 
 /* ============================================
 TOTALS
-Shipping comes directly from Django Admin
+
+Tax has been completely removed.
+
+Shipping comes directly from Django Admin.
 ============================================ */
 
 function cartTotals() {
 
-const items =
-cartDetailed();
+    const items =
+        cartDetailed();
 
 
-const subtotal =
-items.reduce(
-(sum, item) =>
-sum +
-item.price *
-item.qty,
-0
-);
+    const subtotal =
+        items.reduce(
+            (sum, item) =>
+                sum +
+                item.price *
+                item.qty,
+            0
+        );
 
 
-/*
- * IMPORTANT:
- *
- * There is NO free shipping threshold.
- *
- * Django Admin controls:
- *
- * STORE_SETTINGS.shipping_fee
- *
- * Example:
- *
- * shipping_fee = 2000
- *
- * Cart shipping = ₦2,000.00
- */
+    /*
+     * Django Admin controls:
+     *
+     * STORE_SETTINGS.shipping_fee
+     */
 
-const shipping =
-subtotal > 0
-? Number(
-STORE_SETTINGS?.shipping_fee
-) || 0
-: 0;
+    const shipping =
+        subtotal > 0
+            ? Number(
+                STORE_SETTINGS?.shipping_fee
+            ) || 0
+            : 0;
 
 
-const taxed =
-subtotal;
+    /*
+     * No tax.
+     */
+
+    const total =
+        subtotal +
+        shipping;
 
 
-const tax =
-taxed * TAX_RATE;
+    return {
 
+        items,
 
-const total =
-taxed +
-tax +
-shipping;
+        subtotal,
 
+        shipping,
 
-return {
+        discount: 0,
 
-items,
+        total
 
-subtotal,
-
-shipping,
-
-discount: 0,
-
-tax,
-
-total
-
-};
+    };
 
 }
 
@@ -261,338 +309,332 @@ RENDER CART
 
 function renderCart() {
 
-const items =
-cartDetailed();
+    const items =
+        cartDetailed();
 
 
-const layout =
-document.querySelector(
-"#cart-layout"
-);
+    const layout =
+        document.querySelector(
+            "#cart-layout"
+        );
 
 
-if (!layout) {
+    if (!layout) {
 
-return;
+        return;
 
-}
-
-
-/* ============================================
-EMPTY CART
-============================================ */
-
-if (!items.length) {
-
-layout.innerHTML = `
-
-<div
-  class="empty-state"
-  style="grid-column:1/-1"
->
-
-  <div class="empty-icon">
-    ${icon("cart")}
-  </div>
+    }
 
 
-  <h3>
-    Your cart is empty
-  </h3>
+    /* ============================================
+    EMPTY CART
+    ============================================ */
+
+    if (!items.length) {
+
+        layout.innerHTML = `
+
+            <div
+                class="empty-state"
+                style="grid-column:1/-1"
+            >
+
+                <div class="empty-icon">
+                    ${icon("cart")}
+                </div>
 
 
-  <p>
-    Looks like you haven't added anything yet.
-    Let's fix that.
-  </p>
+                <h3>
+                    Your cart is empty
+                </h3>
 
 
-  <a
-    href="/shop"
-    class="btn btn-primary btn-lg"
-  >
-    Start Shopping
-  </a>
-
-</div>
-
-`;
-
-return;
-
-}
+                <p>
+                    Looks like you haven't added anything yet.
+                    Let's fix that.
+                </p>
 
 
-const t =
-cartTotals();
+                <a
+                    href="/shop"
+                    class="btn btn-primary btn-lg"
+                >
+                    Start Shopping
+                </a>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
 
 
-/* ============================================
-CART HTML
-============================================ */
-
-layout.innerHTML = `
-
-<div class="cart-items">
+    const t =
+        cartTotals();
 
 
-  ${items.map(
-    (item) => `
+    /* ============================================
+    CART HTML
+    ============================================ */
 
-    <div
-      class="cart-row"
-      data-id="${item.id}"
-    >
+    layout.innerHTML = `
+
+        <div class="cart-items">
 
 
-      <a
-        href="/product?id=${item.id}"
-        class="cart-thumb"
-      >
+            ${items.map(
+                (item) => `
 
-        ${
-          item.img
+                <div
+                    class="cart-row"
+                    data-id="${item.id}"
+                >
 
-            ? `
 
-              <img
-                src="${item.img}"
-                alt="${item.name}"
-              >
+                    <a
+                        href="/product?id=${item.id}"
+                        class="cart-thumb"
+                    >
+
+                        ${
+                            item.img
+
+                                ? `
+
+                                    <img
+                                        src="${item.img}"
+                                        alt="${item.name}"
+                                    >
+
+                                `
+
+                                : ""
+                        }
+
+                    </a>
+
+
+                    <div class="cart-row-info">
+
+
+                        <a
+                            href="/product?id=${item.id}"
+                            class="cart-row-name"
+                        >
+                            ${item.name}
+                        </a>
+
+
+                        <span class="product-cat">
+                            ${item.cat}
+                        </span>
+
+
+                        <button
+                            class="link-btn danger js-remove"
+                            data-id="${item.id}"
+                        >
+
+                            ${icon("trash")}
+
+                            Remove
+
+                        </button>
+
+
+                    </div>
+
+
+                    <!-- =========================
+                    QUANTITY COUNTER
+                    ========================== -->
+
+                    <div
+                        class="qty-stepper sm"
+                        aria-label="Quantity"
+                    >
+
+                        <button
+                            type="button"
+                            class="js-cart-dec"
+                            data-id="${item.id}"
+                            aria-label="Decrease quantity"
+                        >
+
+                            ${icon("chevron")}
+
+                        </button>
+
+
+                        <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value="${item.qty}"
+                            data-id="${item.id}"
+                            class="js-cart-qty"
+                            aria-label="Quantity"
+                        >
+
+
+                        <button
+                            type="button"
+                            class="js-cart-inc"
+                            data-id="${item.id}"
+                            aria-label="Increase quantity"
+                        >
+
+                            ${icon("plus")}
+
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        class="cart-row-price"
+                    >
+
+                        <strong>
+                            ${PRICE_FMT(
+                                item.price *
+                                item.qty
+                            )}
+                        </strong>
+
+
+                        ${
+                            item.qty > 1
+
+                                ? `
+
+                                    <small>
+                                        ${PRICE_FMT(
+                                            item.price
+                                        )}
+                                        each
+                                    </small>
+
+                                `
+
+                                : ""
+                        }
+
+                    </div>
+
+
+                </div>
 
             `
+            ).join("")}
 
-            : ""
-        }
 
-      </a>
+            <a
+                href="/shop"
+                class="link-btn"
+            >
 
+                ${icon("arrowLeft")}
 
-      <div class="cart-row-info">
+                Continue shopping
 
+            </a>
 
-        <a
-          href="/product?id=${item.id}"
-          class="cart-row-name"
-        >
-          ${item.name}
-        </a>
 
+        </div>
 
-        <span class="product-cat">
-          ${item.cat}
-        </span>
 
+        <aside class="cart-summary">
 
-        <button
-          class="link-btn danger js-remove"
-          data-id="${item.id}"
-        >
 
-          ${icon("trash")}
+            <h2>
+                Order Summary
+            </h2>
 
-          Remove
 
-        </button>
+            <div class="summary-line">
 
+                <span>
+                    Subtotal
+                </span>
 
-      </div>
+                <span>
+                    ${PRICE_FMT(
+                        t.subtotal
+                    )}
+                </span>
 
+            </div>
 
-      <div
-        class="qty-stepper sm"
-        aria-label="Quantity"
-      >
 
+            <div class="summary-line">
 
-        <button
-          class="js-cart-dec"
-          data-id="${item.id}"
-          aria-label="Decrease"
-        >
+                <span>
+                    Shipping
+                </span>
 
-          ${icon("chevron")}
+                <span>
 
-        </button>
+                    ${
+                        t.shipping > 0
 
+                            ? PRICE_FMT(
+                                t.shipping
+                            )
 
-        <input
-          type="text"
-          value="${item.qty}"
-          data-id="${item.id}"
-          class="js-cart-qty"
-          aria-label="Quantity"
-        >
+                            : "FREE"
+                    }
 
+                </span>
 
-        <button
-          class="js-cart-inc"
-          data-id="${item.id}"
-          aria-label="Increase"
-        >
+            </div>
 
-          ${icon("plus")}
 
-        </button>
+            <!-- TAX REMOVED -->
 
 
-      </div>
+            <div class="summary-total">
 
+                <span>
+                    Total
+                </span>
 
-      <div
-        class="cart-row-price"
-      >
+                <span>
+                    ${PRICE_FMT(
+                        t.total
+                    )}
+                </span>
 
-        <strong>
-          ${PRICE_FMT(
-            item.price *
-            item.qty
-          )}
-        </strong>
+            </div>
 
 
-        ${
-          item.qty > 1
+            <a
+                href="/checkout"
+                class="btn btn-primary btn-lg btn-block"
+            >
 
-            ? `
+                Proceed to Checkout
 
-              <small>
-                ${PRICE_FMT(
-                  item.price
-                )}
-                each
-              </small>
+            </a>
 
-            `
 
-            : ""
-        }
+            <div class="secure-note">
 
-      </div>
+                ${icon("shield")}
 
+                Secure checkout • SSL encrypted
 
-    </div>
+            </div>
 
-  `
-  ).join("")}
 
+        </aside>
 
-  <a
-    href="/shop"
-    class="link-btn"
-  >
+    `;
 
-    ${icon("arrowLeft")}
 
-    Continue shopping
-
-  </a>
-
-
-</div>
-
-
-<aside class="cart-summary">
-
-
-  <h2>
-    Order Summary
-  </h2>
-
-
-  <div class="summary-line">
-
-    <span>
-      Subtotal
-    </span>
-
-    <span>
-      ${PRICE_FMT(
-        t.subtotal
-      )}
-    </span>
-
-  </div>
-
-
-  <div class="summary-line">
-
-    <span>
-      Shipping
-    </span>
-
-    <span>
-
-      ${
-        t.shipping > 0
-
-          ? PRICE_FMT(
-              t.shipping
-            )
-
-          : "FREE"
-      }
-
-    </span>
-
-  </div>
-
-
-  <div class="summary-line">
-
-    <span>
-      Tax (8%)
-    </span>
-
-    <span>
-      ${PRICE_FMT(
-        t.tax
-      )}
-    </span>
-
-  </div>
-
-
-  <div class="summary-total">
-
-    <span>
-      Total
-    </span>
-
-    <span>
-      ${PRICE_FMT(
-        t.total
-      )}
-    </span>
-
-  </div>
-
-
-  <a
-    href="/checkout"
-    class="btn btn-primary btn-lg btn-block"
-  >
-
-    Proceed to Checkout
-
-  </a>
-
-
-  <div class="secure-note">
-
-    ${icon("shield")}
-
-    Secure checkout • SSL encrypted
-
-  </div>
-
-
-</aside>
-
-`;
-
-
-bindCartEvents();
+    bindCartEvents();
 
 }
 
@@ -602,97 +644,144 @@ UPDATE QUANTITY
 ============================================ */
 
 async function setQty(
-id,
-qty
+    id,
+    qty
 ) {
 
-qty =
-parseInt(qty);
+    qty =
+        parseInt(qty);
 
 
-if (
-isNaN(qty) ||
-qty < 1
-) {
+    if (
+        isNaN(qty) ||
+        qty < 1
+    ) {
 
-qty = 1;
+        qty = 1;
 
-}
-
-
-try {
-
-const formData =
-new FormData();
+    }
 
 
-formData.append(
-"product_id",
-id
-);
+    const isAuthenticated =
+        document.body.dataset.authenticated === "true";
 
 
-formData.append(
-"quantity",
-qty
-);
+    /* ============================================
+    GUEST USER
+    LOCAL STORAGE ONLY
+    ============================================ */
+
+    if (!isAuthenticated) {
+
+        let cart =
+            getGuestCart();
 
 
-const response =
-await fetch(
-"/api/cart/update/",
-{
-
-method: "POST",
-
-credentials:
-"same-origin",
-
-headers: {
-
-"X-CSRFToken":
-getCSRFToken()
-
-},
-
-body:
-formData
-
-}
-);
+        const item =
+            cart.find(
+                (item) =>
+                    Number(item.id) ===
+                    Number(id)
+            );
 
 
-const data =
-await response.json();
+        if (item) {
+
+            item.qty =
+                qty;
+
+            saveGuestCart(cart);
+
+            databaseCart =
+                cart;
+
+            renderCart();
+
+        }
+
+        return;
+
+    }
 
 
-if (!data.success) {
+    /* ============================================
+    LOGGED-IN USER
+    DJANGO DATABASE
+    ============================================ */
 
-throw new Error(
-data.message ||
-"Unable to update cart"
-);
+    try {
 
-}
-
-
-await loadDatabaseCart();
+        const formData =
+            new FormData();
 
 
-} catch (error) {
-
-console.error(
-"Quantity update error:",
-error
-);
+        formData.append(
+            "product_id",
+            id
+        );
 
 
-toast(
-"Unable to update quantity",
-"close"
-);
+        formData.append(
+            "quantity",
+            qty
+        );
 
-}
+
+        const response =
+            await fetch(
+                "/api/cart/update/",
+                {
+
+                    method: "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+
+                        "X-CSRFToken":
+                            getCSRFToken()
+
+                    },
+
+                    body:
+                        formData
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to update cart"
+            );
+
+        }
+
+
+        await loadDatabaseCart();
+
+
+    } catch (error) {
+
+        console.error(
+            "Quantity update error:",
+            error
+        );
+
+
+        toast(
+            "Unable to update quantity",
+            "close"
+        );
+
+    }
 
 }
 
@@ -703,79 +792,126 @@ REMOVE ITEM
 
 async function removeFromCart(id) {
 
-try {
-
-const formData =
-new FormData();
+    const isAuthenticated =
+        document.body.dataset.authenticated === "true";
 
 
-formData.append(
-"product_id",
-id
-);
+    /* ============================================
+    GUEST USER
+    LOCAL STORAGE ONLY
+    ============================================ */
+
+    if (!isAuthenticated) {
+
+        let cart =
+            getGuestCart();
 
 
-const response =
-await fetch(
-"/api/cart/remove/",
-{
-
-method: "POST",
-
-credentials:
-"same-origin",
-
-headers: {
-
-"X-CSRFToken":
-getCSRFToken()
-
-},
-
-body:
-formData
-
-}
-);
+        cart =
+            cart.filter(
+                (item) =>
+                    Number(item.id) !==
+                    Number(id)
+            );
 
 
-const data =
-await response.json();
+        saveGuestCart(cart);
+
+        databaseCart =
+            cart;
 
 
-if (!data.success) {
-
-throw new Error(
-data.message ||
-"Unable to remove item"
-);
-
-}
+        toast(
+            "Item removed from cart",
+            "trash"
+        );
 
 
-toast(
-"Item removed from cart",
-"trash"
-);
+        renderCart();
+
+        return;
+
+    }
 
 
-await loadDatabaseCart();
+    /* ============================================
+    LOGGED-IN USER
+    DJANGO DATABASE
+    ============================================ */
+
+    try {
+
+        const formData =
+            new FormData();
 
 
-} catch (error) {
-
-console.error(
-"Remove cart error:",
-error
-);
+        formData.append(
+            "product_id",
+            id
+        );
 
 
-toast(
-"Unable to remove item",
-"close"
-);
+        const response =
+            await fetch(
+                "/api/cart/remove/",
+                {
 
-}
+                    method: "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+
+                        "X-CSRFToken":
+                            getCSRFToken()
+
+                    },
+
+                    body:
+                        formData
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to remove item"
+            );
+
+        }
+
+
+        toast(
+            "Item removed from cart",
+            "trash"
+        );
+
+
+        await loadDatabaseCart();
+
+
+    } catch (error) {
+
+        console.error(
+            "Remove cart error:",
+            error
+        );
+
+
+        toast(
+            "Unable to remove item",
+            "close"
+        );
+
+    }
 
 }
 
@@ -787,153 +923,153 @@ EVENTS
 function bindCartEvents() {
 
 
-/* ---------- REMOVE ---------- */
+    /* ---------- REMOVE ---------- */
 
-document
-.querySelectorAll(
-".js-remove"
-)
-.forEach(
-(button) => {
+    document
+        .querySelectorAll(
+            ".js-remove"
+        )
+        .forEach(
+            (button) => {
 
-button.addEventListener(
-"click",
-() => {
+                button.addEventListener(
+                    "click",
+                    () => {
 
-removeFromCart(
-button.dataset.id
-);
+                        removeFromCart(
+                            button.dataset.id
+                        );
 
-}
-);
+                    }
+                );
 
-}
-);
-
-
-/* ---------- INCREASE ---------- */
-
-document
-.querySelectorAll(
-".js-cart-inc"
-)
-.forEach(
-(button) => {
-
-button.addEventListener(
-"click",
-() => {
-
-const item =
-databaseCart.find(
-(item) =>
-Number(item.id) ===
-Number(
-button.dataset.id
-)
-);
+            }
+        );
 
 
-if (!item) {
+    /* ---------- INCREASE ---------- */
 
-return;
+    document
+        .querySelectorAll(
+            ".js-cart-inc"
+        )
+        .forEach(
+            (button) => {
 
-}
+                button.addEventListener(
+                    "click",
+                    () => {
 
-
-setQty(
-button.dataset.id,
-Number(item.qty) + 1
-);
-
-}
-);
-
-}
-);
-
-
-/* ---------- DECREASE ---------- */
-
-document
-.querySelectorAll(
-".js-cart-dec"
-)
-.forEach(
-(button) => {
-
-button.addEventListener(
-"click",
-() => {
-
-const item =
-databaseCart.find(
-(item) =>
-Number(item.id) ===
-Number(
-button.dataset.id
-)
-);
+                        const item =
+                            databaseCart.find(
+                                (item) =>
+                                    Number(item.id) ===
+                                    Number(
+                                        button.dataset.id
+                                    )
+                            );
 
 
-if (!item) {
+                        if (!item) {
 
-return;
+                            return;
 
-}
-
-
-const newQty =
-Math.max(
-1,
-Number(item.qty) - 1
-);
+                        }
 
 
-setQty(
-button.dataset.id,
-newQty
-);
+                        setQty(
+                            button.dataset.id,
+                            Number(item.qty) + 1
+                        );
 
-}
-);
+                    }
+                );
 
-}
-);
-
-
-/* ---------- MANUAL QUANTITY ---------- */
-
-document
-.querySelectorAll(
-".js-cart-qty"
-)
-.forEach(
-(input) => {
-
-input.addEventListener(
-"change",
-() => {
-
-const value =
-parseInt(
-input.value.replace(
-/\D/g,
-""
-)
-) || 1;
+            }
+        );
 
 
-setQty(
-input.dataset.id,
-value
-);
+    /* ---------- DECREASE ---------- */
 
-}
-);
+    document
+        .querySelectorAll(
+            ".js-cart-dec"
+        )
+        .forEach(
+            (button) => {
 
-}
-);
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const item =
+                            databaseCart.find(
+                                (item) =>
+                                    Number(item.id) ===
+                                    Number(
+                                        button.dataset.id
+                                    )
+                            );
+
+
+                        if (!item) {
+
+                            return;
+
+                        }
+
+
+                        const newQty =
+                            Math.max(
+                                1,
+                                Number(item.qty) - 1
+                            );
+
+
+                        setQty(
+                            button.dataset.id,
+                            newQty
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    /* ---------- MANUAL QUANTITY ---------- */
+
+    document
+        .querySelectorAll(
+            ".js-cart-qty"
+        )
+        .forEach(
+            (input) => {
+
+                input.addEventListener(
+                    "change",
+                    () => {
+
+                        const value =
+                            parseInt(
+                                input.value
+                            ) || 1;
+
+
+                        setQty(
+                            input.dataset.id,
+                            Math.max(
+                                1,
+                                value
+                            )
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 }
 
@@ -944,28 +1080,27 @@ Wait for Django store settings first
 ============================================ */
 
 document.addEventListener(
-"DOMContentLoaded",
-async () => {
+    "DOMContentLoaded",
+    async () => {
+
+        /*
+         * main.js provides loadStoreSettings().
+         *
+         * Wait for Django currency and
+         * shipping settings before rendering.
+         */
+
+        if (
+            typeof loadStoreSettings ===
+            "function"
+        ) {
+
+            await loadStoreSettings();
+
+        }
 
 
-/*
- * main.js provides loadStoreSettings().
- *
- * Wait for the Django currency and
- * shipping settings before rendering.
- */
+        await loadDatabaseCart();
 
-if (
-typeof loadStoreSettings ===
-"function"
-) {
-
-await loadStoreSettings();
-
-}
-
-
-await loadDatabaseCart();
-
-}
+    }
 );

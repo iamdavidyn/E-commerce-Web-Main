@@ -165,3 +165,66 @@ class CustomersReview(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.rating}★)"
+
+
+
+class Order(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    email = models.EmailField()
+    phone = models.CharField(max_length=30)
+
+    alternate_phone = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    alternate_contact_name = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+
+    zip = models.CharField(
+        max_length=20,
+        blank=True
+    )
+
+    country = models.CharField(max_length=100)
+
+    delivery = models.CharField(
+        max_length=50,
+        default="standard"
+    )
+
+    subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    shipping = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Order #{self.user} - {self.email}"

@@ -552,9 +552,9 @@ async function loadFlashSale() {
 
         desc: '',
 
-        rating: 5,
+        rating: product.rating,
 
-        reviews: 0,
+        reviews: product.review,
 
         stock: Number(
           product.stock || 0
@@ -619,6 +619,72 @@ async function loadFlashSale() {
 /* =========================================================
    HOME PRODUCTS
 ========================================================= */
+
+function getSectionForGrid(selector) {
+
+  const grid = document.querySelector(selector);
+
+  if (!grid) return null;
+
+  return grid.closest('section') || grid.parentElement;
+}
+
+
+function setTaggedSectionVisibility(selector, products) {
+
+  const section = getSectionForGrid(selector);
+
+  if (!section) return;
+
+  section.style.display = products.length > 0 ? '' : 'none';
+}
+
+
+/* Remove the homepage customer reviews/testimonials section completely. */
+function removeHomepageReviews() {
+
+  const headings = document.querySelectorAll('h1, h2, h3, h4, p');
+
+  for (const heading of headings) {
+
+    const text = (heading.textContent || '').trim().toLowerCase();
+
+    if (
+      text === 'what our customers say' ||
+      text.includes('what our customers say')
+    ) {
+
+      const section = heading.closest('section');
+
+      if (section) {
+        section.remove();
+      } else if (heading.parentElement) {
+        heading.parentElement.remove();
+      }
+
+      break;
+    }
+  }
+}
+
+
+let homePageInitialized = false;
+
+
+function initHomePage() {
+
+  if (homePageInitialized) return;
+  homePageInitialized = true;
+
+  renderFeatures();
+  renderCategories();
+  renderHomeSections();
+  removeHomepageReviews();
+  loadFlashSale();
+
+  setTimeout(setupReveal, 60);
+}
+
 
 function renderHomeSections() {
 
@@ -704,6 +770,7 @@ function renderHomeSections() {
     '#featured-grid',
     featured
   );
+  setTaggedSectionVisibility('#featured-grid', featured);
 
 
 
@@ -733,6 +800,7 @@ function renderHomeSections() {
     '#best-grid',
     best
   );
+  setTaggedSectionVisibility('#best-grid', best);
 
 
 
@@ -762,6 +830,7 @@ function renderHomeSections() {
     '#new-grid',
     newProducts
   );
+  setTaggedSectionVisibility('#new-grid', newProducts);
 
 }
 
@@ -773,52 +842,17 @@ function renderHomeSections() {
 
 document.addEventListener(
   'DOMContentLoaded',
-  () => {
-
-    /*
-     * Features
-     */
-
-    renderFeatures();
-
-
-    /*
-     * Categories
-     *
-     * PRODUCTS may not have loaded yet.
-     * If it hasn't, this safely renders nothing.
-     */
-    renderCategories();
-
-
-    /*
-     * Home products
-     *
-     * If PRODUCTS has not loaded yet,
-     * products:loaded will call this again.
-     */
-
-    renderHomeSections();
-
-
-    /*
-     * Django Flash Sale
-     */
-
-    loadFlashSale();
-
-
-    /*
-     * Scroll reveal
-     */
-
-    setTimeout(
-      setupReveal,
-      60
-    );
-
-  }
+  initHomePage
 );
+
+
+/*
+ * If this script is loaded after DOMContentLoaded (for example
+ * through a cached/dynamic script), initialize immediately too.
+ */
+if (document.readyState !== 'loading') {
+  initHomePage();
+}
 
 
 
@@ -845,6 +879,7 @@ document.addEventListener(
      */
 
     renderHomeSections();
+    removeHomepageReviews();
 
 
     /*

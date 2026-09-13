@@ -114,7 +114,10 @@ function checkoutPrice(amount) {
 
     return (
         symbol +
-        value.toFixed(2)
+        value.toLocaleString("en-NG", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })
     );
 
 }

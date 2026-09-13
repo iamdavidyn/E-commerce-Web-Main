@@ -77,42 +77,69 @@ class Login_view(View):
 def about(request):
     return render(request, 'about.html')
     
-    
+
 @login_required
+@require_http_methods(["POST"])
 def add_to_cart(request):
-    if request.method != "POST":
-        return JsonResponse({
-            "success": False,
-            "message": "POST request required"
-        }, status=405)
 
     product_id = request.POST.get("product_id")
-    quantity = int(request.POST.get("quantity", 1))
+    quantity = request.POST.get("quantity", 1)
 
-    product = get_object_or_404(Product, id=product_id)
+    if not product_id:
+        return JsonResponse({
+            "success": False,
+            "message": "Product ID is required."
+        }, status=400)
 
+    try:
+        quantity = int(quantity)
+
+        if quantity < 1:
+            quantity = 1
+
+    except (TypeError, ValueError):
+        quantity = 1
+
+    # Get the product
+    product = get_object_or_404(
+        Product,
+        id=product_id
+    )
+
+    # Get or create cart for the logged-in user
     cart, created = Cart.objects.get_or_create(
         user=request.user
     )
 
-    item, created = Cart_Items.objects.get_or_create(
+    # Get or create the product inside the cart
+    cart_item, item_created = Cart_Items.objects.get_or_create(
         cart=cart,
-        product=product
+        product=product,
+        defaults={
+            "quantity": quantity
+        }
     )
 
-    if created:
-        item.quantity = quantity
-    else:
-        item.quantity += quantity
+    # Product already exists in cart
+    if not item_created:
+        cart_item.quantity += quantity
+        cart_item.save(update_fields=["quantity"])
 
-    item.save()
+    # Calculate total quantity
+    cart_count = sum(
+        item.quantity
+        for item in cart.items.all()
+    )
 
     return JsonResponse({
         "success": True,
-        "message": "Product added to cart",
-        "cart_count": sum(
-            item.quantity for item in cart.items.all()
-        )
+        "message": "Product added to cart.",
+        "cart_count": cart_count,
+        "item": {
+            "id": product.id,
+            "name": product.product_name,
+            "quantity": cart_item.quantity,
+        }
     })
 
 
@@ -165,12 +192,10 @@ def api_shop(request):
     return JsonResponse(data, safe=False)
 
 
-@login_required
 def cart_api(request):
     cart, created = Cart.objects.get_or_create(
-        user=request.user
-    )
-
+        user=request.user)
+ 
     items = []
 
     for item in cart.items.select_related("product").all():
@@ -195,7 +220,7 @@ def cart_api(request):
     })
 
 
-@login_required
+
 @require_http_methods(["POST"])
 def update_cart_item(request):
     cart, created = Cart.objects.get_or_create(
@@ -239,7 +264,9 @@ def update_cart_item(request):
 
 
 
-@login_required
+
+
+
 @require_http_methods(["POST"])
 def remove_cart_item(request):
     cart, created = Cart.objects.get_or_create(
@@ -284,21 +311,34 @@ def account_view(request):
 
 
 def cart(request):
-    cart, created = Cart.objects.get_or_create(user=request.user)
 
-    cart_items = cart.items.select_related("product").all()
+    if request.user.is_authenticated:
+
+        cart, created = Cart.objects.get_or_create(
+            user=request.user
+        )
+
+        cart_items = cart.items.select_related(
+            "product"
+        ).all()
+
+    else:
+
+        cart = None
+        cart_items = []
 
 
-    
     return render(
         request,
         "cart.html",
         {
             "cart": cart,
             "cart_items": cart_items,
+            "is_authenticated": request.user.is_authenticated,
         }
     )
-    
+
+
 
 def store_settings_api(request):
 
@@ -415,4 +455,144 @@ def shipping_api(request):
     return JsonResponse({
         "success": True,
         "shipping_fee": float(settings.shipping_fee),
+    })
+
+
+
+@login_required
+@require_http_methods(["POST"])
+def checkout(request):
+
+    try:
+        data = json.loads(request.body)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON data"
+        }, status=400)
+
+    # Get checkout information
+    email = data.get("email", "").strip()
+    phone = data.get("phone", "").strip()
+
+    alternate_phone = data.get(
+        "alternate_phone", ""
+    ).strip()
+
+    alternate_contact_name = data.get(
+        "alternate_contact_name", ""
+    ).strip()
+
+    first_name = data.get(
+        "first_name", ""
+    ).strip()
+
+    last_name = data.get(
+        "last_name", ""
+    ).strip()
+
+    address = data.get(
+        "address", ""
+    ).strip()
+
+    city = data.get(
+        "city", ""
+    ).strip()
+
+    state = data.get(
+        "state", ""
+    ).strip()
+
+    zip_code = data.get(
+        "zip", ""
+    ).strip()
+
+    country = data.get(
+        "country", ""
+    ).strip()
+
+    delivery = data.get(
+        "delivery", "standard"
+    ).strip()
+
+    # Basic validation
+    if not email:
+        return JsonResponse({
+            "success": False,
+            "message": "Email is required"
+        }, status=400)
+
+    if not phone:
+        return JsonResponse({
+            "success": False,
+            "message": "Phone number is required"
+        }, status=400)
+
+    if not first_name:
+        return JsonResponse({
+            "success": False,
+            "message": "First name is required"
+        }, status=400)
+
+    if not last_name:
+        return JsonResponse({
+            "success": False,
+            "message": "Last name is required"
+        }, status=400)
+
+    if not address:
+        return JsonResponse({
+            "success": False,
+            "message": "Address is required"
+        }, status=400)
+
+    if not city:
+        return JsonResponse({
+            "success": False,
+            "message": "City is required"
+        }, status=400)
+
+    if not state:
+        return JsonResponse({
+            "success": False,
+            "message": "State is required"
+        }, status=400)
+
+    if not country:
+        return JsonResponse({
+            "success": False,
+            "message": "Country is required"
+        }, status=400)
+
+    # Save order
+    order = Order.objects.create(
+        user=request.user,
+
+        email=email,
+        phone=phone,
+
+        alternate_phone=alternate_phone,
+        alternate_contact_name=alternate_contact_name,
+
+        first_name=first_name,
+        last_name=last_name,
+
+        address=address,
+        city=city,
+        state=state,
+        zip=zip_code,
+        country=country,
+
+        delivery=delivery,
+
+        subtotal=0,
+        shipping=0,
+        total=0
+    )
+
+    return JsonResponse({
+        "success": True,
+        "message": "Checkout information saved successfully",
+        "order_id": order.id
     })
