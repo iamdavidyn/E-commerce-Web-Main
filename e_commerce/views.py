@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview
+from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 import json
@@ -57,7 +57,6 @@ class Login_view(View):
     password = request.POST.get('password', '')
 
     user_obj = User.objects.filter(email=email).first()
-    print(user_obj)
     
     if user_obj:
         user = authenticate(request, username=user_obj.username, password=password)
@@ -564,6 +563,56 @@ def checkout(request):
             "success": False,
             "message": "Country is required"
         }, status=400)
+        
+        
+        
+    cart = get_object_or_404(
+        Cart,
+        user=request.user
+    )
+
+    cart_items = cart.items.select_related(
+        "product"
+    ).all()
+
+
+    # =====================================================
+    # CHECK CART
+    # =====================================================
+
+    if not cart_items.exists():
+        return JsonResponse({
+            "success": False,
+            "message": "Your cart is empty."
+        }, status=400)
+
+
+    # =====================================================
+    # CALCULATE SUBTOTAL
+    # =====================================================
+
+    subtotal = 0
+
+
+    for item in cart_items:
+
+        product = item.product
+
+        price = product.new_product_price
+
+        item_total = price * item.quantity
+
+        subtotal += item_total
+
+
+        
+        
+    
+        
+    shp = StoreSettings.objects.first()
+    
+    total = subtotal + shp.shipping_fee
+
 
     # Save order
     order = Order.objects.create(
@@ -586,10 +635,13 @@ def checkout(request):
 
         delivery=delivery,
 
-        subtotal=0,
-        shipping=0,
-        total=0
+        subtotal=subtotal,
+        shipping=shp.shipping_fee,
+        total=total
     )
+    order.save()
+    
+    
 
     return JsonResponse({
         "success": True,

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+import uuid
 # Create your models here.
 
 
@@ -28,8 +28,12 @@ class Product(models.Model):
         ('Toys', 'Toys')
 
     )
+    
+    product_code = models.CharField(max_length=20,
+        unique=True,
+        editable=False)
 
-    product_image = models.FileField()
+    product_image = models.ImageField()
     
     product_name = models.CharField(max_length=500)
     
@@ -42,7 +46,13 @@ class Product(models.Model):
     tag = models.CharField(max_length= 20, choices=TAG_CHOICES, default= 'best')
     stock = models.PositiveIntegerField(default=1)
     product_Desc = models.TextField()
+    
+    def save(self, *args, **kwargs):
+        if not self.product_code:
+            self.product_code = "LUXE-" + uuid.uuid4().hex[:8].upper()
 
+        super().save(*args, **kwargs)
+        
 
     def __str__(self):
      return self.product_name

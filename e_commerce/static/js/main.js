@@ -179,6 +179,55 @@ const DESC =
 let PRODUCTS = [];
 
 
+/* =========================================================
+   DYNAMIC CATEGORIES
+   Categories come directly from products in Django.
+========================================================= */
+
+let CATEGORIES = [];
+
+
+/* =========================================================
+   GET AVAILABLE CATEGORIES
+   Only categories that currently contain products
+   will be returned.
+========================================================= */
+
+function getAvailableCategories() {
+
+  if (
+    typeof PRODUCTS === "undefined" ||
+    !Array.isArray(PRODUCTS)
+  ) {
+
+    return [];
+
+  }
+
+
+  return [
+    ...new Set(
+
+      PRODUCTS
+
+        .map(product =>
+          String(
+            product.cat || ''
+          ).trim()
+        )
+
+        .filter(Boolean)
+
+    )
+  ];
+
+}
+
+
+/* =========================================================
+   PRODUCT API
+========================================================= */
+
 fetch("/api/shop/")
   .then(response => {
 
@@ -224,6 +273,20 @@ fetch("/api/shop/")
 
     }));
 
+
+    /*
+     * Build the category list from
+     * the products returned by Django.
+     */
+
+    CATEGORIES =
+      getAvailableCategories();
+
+
+    /*
+     * Tell the rest of the website
+     * that products are ready.
+     */
 
     document.dispatchEvent(
       new CustomEvent(
@@ -1255,18 +1318,12 @@ function toast(
    HEADER
 ========================================================= */
 
-const CATEGORIES = [
 
-  'Electronics',
-  'Fashion',
-  'Home & Living',
-  'Beauty',
-  'Sports',
-  'Toys',
-  'Groceries'
-
-];
-
+/* =========================================================
+   BUILD HEADER
+   Categories are initially empty because
+   products load asynchronously.
+========================================================= */
 
 function buildHeader() {
 
@@ -1469,16 +1526,12 @@ function buildHeader() {
           </button>
 
 
-          <div class="dropdown-menu">
+          <div
+            class="dropdown-menu"
+            id="header-category-menu"
+          >
 
-            ${CATEGORIES
-              .map(
-                c =>
-                  `<a href="/shop?cat=${encodeURIComponent(c)}">
-                    ${c}
-                  </a>`
-              )
-              .join('')}
+            <!-- Categories are inserted after products load -->
 
           </div>
 
@@ -1554,18 +1607,12 @@ function buildHeader() {
     </h4>
 
 
-    <ul class="nav-list">
+    <ul
+      class="nav-list"
+      id="mobile-category-list"
+    >
 
-      ${CATEGORIES
-        .map(
-          c =>
-            `<li>
-              <a href="/shop?cat=${encodeURIComponent(c)}">
-                ${c}
-              </a>
-            </li>`
-        )
-        .join('')}
+      <!-- Categories are inserted after products load -->
 
     </ul>
 
@@ -1575,6 +1622,83 @@ function buildHeader() {
   <div class="drawer-overlay js-overlay"></div>
 
   `;
+
+}
+
+
+/* =========================================================
+   UPDATE HEADER CATEGORIES
+   Runs after Django products have loaded.
+========================================================= */
+
+function updateHeaderCategories() {
+
+  CATEGORIES =
+    getAvailableCategories();
+
+
+  const desktopMenu =
+    document.querySelector(
+      '#header-category-menu'
+    );
+
+
+  const mobileMenu =
+    document.querySelector(
+      '#mobile-category-list'
+    );
+
+
+  /*
+   * Desktop categories
+   */
+
+  if (desktopMenu) {
+
+    desktopMenu.innerHTML =
+      CATEGORIES
+        .map(
+          category => `
+            <a
+              href="/shop?cat=${encodeURIComponent(category)}"
+            >
+              ${category}
+            </a>
+          `
+        )
+        .join('');
+
+  }
+
+
+  /*
+   * Mobile categories
+   */
+
+  if (mobileMenu) {
+
+    mobileMenu.innerHTML =
+      CATEGORIES
+        .map(
+          category => `
+            <li>
+              <a
+                href="/shop?cat=${encodeURIComponent(category)}"
+              >
+                ${category}
+              </a>
+            </li>
+          `
+        )
+        .join('');
+
+  }
+
+
+  /*
+   * If there are no products/categories,
+   * keep the category menus empty.
+   */
 
 }
 
@@ -2099,6 +2223,7 @@ function setupReveal() {
         obs.observe(el)
     );
 
+
 }
 
 
@@ -2260,6 +2385,14 @@ document.addEventListener(
 document.addEventListener(
   'products:loaded',
   () => {
+
+    /*
+     * Update categories from the actual
+     * products returned by Django.
+     */
+
+    updateHeaderCategories();
+
 
     setupGlobalClicks();
 

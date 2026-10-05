@@ -331,7 +331,8 @@ img {
   }
 
   .product-media img {
-    height: 160px;
+    height: px;
+    width: 300px;
   }
 
   /* Buttons full width where appropriate */
@@ -7197,5 +7198,180 @@ body {
 
   .pd-price .price-old {
     font-size: 0.72rem;
+  }
+}
+
+/* ============================================
+   Home hero (.luxe-hero)
+   One image for every screen size. Image URL is set inline
+   in home.html via {% static 'images/hero-gift.png' %}.
+   ============================================ */
+.luxe-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: clamp(460px, 72vh, 680px);
+  overflow: hidden;
+  background-color: var(--color-ink);
+  color: #fff;
+}
+
+.luxe-hero-image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 70% center; /* keeps the gift on the right, clear of the text */
+}
+
+/* Plain dark scrim, only strong enough to keep the text readable */
+.luxe-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(20, 22, 43, 0.78) 0%, rgba(20, 22, 43, 0.45) 45%, rgba(20, 22, 43, 0) 75%);
+}
+
+.luxe-hero .container {
+  padding-block: var(--space-8);
+}
+
+.luxe-hero-content {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.luxe-hero-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-danger);
+}
+
+.luxe-hero h1 {
+  color: #fff;
+  font-size: clamp(2.1rem, 5vw, 3.7rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+
+.luxe-hero h1 span {
+  color: #fff;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.luxe-hero p {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.05rem;
+  max-width: 440px;
+}
+
+.luxe-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.luxe-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.6rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.luxe-btn-primary {
+  background: #e8402b;
+  color: #fff;
+  border: 2px solid #e8402b;
+}
+
+.luxe-btn-primary:hover {
+  background: #fff;
+  color: #14162b;
+  border-color: #fff;
+}
+
+.luxe-btn-light {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.luxe-btn-light:hover {
+  background: #fff;
+  color: #14162b;
+  border-color: #fff;
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 900px) {
+  .luxe-hero-image {
+    background-position: 75% center;
+  }
+
+  .luxe-hero-overlay {
+    background: linear-gradient(90deg, rgba(20, 22, 43, 0.82) 0%, rgba(20, 22, 43, 0.5) 60%, rgba(20, 22, 43, 0.2) 100%);
+  }
+}
+
+/* ---------- Mobile: tall hero, full-width image, text over the lower part ---------- */
+@media (max-width: 600px) {
+  .luxe-hero {
+    align-items: flex-end;
+    min-height: min(155vw, 720px);
+  }
+
+  .luxe-hero-image {
+    background-size: cover;
+    background-position: center top;
+  }
+
+  /* Image stays clear at the top, then fades into dark behind the text */
+  .luxe-hero-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(13, 9, 7, 0) 0%,
+      rgba(13, 9, 7, 0) 38%,
+      rgba(13, 9, 7, 0.72) 62%,
+      rgba(13, 9, 7, 0.96) 85%,
+      #0d0907 100%
+    );
+  }
+
+  .luxe-hero .container {
+    padding-block: var(--space-6);
+  }
+
+  .luxe-hero-content {
+    max-width: none;
+    gap: var(--space-3);
+  }
+
+  .luxe-hero p {
+    font-size: 1rem;
+    max-width: 22rem;
+  }
+
+  .luxe-hero-actions {
+    width: auto;
+  }
+
+  .luxe-btn {
+    flex: 0 0 auto;
   }
 }
