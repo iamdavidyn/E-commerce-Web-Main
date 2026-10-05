@@ -22,4 +22,5 @@ node_modules
 
 
 passphrase
-passphrase.pub
+passphrase.pub__pycache__/
+*.pyc
