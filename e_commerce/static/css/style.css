@@ -7375,3 +7375,279 @@ body {
     flex: 0 0 auto;
   }
 }
+
+/* =========================================================
+   LUXE CHECKOUT — SAVED ADDRESS SELECTOR
+   Uses the existing checkout design tokens and orange accent.
+========================================================= */
+
+.checkout-layout .saved-address-wrap {
+  margin-bottom: 8px;
+}
+
+.checkout-layout .saved-address-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.checkout-layout .saved-address-heading strong,
+.checkout-layout .address-form-header strong {
+  display: block;
+  color: var(--co-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.checkout-layout .saved-address-heading small,
+.checkout-layout .address-form-header small {
+  display: block;
+  margin-top: 3px;
+  color: var(--co-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.checkout-layout .saved-addresses {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkout-layout .saved-address {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  background: var(--co-surface);
+  border: 1.5px solid var(--co-border);
+  border-radius: var(--co-radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.checkout-layout .saved-address:hover {
+  border-color: rgba(255, 106, 0, 0.5);
+  transform: translateY(-1px);
+}
+
+.checkout-layout .saved-address:focus-visible {
+  border-color: var(--co-accent);
+  box-shadow: 0 0 0 4px var(--co-accent-ring-soft);
+}
+
+.checkout-layout .saved-address.selected {
+  border-color: var(--co-accent);
+  background: var(--co-accent-ring-soft);
+  box-shadow: 0 0 0 3px var(--co-accent-ring-soft);
+}
+
+.checkout-layout .saved-address-radio {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+.checkout-layout .saved-address-radio input {
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  accent-color: var(--co-accent);
+  cursor: pointer;
+}
+
+.checkout-layout .saved-address-content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--co-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.checkout-layout .saved-address-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.checkout-layout .saved-address-head strong {
+  color: var(--co-text);
+  font-size: 14px;
+}
+
+.checkout-layout .address-default {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--co-accent-ring-soft);
+  color: var(--co-accent);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.checkout-layout .saved-address-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.checkout-layout .address-action {
+  padding: 0;
+  color: var(--co-accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkout-layout .address-action:hover {
+  text-decoration: underline;
+}
+
+.checkout-layout .address-action.danger {
+  color: var(--co-danger);
+}
+
+.checkout-layout .add-address-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  padding: 10px 0;
+  color: var(--co-accent);
+  font-family: var(--font-heading, 'Poppins', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkout-layout .add-address-btn:hover {
+  color: var(--co-accent-dark);
+}
+
+.checkout-layout .new-address-form {
+  margin-top: 20px;
+  padding-top: 22px;
+  border-top: 1px solid var(--co-border);
+}
+
+.checkout-layout .new-address-form[hidden] {
+  display: none;
+}
+
+.checkout-layout .address-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.checkout-layout .address-cancel-btn {
+  flex: 0 0 auto;
+  color: var(--co-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkout-layout .address-cancel-btn:hover {
+  color: var(--co-accent);
+}
+
+.checkout-layout .save-address-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 2px 0 16px;
+  color: var(--co-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.checkout-layout .save-address-check input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--co-accent);
+  cursor: pointer;
+}
+
+.checkout-layout .save-address-btn {
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 11px;
+  font-size: 13px;
+}
+
+.checkout-layout .address-empty,
+.checkout-layout .address-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 15px;
+  border: 1px dashed var(--co-border);
+  border-radius: var(--co-radius-sm);
+  color: var(--co-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.checkout-layout .address-empty strong {
+  color: var(--co-text);
+  font-size: 13px;
+}
+
+/* Dark mode */
+[data-theme="dark"] .checkout-layout .saved-address,
+[data-theme="dark"] .checkout-layout .address-empty,
+[data-theme="dark"] .checkout-layout .address-loading {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .checkout-layout .saved-address.selected {
+  background: rgba(255, 106, 0, 0.12);
+  border-color: var(--co-accent);
+}
+
+[data-theme="dark"] .checkout-layout .saved-address:hover {
+  border-color: rgba(255, 106, 0, 0.55);
+}
+
+[data-theme="dark"] .checkout-layout .new-address-form {
+  border-color: var(--color-border);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .checkout-layout .saved-address {
+    padding: 14px;
+  }
+
+  .checkout-layout .saved-address-content {
+    font-size: 12.5px;
+  }
+
+  .checkout-layout .address-form-header {
+    margin-bottom: 18px;
+  }
+
+  .checkout-layout .save-address-btn {
+    width: 100%;
+  }
+}
+

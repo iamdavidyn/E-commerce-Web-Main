@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order
+from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order, SavedAddress
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 import json
@@ -306,7 +306,14 @@ def faq(request):
     
 @login_required
 def account_view(request):
- return render(request, 'account.html', {'user' : request.user})
+    
+    add = Order.objects.filter(user=request.user)
+    amt = Order.objects.filter(user=request.user).count()
+    
+    return render(request, 'account.html', {'user' : request.user,
+        'address' : add,
+        'amt' : amt
+    })
 
 
 def cart(request):
@@ -647,4 +654,253 @@ def checkout(request):
         "success": True,
         "message": "Checkout information saved successfully",
         "order_id": order.id
+    })
+    
+    
+    
+    
+
+
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def addresses(request):
+
+    # =========================
+    # GET SAVED ADDRESSES
+    # =========================
+    if request.method == "GET":
+
+        addresses = SavedAddress.objects.filter(
+            user=request.user
+        ).order_by("-is_default", "-updated_at")
+
+        return JsonResponse({
+            "success": True,
+            "addresses": [
+                {
+                    "id": item.id,
+                    "label": item.label,
+                    "first_name": item.first_name,
+                    "last_name": item.last_name,
+                    "address": item.address,
+                    "city": item.city,
+                    "state": item.state,
+                    "zip": item.postal_code,
+                    "country": item.country,
+                    "is_default": item.is_default,
+                }
+                for item in addresses
+            ]
+        })
+
+    # =========================
+    # CREATE ADDRESS
+    # =========================
+    try:
+        data = json.loads(request.body)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON data"
+        }, status=400)
+
+    label = data.get("label", "Home").strip()
+    first_name = data.get("first_name", "").strip()
+    last_name = data.get("last_name", "").strip()
+    address_text = data.get("address", "").strip()
+    city = data.get("city", "").strip()
+    state = data.get("state", "").strip()
+    postal_code = data.get("zip", "").strip()
+    country = data.get("country", "").strip() or "Nigeria"
+
+    if not first_name:
+        return JsonResponse({
+            "success": False,
+            "message": "First name is required"
+        }, status=400)
+
+    if not last_name:
+        return JsonResponse({
+            "success": False,
+            "message": "Last name is required"
+        }, status=400)
+
+    if not address_text:
+        return JsonResponse({
+            "success": False,
+            "message": "Address is required"
+        }, status=400)
+
+    if not city:
+        return JsonResponse({
+            "success": False,
+            "message": "City is required"
+        }, status=400)
+
+    if not state:
+        return JsonResponse({
+            "success": False,
+            "message": "State is required"
+        }, status=400)
+
+    if not postal_code:
+        return JsonResponse({
+            "success": False,
+            "message": "Postal code is required"
+        }, status=400)
+
+    # New address becomes default if it is
+    # the user's first address.
+    has_address = SavedAddress.objects.filter(
+        user=request.user
+    ).exists()
+
+    is_default = not has_address
+
+    saved_address = SavedAddress.objects.create(
+        user=request.user,
+        label=label,
+        first_name=first_name,
+        last_name=last_name,
+        address=address_text,
+        city=city,
+        state=state,
+        postal_code=postal_code,
+        country=country,
+        is_default=is_default
+    )
+
+    return JsonResponse({
+        "success": True,
+        "message": "Address saved successfully",
+        "address": {
+            "id": saved_address.id,
+            "label": saved_address.label,
+            "first_name": saved_address.first_name,
+            "last_name": saved_address.last_name,
+            "address": saved_address.address,
+            "city": saved_address.city,
+            "state": saved_address.state,
+            "zip": saved_address.postal_code,
+            "country": saved_address.country,
+            "is_default": saved_address.is_default,
+        }
+    }, status=201)
+    
+    
+    
+
+@login_required
+@require_http_methods(["PUT", "DELETE"])
+def address_detail(request, address_id):
+
+    try:
+        saved_address = SavedAddress.objects.get(
+            id=address_id,
+            user=request.user
+        )
+
+    except SavedAddress.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "message": "Address not found"
+        }, status=404)
+
+    # =========================
+    # DELETE
+    # =========================
+    if request.method == "DELETE":
+
+        was_default = saved_address.is_default
+
+        saved_address.delete()
+
+        # If the deleted address was default,
+        # make another address default.
+        if was_default:
+            replacement = SavedAddress.objects.filter(
+                user=request.user
+            ).order_by("-updated_at").first()
+
+            if replacement:
+                replacement.is_default = True
+                replacement.save(update_fields=["is_default"])
+
+        return JsonResponse({
+            "success": True,
+            "message": "Address deleted successfully"
+        })
+
+    # =========================
+    # UPDATE
+    # =========================
+    try:
+        data = json.loads(request.body)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON data"
+        }, status=400)
+
+    saved_address.label = data.get(
+        "label",
+        saved_address.label
+    ).strip()
+
+    saved_address.first_name = data.get(
+        "first_name",
+        saved_address.first_name
+    ).strip()
+
+    saved_address.last_name = data.get(
+        "last_name",
+        saved_address.last_name
+    ).strip()
+
+    saved_address.address = data.get(
+        "address",
+        saved_address.address
+    ).strip()
+
+    saved_address.city = data.get(
+        "city",
+        saved_address.city
+    ).strip()
+
+    saved_address.state = data.get(
+        "state",
+        saved_address.state
+    ).strip()
+
+    saved_address.postal_code = data.get(
+        "zip",
+        saved_address.postal_code
+    ).strip()
+
+    saved_address.country = data.get(
+        "country",
+        saved_address.country
+    ).strip()
+
+    saved_address.save()
+
+    return JsonResponse({
+        "success": True,
+        "message": "Address updated successfully",
+        "address": {
+            "id": saved_address.id,
+            "label": saved_address.label,
+            "first_name": saved_address.first_name,
+            "last_name": saved_address.last_name,
+            "address": saved_address.address,
+            "city": saved_address.city,
+            "state": saved_address.state,
+            "zip": saved_address.postal_code,
+            "country": saved_address.country,
+            "is_default": saved_address.is_default,
+        }
     })

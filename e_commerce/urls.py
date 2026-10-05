@@ -50,6 +50,19 @@ urlpatterns = [
         views.checkout,
         name="checkout"
     ),
+    
+    path(
+        "api/addresses/",
+        views.addresses,
+        name="addresses"
+    ),
+    
+    path(
+    "api/addresses/<int:address_id>/",
+    views.address_detail,
+    name="address_detail"
+),
+
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

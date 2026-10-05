@@ -256,7 +256,7 @@
                             <div class="stat-card">
 
                                 <div class="num">
-                                    26
+                                    {{amt}}
                                 </div>
 
                                 <div class="label">
@@ -451,7 +451,8 @@
                         <h2>
                             Saved Addresses
                         </h2>
-
+                        {% if address %}
+                        {% for add in address %}
 
                         <div class="address-grid">
 
@@ -464,33 +465,20 @@
 
 
                                 <p>
-                                    42 Orchard Lane<br>
-                                    Brooklyn, NY 11201
+                                    {{add.state}}<br>
+                                    {{add.city}}<br>
+                                    {{add.address}}
                                 </p>
 
 
                                 <span class="tag">
-                                    Default
+                                    
                                 </span>
 
                             </div>
-
-
-
-                            <div class="address-card">
-
-                                <strong>
-                                    Work Address
-                                </strong>
-
-
-                                <p>
-                                    88 Market Street<br>
-                                    San Francisco, CA 94103
-                                </p>
-
-                            </div>
-
+                            
+                        {% endfor %}
+                        {% endif %}
 
                         </div>
 
@@ -533,7 +521,7 @@
                                     type="text"
                                     id="name"
                                     name="full_name"
-                                    value="{{ user.full_name|default:'' }}"
+                                    value="{{ user.first_name }} {{ user.last_name }}"
                                     autocomplete="name"
                                     placeholder="Enter your full name"
                                 >

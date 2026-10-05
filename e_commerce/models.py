@@ -33,7 +33,7 @@ class Product(models.Model):
         unique=True,
         editable=False)
 
-    product_image = models.ImageField()
+    product_image = models.ImageField(upload_to='products')
     
     product_name = models.CharField(max_length=500)
     
@@ -56,7 +56,8 @@ class Product(models.Model):
 
     def __str__(self):
      return self.product_name
-
+     
+     
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="cart")
@@ -238,3 +239,34 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.user} - {self.email}"
+
+
+
+class SavedAddress(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="saved_addresses"
+    )
+
+    label = models.CharField(max_length=50, default="Home")
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, default="Nigeria")
+
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-is_default", "-updated_at"]
+
+    def __str__(self):
+        return f"{self.label} - {self.first_name} {self.last_name}"
