@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.views import View
+import uuid
 
 
 # Create your views here.
@@ -904,3 +905,100 @@ def address_detail(request, address_id):
             "is_default": saved_address.is_default,
         }
     })
+    
+    
+    
+
+
+def admin_dashboard(request):
+    return render(request, "custom_admin/dashboard.html")
+
+
+def admin_products(request):
+    
+    pdt = Product.objects.all()
+    
+    return render(request, "custom_admin/products.html",{'product' : pdt})
+
+
+def admin_product_form(request):
+    
+    if request.method == "POST":
+
+        product_name = request.POST.get("product_name")
+        product_category = request.POST.get("product_category")
+        old_product_price = request.POST.get("old_product_price")
+        new_product_price = request.POST.get("new_product_price")
+        product_Desc = request.POST.get("product_Desc")
+        badge = request.POST.get("badge")
+        tag = request.POST.get("tag")
+        stock = request.POST.get("stock")
+        product_image = request.FILES.get("product_image")
+
+        product_code = uuid.uuid4().hex[:20].upper()
+
+        Product.objects.create(
+            product_code=product_code,
+            product_name=product_name,
+            product_category=product_category,
+            old_product_price=old_product_price,
+            new_product_price=new_product_price,
+            product_Desc=product_Desc,
+            badge=badge,
+            tag=tag,
+            stock=stock,
+            product_image=product_image,
+        )
+
+        return redirect("admin_products")
+    
+    return render(request, "custom_admin/product-form.html")
+
+
+def admin_categories(request):
+    return render(request, "custom_admin/categories.html")
+
+
+def admin_orders(request):
+    return render(request, "custom_admin/orders.html")
+
+
+def admin_order_detail(request, order_id):
+    return render(request, "custom_admin/order-detail.html", {
+        "order_id": order_id,
+    })
+
+
+def admin_customers(request):
+    return render(request, "custom_admin/customers.html")
+
+
+def admin_inventory(request):
+    
+    pdt = Product.objects.all()
+    
+    return render(request, "custom_admin/inventory.html", {'product' : pdt})
+
+
+def admin_reviews(request):
+    return render(request, "custom_admin/reviews.html")
+
+
+def admin_discounts(request):
+    return render(request, "custom_admin/discounts.html")
+
+
+def admin_shipping(request):
+    return render(request, "custom_admin/shipping.html")
+
+
+def admin_settings(request):
+    return render(request, "custom_admin/settings.html")
+
+
+def admin_profile(request):
+    return render(request, "custom_admin/profile.html")
+
+
+def admin_login(request):
+    return render(request, "custom_admin/login.html")

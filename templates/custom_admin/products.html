@@ -1,0 +1,223 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products | LUXE Admin</title>
+<link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+</head>
+
+<style>
+    /* =========================================================
+   PRODUCTS TABLE — MOBILE SPACING
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    /* Give the page more usable horizontal space */
+    .main-wrapper {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .container-fluid {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    /* Product table becomes horizontally scrollable */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+    }
+
+    .table-responsive table {
+        min-width: 760px;
+        width: 760px;
+    }
+
+    /* More breathing room */
+    .table-responsive th,
+    .table-responsive td {
+        padding: 18px 16px !important;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    /* Product column */
+    .table-responsive th:first-child,
+    .table-responsive td:first-child {
+        min-width: 260px;
+        width: 260px;
+    }
+
+    /* Category */
+    .table-responsive th:nth-child(2),
+    .table-responsive td:nth-child(2) {
+        min-width: 150px;
+    }
+
+    /* Price */
+    .table-responsive th:nth-child(3),
+    .table-responsive td:nth-child(3) {
+        min-width: 150px;
+    }
+
+    /* Stock */
+    .table-responsive th:nth-child(4),
+    .table-responsive td:nth-child(4) {
+        min-width: 100px;
+        text-align: center;
+    }
+
+    /* Action */
+    .table-responsive th:last-child,
+    .table-responsive td:last-child {
+        min-width: 120px;
+        text-align: center;
+    }
+
+    /* Product image */
+    .luxe-thumb {
+        width: 58px !important;
+        height: 58px !important;
+        min-width: 58px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    /* Product name */
+    .table-responsive td strong {
+        font-size: 16px;
+        line-height: 1.4;
+        white-space: normal;
+        display: block;
+        max-width: 160px;
+    }
+
+    /* Edit button */
+    .table-responsive .btn {
+        min-width: 90px;
+        padding: 10px 16px;
+        font-size: 15px;
+    }
+
+    /* Category and price */
+    .table-responsive td {
+        font-size: 15px;
+    }
+
+    /* Table header */
+    .table-responsive th {
+        font-size: 13px;
+        letter-spacing: .4px;
+    }
+}
+</style>
+
+<body>
+<div id="preloader"><div class="spinner"></div></div>
+<aside class="sidebar-nav-wrapper" id="sidebar">
+  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
+  <nav class="sidebar-nav"><ul><li class="nav-item"><a class="" href="{% url 'admin_dashboard' %}">
+          <span class="icon"><i class="lni lni-dashboard"></i></span><span class="text">Dashboard</span>
+        </a></li><li class="nav-item"><a class="active" href="{% url 'admin_products' %}">
+          <span class="icon"><i class="lni lni-shopping-basket"></i></span><span class="text">Products</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_categories' %}">
+          <span class="icon"><i class="lni lni-grid-alt"></i></span><span class="text">Categories</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_orders' %}">
+          <span class="icon"><i class="lni lni-cart"></i></span><span class="text">Orders</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_customers' %}">
+          <span class="icon"><i class="lni lni-users"></i></span><span class="text">Customers</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_inventory' %}">
+          <span class="icon"><i class="lni lni-package"></i></span><span class="text">Inventory</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_reviews' %}">
+          <span class="icon"><i class="lni lni-comments"></i></span><span class="text">Reviews</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_discounts' %}">
+          <span class="icon"><i class="lni lni-offer"></i></span><span class="text">Discounts</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_shipping' %}">
+          <span class="icon"><i class="lni lni-delivery"></i></span><span class="text">Shipping</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_settings' %}">
+          <span class="icon"><i class="lni lni-cog"></i></span><span class="text">Settings</span>
+        </a></li></ul></nav>
+</aside>
+<div class="overlay"></div>
+<main class="main-wrapper">
+<header class="header">
+  <div class="container-fluid"><div class="row align-items-center">
+    <div class="col-lg-5 col-md-5 col-6">
+      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
+      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
+    </div>
+    <div class="col-lg-7 col-md-7 col-6">
+      <div class="d-flex justify-content-end align-items-center gap-3">
+        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
+        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
+          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</header>
+<section class="section">
+<div class="container-fluid">
+<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Products</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Products</li></ol></nav></div></div></div></div>
+
+<div class="card-style">
+<div class="luxe-toolbar mb-20"><div class="d-flex gap-2 flex-wrap"><input class="form-control search" placeholder="Search products..." data-table-search="#productsTable"><select class="form-select" style="width:auto"><option>All categories</option><option>Electronics</option><option>Fashion</option><option>Beauty</option><option>Home</option></select></div><a class="btn btn-primary" href="{% url 'admin_product_form' %}"><i class="lni lni-plus"></i> Add product</a></div>
+<div class="table-responsive"><table class="table luxe-table" id="productsTable"><thead><tr><th>Product</th><th>Cat</th><th>Price</th><th>Stock</th><th class="text-end">Action</th></tr></thead><tbody>
+
+{% if product %}
+    {% for pdt in product %}
+        <tr>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+
+                    {% if pdt.product_image %}
+                        <img
+                            src="{{ pdt.product_image.url }}"
+                            class="luxe-thumb"
+                            alt="{{ pdt.product_name }}"
+                        >
+                    {% else %}
+                        <img
+                            src="{% static 'admin/images/products/product-mini-2.svg' %}"
+                            class="luxe-thumb"
+                            alt="{{ pdt.product_name }}"
+                        >
+                    {% endif %}
+
+                    <strong>{{ pdt.product_name }}</strong>
+                </div>
+            </td>
+
+            <td>{{ pdt.product_category }}</td>
+            <td>₦{{ pdt.new_product_price }}</td>
+            <td>{{ pdt.stock }}</td>
+
+
+            <td class="text-end">
+                <a href="{% url 'admin_product_form' %}"
+                   class="btn btn-sm btn-outline-primary">
+                    Edit
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+{% endif %}
+
+</tbody></table></div></div>
+
+<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
+</div></section>
+</main>
+<script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'admin/js/luxe-admin.js' %}"></script>
+</body></html>

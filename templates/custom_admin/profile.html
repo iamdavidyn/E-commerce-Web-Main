@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Profile | LUXE Admin</title>
+<link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+</head>
+<body>
+<div id="preloader"><div class="spinner"></div></div>
+<aside class="sidebar-nav-wrapper" id="sidebar">
+  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
+  <nav class="sidebar-nav"><ul><li class="nav-item"><a class="" href="{% url 'admin_dashboard' %}">
+          <span class="icon"><i class="lni lni-dashboard"></i></span><span class="text">Dashboard</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_products' %}">
+          <span class="icon"><i class="lni lni-shopping-basket"></i></span><span class="text">Products</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_categories' %}">
+          <span class="icon"><i class="lni lni-grid-alt"></i></span><span class="text">Categories</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_orders' %}">
+          <span class="icon"><i class="lni lni-cart"></i></span><span class="text">Orders</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_customers' %}">
+          <span class="icon"><i class="lni lni-users"></i></span><span class="text">Customers</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_inventory' %}">
+          <span class="icon"><i class="lni lni-package"></i></span><span class="text">Inventory</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_reviews' %}">
+          <span class="icon"><i class="lni lni-comments"></i></span><span class="text">Reviews</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_discounts' %}">
+          <span class="icon"><i class="lni lni-offer"></i></span><span class="text">Discounts</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_shipping' %}">
+          <span class="icon"><i class="lni lni-delivery"></i></span><span class="text">Shipping</span>
+        </a></li><li class="nav-item"><a class="" href="{% url 'admin_settings' %}">
+          <span class="icon"><i class="lni lni-cog"></i></span><span class="text">Settings</span>
+        </a></li></ul></nav>
+</aside>
+<div class="overlay"></div>
+<main class="main-wrapper">
+<header class="header">
+  <div class="container-fluid"><div class="row align-items-center">
+    <div class="col-lg-5 col-md-5 col-6">
+      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
+      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
+    </div>
+    <div class="col-lg-7 col-md-7 col-6">
+      <div class="d-flex justify-content-end align-items-center gap-3">
+        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
+        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
+          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</header>
+<section class="section">
+<div class="container-fluid">
+<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Admin Profile</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Admin Profile</li></ol></nav></div></div></div></div>
+
+<div class="luxe-two"><div class="card-style"><div class="luxe-section-title">Profile</div><div class="mb-3"><label class="form-label">Name</label><input class="form-control" value="Store Administrator"></div><div class="mb-3"><label class="form-label">Email</label><input class="form-control" value="admin@luxe.store"></div><button class="btn btn-primary">Save profile</button></div><div class="card-style"><div class="luxe-section-title">Security</div><div class="mb-3"><label class="form-label">Current password</label><input class="form-control" type="password"></div><div class="mb-3"><label class="form-label">New password</label><input class="form-control" type="password"></div><button class="btn btn-outline-primary">Change password</button></div></div>
+
+<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
+</div></section>
+</main>
+<script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'admin/js/luxe-admin.js' %}"></script>
+</body></html>

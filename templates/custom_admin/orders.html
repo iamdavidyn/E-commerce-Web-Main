@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders | LUXE Admin</title>
+<link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+</head>
+<body>
+<div id="preloader"><div class="spinner"></div></div>
+<aside class="sidebar-nav-wrapper" id="sidebar">
+  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
+    <nav class="sidebar-nav">
+        <ul>
+            <li class="nav-item">
+                <a class="active" href="{% url 'admin_dashboard' %}">
+                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                    <span class="text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_products' %}">
+                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="text">Products</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_categories' %}">
+                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="text">Categories</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="active" href="{% url 'admin_orders' %}">
+                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="text">Orders</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_customers' %}">
+                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="text">Customers</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_inventory' %}">
+                    <span class="icon"><i class="lni lni-package"></i></span>
+                    <span class="text">Inventory</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_reviews' %}">
+                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="text">Reviews</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_discounts' %}">
+                    <span class="icon"><i class="lni lni-offer"></i></span>
+                    <span class="text">Discounts</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_shipping' %}">
+                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="text">Shipping</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'admin_settings' %}">
+                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<div class="overlay"></div>
+<main class="main-wrapper">
+<header class="header">
+  <div class="container-fluid"><div class="row align-items-center">
+    <div class="col-lg-5 col-md-5 col-6">
+      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
+      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
+    </div>
+    <div class="col-lg-7 col-md-7 col-6">
+      <div class="d-flex justify-content-end align-items-center gap-3">
+        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
+        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
+          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</header>
+<section class="section">
+<div class="container-fluid">
+<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Orders</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Orders</li></ol></nav></div></div></div></div>
+
+<div class="card-style"><div class="luxe-toolbar mb-3"><div class="d-flex gap-2 flex-wrap"><input class="form-control search" placeholder="Search order or customer..." data-table-search="#ordersTable"><select class="form-select" style="width:auto"><option>All statuses</option><option>Pending</option><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></div></div>
+<div class="table-responsive"><table class="table luxe-table" id="ordersTable"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Payment</th><th>Total</th><th>Fulfillment</th><th></th></tr></thead><tbody>
+<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10482</strong></a></td><td>David Okafor<br><small class="text-muted">david@example.com</small></td><td>Oct 06</td><td><span class="luxe-badge success">Paid</span></td><td>₦85,000</td><td><span class="luxe-badge warning">Processing</span></td><td><a href="{% url 'admin_order_detail' order_id=10480 %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
+<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10481</strong></a></td><td>Amaka Nwosu<br><small class="text-muted">amaka@example.com</small></td><td>Oct 06</td><td><span class="luxe-badge success">Paid</span></td><td>₦42,500</td><td><span class="luxe-badge warning">Processing</span></td><td><a href="{% url 'admin_order_detail' order_id=10480 %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
+<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10480</strong></a></td><td>John Ade<br><small class="text-muted">john@example.com</small></td><td>Oct 05</td><td><span class="luxe-badge success">Paid</span></td><td>₦128,900</td><td><span class="luxe-badge success">Shipped</span></td><td><a href="{% url 'admin_order_detail' order_id=10480 %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
+</tbody></table></div></div>
+
+<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
+</div></section>
+</main>
+<script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'admin/js/luxe-admin.js' %}"></script>
+</body></html>
