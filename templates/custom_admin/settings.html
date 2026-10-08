@@ -58,9 +58,176 @@
 <section class="section">
 <div class="container-fluid">
 <div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Store Settings</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Store Settings</li></ol></nav></div></div></div></div>
+<form method="post">
+    {% csrf_token %}
+<div class="luxe-two">
 
-<div class="luxe-two"><div class="card-style"><div class="luxe-section-title">Store information</div><div class="mb-3"><label class="form-label">Store name</label><input class="form-control" value="LUXE"></div><div class="mb-3"><label class="form-label">Store email</label><input class="form-control" value="support@luxe.store"></div><div class="mb-3"><label class="form-label">Currency</label><select class="form-select"><option>NGN — ₦</option><option>USD — $</option></select></div><div class="mb-3"><label class="form-label">Store description</label><textarea class="form-control" rows="4">Premium online shopping for electronics, fashion, beauty and home essentials.</textarea></div><button class="btn btn-primary">Save settings</button></div>
-<div class="card-style"><div class="luxe-section-title">Checkout</div><div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Enable guest checkout</label></div><div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Enable saved addresses</label></div><div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Paystack payments</label></div><div class="form-check form-switch"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Product reviews</label></div></div></div>
+    <div class="card-style">
+
+        <div class="luxe-section-title">
+            Store information
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Store name
+            </label>
+
+            <input
+                class="form-control"
+                type="text"
+                name="store_name"
+                value="{{ store.store_name|default:'LUXE' }}"
+                maxlength="200"
+                required>
+
+        </div>
+
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Store email
+            </label>
+
+            <input
+                class="form-control"
+                type="email"
+                name="store_email"
+                value="{{ store.store_email|default:'support@luxe.store' }}"
+                required>
+
+        </div>
+
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Currency
+            </label>
+
+            <select
+                class="form-select"
+                name="currency">
+
+                <option
+                    value="NGN"
+                    {% if store.currency == "NGN" %}selected{% endif %}>
+                    NGN — ₦
+                </option>
+
+                <option
+                    value="USD"
+                    {% if store.currency == "USD" %}selected{% endif %}>
+                    USD — $
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Store description
+            </label>
+
+            <textarea
+                class="form-control"
+                rows="4"
+                name="store_desc"
+                required>{{ store.store_desc|default:'Premium online shopping for electronics, fashion, beauty and home essentials.' }}</textarea>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-primary">
+
+            Save settings
+
+        </button>
+
+    </div>
+
+
+    <div class="card-style">
+
+        <div class="luxe-section-title">
+            Checkout
+        </div>
+
+
+        <div class="form-check form-switch mb-3">
+
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="guest_checkout"
+                value="1"
+                {% if store.guest_checkout %}checked{% endif %}>
+
+            <label class="form-check-label">
+                Enable guest checkout
+            </label>
+
+        </div>
+
+
+        <div class="form-check form-switch mb-3">
+
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="saved_addresses"
+                value="1"
+                {% if store.saved_addresses %}checked{% endif %}>
+
+            <label class="form-check-label">
+                Enable saved addresses
+            </label>
+
+        </div>
+
+
+        <div class="form-check form-switch mb-3">
+
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="paystack_payments"
+                value="1"
+                {% if store.paystack_payments %}checked{% endif %}>
+
+            <label class="form-check-label">
+                Paystack payments
+            </label>
+
+        </div>
+
+
+        <div class="form-check form-switch">
+
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="product_reviews"
+                value="1"
+                {% if store.product_reviews %}checked{% endif %}>
+
+            <label class="form-check-label">
+                Product reviews
+            </label>
+
+        </div>
+
+    </div>
+
+</div>
+</form>
 
 <div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
 </div></section>

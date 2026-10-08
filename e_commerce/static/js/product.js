@@ -1,12 +1,3 @@
-/* ============================================
-   LUXE — Product detail logic
-   ============================================ */
-
-
-/* ============================================
-   Escape customer review text
-   ============================================ */
-
 function escapeReviewHTML(value) {
 
   return String(value || '')
@@ -19,10 +10,6 @@ function escapeReviewHTML(value) {
 }
 
 
-/* ============================================
-   Render product details
-   ============================================ */
-
 function renderDetail(p) {
 
   const wished =
@@ -34,7 +21,6 @@ function renderDetail(p) {
           (1 - p.price / p.old) * 100
         )
       : 0;
-
 
   const features = [
 
@@ -58,10 +44,17 @@ function renderDetail(p) {
 
   ];
 
+  const images =
+    Array.isArray(p.images) && p.images.length
+      ? p.images.filter(
+          (src) => src && String(src).trim()
+        )
+      : p.img
+        ? [p.img]
+        : [];
 
-  /* ==========================================
-     Product HTML
-     ========================================== */
+  const mainImage =
+    images[0] || '';
 
   document.querySelector(
     '#product-detail'
@@ -88,7 +81,7 @@ function renderDetail(p) {
         }
 
         <img
-          src="${p.img}"
+          src="${mainImage}"
           alt="${p.name}"
           id="pd-main"
         >
@@ -96,29 +89,44 @@ function renderDetail(p) {
       </div>
 
 
-      <div class="pd-thumbs">
+      ${
+        images.length > 0
+          ? `
+            <div class="pd-thumbs">
 
-        ${
-          [p.img, p.img, p.img]
-            .map((src, i) => `
-              
-              <button
-                class="pd-thumb ${i === 0 ? 'active' : ''}"
-                data-src="${src}"
-              >
+              ${
+                images
+                  .map((src, i) => `
 
-                <img
-                  src="${src}"
-                  alt="${p.name} view ${i + 1}"
-                >
+                    <button
+                      class="pd-thumb ${
+                        i === 0 ? 'active' : ''
+                      }"
+                      data-src="${src}"
+                      type="button"
+                      aria-label="View ${
+                        p.name
+                      } image ${i + 1}"
+                    >
 
-              </button>
+                      <img
+                        src="${src}"
+                        alt="${
+                          p.name
+                        } view ${i + 1}"
+                        loading="lazy"
+                      >
 
-            `)
-            .join('')
-        }
+                    </button>
 
-      </div>
+                  `)
+                  .join('')
+              }
+
+            </div>
+          `
+          : ''
+      }
 
     </div>
 
@@ -179,7 +187,9 @@ function renderDetail(p) {
 
 
       <div
-        class="pd-stock ${p.stock <= 10 ? 'low' : ''}"
+        class="pd-stock ${
+          p.stock <= 10 ? 'low' : ''
+        }"
       >
 
         ${icon('check')}
@@ -200,8 +210,6 @@ function renderDetail(p) {
 
       <div class="pd-buy">
 
-
-        <!-- Quantity -->
 
         <div
           class="qty-stepper"
@@ -237,8 +245,6 @@ function renderDetail(p) {
         </div>
 
 
-        <!-- Add to cart -->
-
         <button
           class="btn btn-primary btn-lg js-pd-add"
           data-id="${p.id}"
@@ -251,8 +257,6 @@ function renderDetail(p) {
 
         </button>
 
-
-        <!-- Wishlist -->
 
         <button
           class="icon-btn pd-wish js-wishlist ${
@@ -269,8 +273,6 @@ function renderDetail(p) {
 
       </div>
 
-
-      <!-- Product features -->
 
       <div class="pd-features">
 
@@ -306,8 +308,6 @@ function renderDetail(p) {
       </div>
 
 
-      <!-- Product metadata -->
-
       <div class="pd-meta">
 
         <span>
@@ -342,47 +342,42 @@ function renderDetail(p) {
   `;
 
 
-  /* ==========================================
-     Thumbnail switching
-     ========================================== */
-
   document
     .querySelectorAll('.pd-thumb')
     .forEach((t) => {
 
-      t.addEventListener('click', () => {
+      t.addEventListener(
+        'click',
+        () => {
 
-        document
-          .querySelectorAll('.pd-thumb')
-          .forEach((x) => {
+          document
+            .querySelectorAll('.pd-thumb')
+            .forEach((x) => {
 
-            x.classList.remove('active');
+              x.classList.remove('active');
 
-          });
-
-
-        t.classList.add('active');
-
-
-        const mainImage =
-          document.querySelector('#pd-main');
+            });
 
 
-        if (mainImage) {
+          t.classList.add('active');
 
-          mainImage.src =
-            t.dataset.src;
+
+          const mainImage =
+            document.querySelector('#pd-main');
+
+
+          if (mainImage) {
+
+            mainImage.src =
+              t.dataset.src;
+
+          }
 
         }
-
-      });
+      );
 
     });
 
-
-  /* ==========================================
-     Quantity stepper
-     ========================================== */
 
   const qty =
     document.querySelector('#pd-qty');
@@ -396,8 +391,11 @@ function renderDetail(p) {
     document.querySelector('.js-qty-inc');
 
 
-  if (qty && decreaseButton && increaseButton) {
-
+  if (
+    qty &&
+    decreaseButton &&
+    increaseButton
+  ) {
 
     decreaseButton.addEventListener(
       'click',
@@ -449,10 +447,6 @@ function renderDetail(p) {
   }
 
 
-  /* ==========================================
-     Add to cart
-     ========================================== */
-
   const addButton =
     document.querySelector('.js-pd-add');
 
@@ -476,14 +470,12 @@ function renderDetail(p) {
 }
 
 
-/* ============================================
-   Load reviews for current product
-   ============================================ */
-
 function loadProductReviews(productId) {
 
   const productDetail =
-    document.querySelector('#product-detail');
+    document.querySelector(
+      '#product-detail'
+    );
 
 
   if (!productDetail) {
@@ -513,16 +505,6 @@ function loadProductReviews(productId) {
 
     .then((reviews) => {
 
-
-      /* ========================================
-         NO REVIEWS
-         
-         Do absolutely nothing.
-         No heading.
-         No 0.
-         No empty message.
-         ======================================== */
-
       if (
         !Array.isArray(reviews) ||
         reviews.length === 0
@@ -532,10 +514,6 @@ function loadProductReviews(productId) {
 
       }
 
-
-      /* ========================================
-         Create review section
-         ======================================== */
 
       const section =
         document.createElement('section');
@@ -552,7 +530,6 @@ function loadProductReviews(productId) {
       section.innerHTML = `
 
         <div class="reviews-section-head">
-
 
           <div>
 
@@ -579,7 +556,6 @@ function loadProductReviews(productId) {
 
           </span>
 
-
         </div>
 
 
@@ -588,7 +564,6 @@ function loadProductReviews(productId) {
           ${
             reviews
               .map((review) => {
-
 
                 const name =
                   escapeReviewHTML(
@@ -628,18 +603,13 @@ function loadProductReviews(productId) {
                     class="review-card"
                   >
 
-
-                    <!-- Customer -->
-
                     <div
                       class="review-card-top"
                     >
 
-
                       <div
                         class="review-customer"
                       >
-
 
                         <div
                           class="review-avatar"
@@ -685,7 +655,6 @@ function loadProductReviews(productId) {
 
                         </div>
 
-
                       </div>
 
 
@@ -695,11 +664,8 @@ function loadProductReviews(productId) {
                         ${date}
                       </span>
 
-
                     </div>
 
-
-                    <!-- Rating -->
 
                     <div
                       class="review-stars"
@@ -716,14 +682,11 @@ function loadProductReviews(productId) {
                     </div>
 
 
-                    <!-- Comment -->
-
                     <p
                       class="review-comment"
                     >
                       ${comment}
                     </p>
-
 
                   </article>
 
@@ -738,11 +701,6 @@ function loadProductReviews(productId) {
       `;
 
 
-      /*
-       * Add the review section underneath
-       * the product detail.
-       */
-
       productDetail.appendChild(
         section
       );
@@ -751,13 +709,6 @@ function loadProductReviews(productId) {
 
 
     .catch((error) => {
-
-      /*
-       * Do not display an error message
-       * to the customer.
-       *
-       * Only log it in the console.
-       */
 
       console.error(
         'REVIEWS ERROR:',
@@ -769,18 +720,9 @@ function loadProductReviews(productId) {
 }
 
 
-/* ============================================
-   Product page initialization
-   ============================================ */
-
 document.addEventListener(
   'DOMContentLoaded',
   () => {
-
-
-    /* ========================================
-       Get product ID
-       ======================================== */
 
     const id =
       getParam('id');
@@ -789,10 +731,6 @@ document.addEventListener(
     const p =
       findProduct(id);
 
-
-    /* ========================================
-       Product doesn't exist
-       ======================================== */
 
     if (!p) {
 
@@ -832,17 +770,9 @@ document.addEventListener(
     }
 
 
-    /* ========================================
-       Page title
-       ======================================== */
-
     document.title =
       `${p.name} | LUXE`;
 
-
-    /* ========================================
-       Breadcrumb
-       ======================================== */
 
     const crumbName =
       document.querySelector(
@@ -878,23 +808,11 @@ document.addEventListener(
     }
 
 
-    /* ========================================
-       Render product
-       ======================================== */
-
     renderDetail(p);
 
 
-    /* ========================================
-       Load product-specific reviews
-       ======================================== */
-
     loadProductReviews(p.id);
 
-
-    /* ========================================
-       Related products
-       ======================================== */
 
     const related =
       PRODUCTS
@@ -939,10 +857,6 @@ document.addEventListener(
 
     }
 
-
-    /* ========================================
-       Reveal animations
-       ======================================== */
 
     setTimeout(
       setupReveal,

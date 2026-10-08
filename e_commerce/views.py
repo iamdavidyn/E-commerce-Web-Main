@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order, SavedAddress
+from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order, SavedAddress, ProductImage
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 import json
@@ -143,7 +143,9 @@ def add_to_cart(request):
     })
 
 
+
 def api_shop(request):
+
     products = Product.objects.all()
 
     data = []
@@ -156,40 +158,87 @@ def api_shop(request):
 
         review_count = reviews.count()
 
-        if review_count > 0:
-            rating = sum(
-                review.rating for review in reviews
-            ) / review_count
+        if review_count:
+            rating = (
+                sum(
+                    review.rating
+                    for review in reviews
+                ) / review_count
+            )
         else:
             rating = 0
 
+        images = []
+
+        if item.product_image:
+            images.append(
+                item.product_image.url
+            )
+
+        additional_images = ProductImage.objects.filter(
+            product=item
+        ).order_by("created_at")
+
+        for product_image in additional_images:
+
+            if product_image.image:
+
+                image_url = product_image.image.url
+
+                if image_url not in images:
+                    images.append(image_url)
+
         data.append({
-            # Product table
-            'id': item.id,
-            'name': item.product_name,
-            'cat': item.product_category,
-            'price': float(item.new_product_price),
-            'old': (
+
+            "id": item.id,
+
+            "name": item.product_name,
+
+            "cat": item.product_category,
+
+            "price": float(
+                item.new_product_price
+            ),
+
+            "old": (
                 float(item.old_product_price)
                 if item.old_product_price is not None
                 else 0
             ),
-            'img': (
+
+            "img": (
                 item.product_image.url
                 if item.product_image
-                else ''
+                else ""
             ),
-            'badge': item.badge,
-            'tags': [item.tag],
-            'desc': item.product_Desc,
-            'stock': item.stock,
 
-            # CustomersReview table
-            'rating': round(rating, 1),
-            'reviews': review_count,
+            "images": images,
+
+            "badge": item.badge,
+
+            "tags": [
+                item.tag
+            ],
+
+            "desc": item.product_Desc,
+
+            "stock": item.stock,
+
+            "rating": round(
+                rating,
+                1
+            ),
+
+            "reviews": review_count
+
         })
 
-    return JsonResponse(data, safe=False)
+    return JsonResponse(
+        data,
+        safe=False
+    )
+
+
 
 
 def cart_api(request):
@@ -921,8 +970,9 @@ def admin_products(request):
     return render(request, "custom_admin/products.html",{'product' : pdt})
 
 
-def admin_product_form(request):
-    
+
+def admin_product_create(request):
+
     if request.method == "POST":
 
         product_name = request.POST.get("product_name")
@@ -933,26 +983,88 @@ def admin_product_form(request):
         badge = request.POST.get("badge")
         tag = request.POST.get("tag")
         stock = request.POST.get("stock")
-        product_image = request.FILES.get("product_image")
 
-        product_code = uuid.uuid4().hex[:20].upper()
+        images = request.FILES.getlist("product_images")
 
-        Product.objects.create(
-            product_code=product_code,
+        if not images:
+            return redirect("admin_product_form")
+
+        product = Product.objects.create(
+            product_code=uuid.uuid4().hex[:6].upper(),
             product_name=product_name,
             product_category=product_category,
-            old_product_price=old_product_price,
+            old_product_price=old_product_price or 0,
             new_product_price=new_product_price,
             product_Desc=product_Desc,
             badge=badge,
             tag=tag,
-            stock=stock,
-            product_image=product_image,
+            stock=stock or 0,
+            product_image=images[0]
         )
 
+        for image in images[1:]:
+            ProductImage.objects.create(
+                product=product,
+                image=image
+            )
+
         return redirect("admin_products")
+
+    return render(
+        request,
+        "custom_admin/product-form.html"
+    )
+
+
+
+
+
+def admin_product_form(request, pdt_id):
     
-    return render(request, "custom_admin/product-form.html")
+    pdt = get_object_or_404(Product, id=pdt_id)
+
+    if request.method == "POST":
+
+        product_name = request.POST.get("product_name")
+        product_category = request.POST.get("product_category")
+        old_product_price = request.POST.get("old_product_price")
+        new_product_price = request.POST.get("new_product_price")
+        product_Desc = request.POST.get("product_Desc")
+        badge = request.POST.get("badge")
+        tag = request.POST.get("tag")
+        stock = request.POST.get("stock")
+
+        images = request.FILES.getlist("product_images")
+
+        if not images:
+            return redirect("admin_product_form")
+
+        product = Product.objects.create(
+            product_code=uuid.uuid4().hex[:6].upper(),
+            product_name=product_name,
+            product_category=product_category,
+            old_product_price=old_product_price or 0,
+            new_product_price=new_product_price,
+            product_Desc=product_Desc,
+            badge=badge,
+            tag=tag,
+            stock=stock or 0,
+            product_image=images[0]
+        )
+
+        for image in images[1:]:
+            ProductImage.objects.create(
+                product=product,
+                image=image
+            )
+
+        return redirect("admin_products")
+
+    return render(
+        request,
+        "custom_admin/product-form.html", {'product' : pdt}
+    )
+
 
 
 def admin_categories(request):
@@ -993,7 +1105,55 @@ def admin_shipping(request):
 
 
 def admin_settings(request):
-    return render(request, "custom_admin/settings.html")
+    
+    store = StoreSettings.objects.first()
+
+    if not store:
+        store = StoreSettings.objects.create(
+            store_name="LUXE",
+            store_email="support@luxe.store",
+            store_desc="Premium online shopping for electronics, fashion, beauty and home essentials.",
+            currency="NGN",
+            guest_checkout=True,
+            saved_addresses=True,
+            paystack_payments=True,
+            product_reviews=True,
+        )
+
+    if request.method == "POST":
+
+        store.store_name = request.POST.get("store_name")
+        store.store_email = request.POST.get("store_email")
+        store.store_desc = request.POST.get("store_desc")
+        store.currency = request.POST.get("currency", "NGN")
+
+        store.guest_checkout = (
+            request.POST.get("guest_checkout") == "1"
+        )
+
+        store.saved_addresses = (
+            request.POST.get("saved_addresses") == "1"
+        )
+
+        store.paystack_payments = (
+            request.POST.get("paystack_payments") == "1"
+        )
+
+        store.product_reviews = (
+            request.POST.get("product_reviews") == "1"
+        )
+
+        store.save()
+
+        return redirect("store_settings")
+
+    return render(
+        request,
+        "custom_admin/settings.html",
+        {
+            "store": store
+        }
+    )
 
 
 def admin_profile(request):

@@ -4,6 +4,18 @@ import uuid
 # Create your models here.
 
 
+
+     
+
+class Cart(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="cart")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+      return f"{self.user.username}'s Cart"
+
 class Product(models.Model):
     BADGE_CHOICES = (
         ('new', 'new'),
@@ -25,49 +37,99 @@ class Product(models.Model):
         ('Beauty', 'Beauty'),
         ('Sports', 'Sports'),
         ('Groceries', 'Groceries'),
-        ('Toys', 'Toys')
-
+        ('Toys', 'Toys'),
     )
-    
-    product_code = models.CharField(max_length=20,
-        unique=True,
-        editable=False)
 
-    product_image = models.ImageField(upload_to='products')
-    
-    product_name = models.CharField(max_length=500)
-    
-    old_product_price = models.DecimalField(decimal_places=2, default=0.00, max_digits=225, null=True, blank=True)
-    
-    new_product_price = models.DecimalField(decimal_places=2, default=0.00, max_digits=225)
-    
-    product_category = models.CharField(max_length=50, choices=CAT_CHOICES)
-    badge = models.CharField(max_length= 20, choices=BADGE_CHOICES, default= 'Hot')
-    tag = models.CharField(max_length= 20, choices=TAG_CHOICES, default= 'best')
-    stock = models.PositiveIntegerField(default=1)
+    product_code = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False
+    )
+
+    product_image = models.ImageField(
+        upload_to='products'
+    )
+
+    product_name = models.CharField(
+        max_length=500
+    )
+
+    old_product_price = models.DecimalField(
+        decimal_places=2,
+        default=0.00,
+        max_digits=225,
+        null=True,
+        blank=True
+    )
+
+    new_product_price = models.DecimalField(
+        decimal_places=2,
+        default=0.00,
+        max_digits=225
+    )
+
+    product_category = models.CharField(
+        max_length=50,
+        choices=CAT_CHOICES
+    )
+
+    badge = models.CharField(
+        max_length=20,
+        choices=BADGE_CHOICES,
+        default='hot'
+    )
+
+    tag = models.CharField(
+        max_length=20,
+        choices=TAG_CHOICES,
+        default='best'
+    )
+
+    stock = models.PositiveIntegerField(
+        default=1
+    )
+
     product_Desc = models.TextField()
-    
+
+
     def save(self, *args, **kwargs):
+
         if not self.product_code:
-            self.product_code = "LUXE-" + uuid.uuid4().hex[:8].upper()
+            self.product_code = (
+                "LUXE-" +
+                uuid.uuid4().hex[:8].upper()
+            )
 
         super().save(*args, **kwargs)
-        
+
 
     def __str__(self):
-     return self.product_name
-     
-     
+        return self.product_name
 
-class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="cart")
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+class ProductImage(models.Model):
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+
+    image = models.ImageField(
+        upload_to="products/"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    class Meta:
+        ordering = ["created_at"]
+
 
     def __str__(self):
-      return f"{self.user.username}'s Cart"
-
+        return f"{self.product.product_name} - {self.image.name}"
 
 class Cart_Items(models.Model):
     cart = models.ForeignKey(
@@ -109,6 +171,19 @@ class FlashSaleSettings(models.Model):
         
         
 class StoreSettings(models.Model):
+    
+    store_name = models.CharField(
+        max_length=200
+    )
+
+    store_email = models.EmailField()
+
+    store_desc = models.TextField(
+        blank=True,
+        null=True
+    )
+    
+    
     CURRENCY_CHOICES = [
         ("NGN", "Nigerian Naira (₦)"),
         ("USD", "US Dollar ($)"),
@@ -133,6 +208,23 @@ class StoreSettings(models.Model):
         max_digits=12,
         decimal_places=2,
         default=0
+    )
+    
+    
+    guest_checkout = models.BooleanField(
+        default=True
+    )
+
+    saved_addresses = models.BooleanField(
+        default=True
+    )
+
+    paystack_payments = models.BooleanField(
+        default=True
+    )
+
+    product_reviews = models.BooleanField(
+        default=True
     )
 
     updated_at = models.DateTimeField(auto_now=True)

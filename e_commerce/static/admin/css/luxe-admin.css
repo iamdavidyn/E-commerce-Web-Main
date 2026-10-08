@@ -54,3 +54,5 @@ a:hover{color:var(--luxe-accent)!important}
 .luxe-footer{padding:24px 0;color:var(--luxe-muted);font-size:12px}
 @media(max-width:1199px){.luxe-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.luxe-two{grid-template-columns:1fr}}
 @media(max-width:767px){.luxe-grid,.luxe-three{grid-template-columns:1fr}.luxe-toolbar .search{width:100%;min-width:0}.luxe-table{font-size:13px}.card-style{padding:18px!important}.header .container-fluid{padding:0 15px}}
+
+

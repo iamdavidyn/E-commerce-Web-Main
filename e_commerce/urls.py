@@ -66,7 +66,8 @@ urlpatterns = [
 
     path("admin/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("admin/products/", views.admin_products, name="admin_products"),
-    path("admin/products/add/", views.admin_product_form, name="admin_product_form"),
+    path("admin/products/add/", views.admin_product_create, name="admin_product_form"),
+    path("admin/products/add/<int:pdt_id>/", views.admin_product_form, name="admin_product_form"),
     path("admin/categories/", views.admin_categories, name="admin_categories"),
     path("admin/orders/", views.admin_orders, name="admin_orders"),
     path(

@@ -1,280 +1,1454 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add / Edit Product | LUXE Admin</title>
-<link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
-<link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Add / Edit Product | LUXE Admin</title>
+
+    <link rel="shortcut icon"
+          href="{% static 'admin/images/favicon.svg' %}"
+          type="image/x-icon">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/bootstrap.min.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/lineicons.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/materialdesignicons.min.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/main.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/luxe-admin.css' %}">
+
+
+    <style>
+
+        /* =========================================================
+           PRODUCT IMAGE PREVIEW
+           ========================================================= */
+
+        .luxe-image-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+
+        .luxe-image-item {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+
+            border: 1px solid var(
+                --border-color,
+                #d6d3ca
+            );
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            background: #f6f5f1;
+        }
+
+
+        .luxe-image-item img {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+
+        /* =========================================================
+           MAIN IMAGE BADGE
+           ========================================================= */
+
+        .main-image-badge {
+            position: absolute;
+
+            top: 8px;
+            left: 8px;
+
+            padding: 4px 8px;
+
+            border-radius: 6px;
+
+            background: #171715;
+            color: #ffffff;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            z-index: 5;
+        }
+
+
+        /* =========================================================
+           REMOVE IMAGE BUTTON
+           ========================================================= */
+
+        .remove-image-btn {
+            position: absolute;
+
+            top: 7px;
+            right: 7px;
+
+            width: 30px;
+            height: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0;
+
+            border: none;
+            border-radius: 50%;
+
+            background: rgba(0, 0, 0, 0.78);
+            color: #ffffff;
+
+            font-size: 21px;
+            font-weight: 600;
+
+            line-height: 1;
+
+            cursor: pointer;
+
+            z-index: 10;
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease;
+        }
+
+
+        .remove-image-btn:hover {
+            background: #dc3545;
+
+            transform: scale(1.08);
+        }
+
+
+        .remove-image-btn:active {
+            transform: scale(0.95);
+        }
+
+
+        /* =========================================================
+           EMPTY PREVIEW
+           ========================================================= */
+
+        .luxe-image-empty {
+            padding: 20px;
+
+            border: 1px dashed var(
+                --border-color,
+                #d6d3ca
+            );
+
+            border-radius: 10px;
+
+            text-align: center;
+
+            color: #777;
+
+            font-size: 13px;
+        }
+
+
+        /* =========================================================
+           MOBILE
+           ========================================================= */
+
+        @media (max-width: 576px) {
+
+            .luxe-image-preview {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+
+            .remove-image-btn {
+                width: 28px;
+                height: 28px;
+
+                font-size: 19px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
-<div id="preloader"><div class="spinner"></div></div>
-<aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
-  <nav class="sidebar-nav"><ul><li class="nav-item"><a class="" href="{% url 'admin_dashboard' %}">
-          <span class="icon"><i class="lni lni-dashboard"></i></span><span class="text">Dashboard</span>
-        </a></li><li class="nav-item"><a class="active" href="{% url 'admin_products' %}">
-          <span class="icon"><i class="lni lni-shopping-basket"></i></span><span class="text">Products</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_categories' %}">
-          <span class="icon"><i class="lni lni-grid-alt"></i></span><span class="text">Categories</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_orders' %}">
-          <span class="icon"><i class="lni lni-cart"></i></span><span class="text">Orders</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_customers' %}">
-          <span class="icon"><i class="lni lni-users"></i></span><span class="text">Customers</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_inventory' %}">
-          <span class="icon"><i class="lni lni-package"></i></span><span class="text">Inventory</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_reviews' %}">
-          <span class="icon"><i class="lni lni-comments"></i></span><span class="text">Reviews</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_discounts' %}">
-          <span class="icon"><i class="lni lni-offer"></i></span><span class="text">Discounts</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_shipping' %}">
-          <span class="icon"><i class="lni lni-delivery"></i></span><span class="text">Shipping</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_settings' %}">
-          <span class="icon"><i class="lni lni-cog"></i></span><span class="text">Settings</span>
-        </a></li></ul></nav>
-</aside>
-<div class="overlay"></div>
-<main class="main-wrapper">
-<header class="header">
-  <div class="container-fluid"><div class="row align-items-center">
-    <div class="col-lg-5 col-md-5 col-6">
-      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
-      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
-    </div>
-    <div class="col-lg-7 col-md-7 col-6">
-      <div class="d-flex justify-content-end align-items-center gap-3">
-        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
-        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
-          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
-        </div>
-      </div>
-    </div>
-  </div></div>
-</header>
-<section class="section">
-<div class="container-fluid">
-<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Add / Edit Product</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Add / Edit Product</li></ol></nav></div></div></div></div>
-
-<form method="post" enctype="multipart/form-data">
-
-    {% csrf_token %}
-
-    <div class="luxe-two mb-20">
-
-        <!-- PRODUCT INFORMATION -->
-        <div class="card-style">
-
-            <div class="luxe-section-title">Product information</div>
-
-            <!-- Product Name -->
-            <div class="mb-3">
-                <label class="form-label">Product name</label>
-                <input
-                    class="form-control"
-                    type="text"
-                    name="product_name"
-                    maxlength="500"
-                    required
-                >
-            </div>
-
-            <!-- Category + SKU -->
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Category</label>
-
-                    <select
-                        name="product_category"
-                        class="form-select"
-                        required
-                    >
-                        <option value="">Select category</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Fashion">Fashion</option>
-                        <option value="Home & Living">Home & Living</option>
-                        <option value="Beauty">Beauty</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Groceries">Groceries</option>
-                        <option value="Toys">Toys</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">SKU</label>
-
-                    <!-- product_code is editable=False -->
-                    <input
-                        class="form-control"
-                        type="text"
-                        value="Automatically generated"
-                        readonly
-                    >
-
-                    <small class="text-muted">
-                        SKU is generated automatically.
-                    </small>
-                </div>
-
-            </div>
-
-            <!-- Prices -->
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Old Price (₦)</label>
-
-                    <input
-                        class="form-control"
-                        type="number"
-                        name="old_product_price"
-                        step="0.01"
-                        min="0"
-                    >
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">New Price (₦)</label>
-
-                    <input
-                        class="form-control"
-                        type="number"
-                        name="new_product_price"
-                        step="0.01"
-                        min="0"
-                        required
-                    >
-                </div>
-
-            </div>
-
-            <!-- Description -->
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-
-                <textarea
-                    class="form-control"
-                    rows="7"
-                    name="product_Desc"
-                    required
-                ></textarea>
-            </div>
-
-            <!-- Badge -->
-            <div class="mb-3">
-                <label class="form-label">Badge</label>
-
-                <select
-                    name="badge"
-                    class="form-select"
-                >
-                    <option value="new">New</option>
-                    <option value="hot">Hot</option>
-                    <option value="sale">Sale</option>
-                </select>
-            </div>
-
-            <!-- Tag -->
-            <div class="mb-3">
-                <label class="form-label">Tag</label>
-
-                <select
-                    name="tag"
-                    class="form-select"
-                >
-                    <option value="featured">Featured</option>
-                    <option value="flash">Flash</option>
-                    <option value="best">Best</option>
-                    <option value="new">New</option>
-                </select>
-            </div>
-
-        </div>
 
 
-        <!-- IMAGE + INVENTORY -->
-        <div class="card-style">
+<!-- =========================================================
+     PRELOADER
+     ========================================================= -->
 
-            <div class="luxe-section-title">Product image</div>
+<div id="preloader">
 
-            <div class="luxe-product-preview mb-3">
-                <img
-                    src="{% static 'admin/images/products/product-mini-1.svg' %}"
-                    alt="Product preview"
-                >
+    <div class="spinner"></div>
 
-                <p class="small mt-2 text-muted">
-                    Upload the main product image
-                </p>
-            </div>
-
-            <!-- Product Image -->
-            <div class="mb-3">
-                <label class="form-label">Product image</label>
-
-                <input
-                    type="file"
-                    name="product_image"
-                    class="form-control"
-                    accept="image/*"
-                    required
-                >
-            </div>
-
-            <hr>
-
-            <div class="luxe-section-title">
-                Inventory
-            </div>
-
-            <!-- Stock -->
-            <div class="mb-3">
-                <label class="form-label">Stock quantity</label>
-
-                <input
-                    class="form-control"
-                    type="number"
-                    name="stock"
-                    value="1"
-                    min="0"
-                    required
-                >
-            </div>
-
-        </div>
-
-    </div>
+</div>
 
 
-    <!-- BUTTONS -->
-    <div class="d-flex justify-content-end gap-2">
+
+<!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
+
+<aside
+    class="sidebar-nav-wrapper"
+    id="sidebar">
+
+
+    <div class="navbar-logo">
 
         <a
-            class="btn btn-outline-primary"
-            href="{% url 'admin_products' %}"
-        >
-            Cancel
+            href="{% url 'admin_dashboard' %}"
+            class="luxe-brand">
+
+            LUXE
+
         </a>
 
-        <button
-            type="submit"
-            class="btn btn-primary"
-        >
-            Save product
-        </button>
+    </div>
+
+
+
+    <nav class="sidebar-nav">
+
+        <ul>
+
+
+            <!-- Dashboard -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_dashboard' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-dashboard"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Dashboard
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Products -->
+
+            <li class="nav-item">
+
+                <a
+                    class="active"
+                    href="{% url 'admin_products' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-shopping-basket"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Products
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Categories -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_categories' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-grid-alt"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Categories
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Orders -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_orders' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-cart"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Orders
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Customers -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_customers' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-users"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Customers
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Inventory -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_inventory' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-package"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Inventory
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Reviews -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_reviews' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-comments"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Reviews
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Discounts -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_discounts' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-offer"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Discounts
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Shipping -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_shipping' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-delivery"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Shipping
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+
+            <!-- Settings -->
+
+            <li class="nav-item">
+
+                <a
+                    href="{% url 'admin_settings' %}">
+
+                    <span class="icon">
+
+                        <i class="lni lni-cog"></i>
+
+                    </span>
+
+                    <span class="text">
+
+                        Settings
+
+                    </span>
+
+                </a>
+
+            </li>
+
+
+        </ul>
+
+    </nav>
+
+</aside>
+
+
+
+<div class="overlay"></div>
+
+
+
+<!-- =========================================================
+     MAIN WRAPPER
+     ========================================================= -->
+
+<main class="main-wrapper">
+
+
+
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+
+<header class="header">
+
+    <div class="container-fluid">
+
+        <div class="row align-items-center">
+
+
+            <div class="col-lg-5 col-md-5 col-6">
+
+
+                <button
+                    id="menu-toggle"
+                    class="main-btn primary-btn btn-hover">
+
+                    <i class="lni lni-menu"></i>
+
+                </button>
+
+
+                <span
+                    class="ms-3 fw-semibold d-none d-md-inline">
+
+                    Store Administration
+
+                </span>
+
+
+            </div>
+
+
+
+            <div class="col-lg-7 col-md-7 col-6">
+
+
+                <div
+                    class="d-flex justify-content-end align-items-center gap-3">
+
+
+                    <a
+                        href="../"
+                        class="text-muted small"
+                        target="_blank">
+
+                        View store ↗
+
+                    </a>
+
+
+
+                    <div class="dropdown">
+
+
+                        <button
+                            class="btn btn-sm dropdown-toggle"
+                            data-bs-toggle="dropdown">
+
+                            Admin
+
+                        </button>
+
+
+
+                        <ul
+                            class="dropdown-menu dropdown-menu-end">
+
+
+                            <li>
+
+                                <a
+                                    class="dropdown-item"
+                                    href="{% url 'admin_profile' %}">
+
+                                    Profile
+
+                                </a>
+
+                            </li>
+
+
+                            <li>
+
+                                <hr class="dropdown-divider">
+
+                            </li>
+
+
+                            <li>
+
+                                <a
+                                    class="dropdown-item"
+                                    href="{% url 'admin_login' %}">
+
+                                    Sign out
+
+                                </a>
+
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
 
     </div>
+
+</header>
+
+
+
+<!-- =========================================================
+     PAGE SECTION
+     ========================================================= -->
+
+<section class="section">
+
+<div class="container-fluid">
+
+
+
+<!-- =========================================================
+     PAGE TITLE
+     ========================================================= -->
+
+<div class="title-wrapper pt-30 mb-25">
+
+
+    <div class="row align-items-center">
+
+
+        <div class="col-md-6">
+
+
+            <div class="title">
+
+                <h2 class="page-title">
+
+                    Add / Edit Product
+
+                </h2>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="col-md-6">
+
+
+            <div class="breadcrumb-wrapper">
+
+
+                <nav aria-label="breadcrumb">
+
+
+                    <ol
+                        class="breadcrumb justify-content-md-end">
+
+
+                        <li class="breadcrumb-item">
+
+                            <a
+                                href="{% url 'admin_dashboard' %}">
+
+                                Admin
+
+                            </a>
+
+                        </li>
+
+
+                        <li class="breadcrumb-item active">
+
+                            Add / Edit Product
+
+                        </li>
+
+
+                    </ol>
+
+
+                </nav>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     FORM
+     ========================================================= -->
+
+<form
+    method="post"
+    enctype="multipart/form-data">
+
+
+{% csrf_token %}
+
+<div class="luxe-two mb-20">
+
+
+
+<!-- =========================================================
+     PRODUCT INFORMATION
+     ========================================================= -->
+
+<div class="card-style">
+
+    <div class="luxe-section-title">
+        Product information
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">
+            Product name
+        </label>
+
+        <input
+            class="form-control"
+            type="text"
+            name="product_name"
+            value="{{ product.product_name|default:'' }}"
+            maxlength="500"
+            required>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6 mb-3">
+
+            <label class="form-label">
+                Category
+            </label>
+
+            <select
+                name="product_category"
+                class="form-select"
+                required>
+
+                <option value="">
+                    Select category
+                </option>
+
+                <option
+                    value="Electronics"
+                    {% if product.product_category == "Electronics" %}selected{% endif %}>
+                    Electronics
+                </option>
+
+                <option
+                    value="Fashion"
+                    {% if product.product_category == "Fashion" %}selected{% endif %}>
+                    Fashion
+                </option>
+
+                <option
+                    value="Home & Living"
+                    {% if product.product_category == "Home & Living" %}selected{% endif %}>
+                    Home & Living
+                </option>
+
+                <option
+                    value="Beauty"
+                    {% if product.product_category == "Beauty" %}selected{% endif %}>
+                    Beauty
+                </option>
+
+                <option
+                    value="Sports"
+                    {% if product.product_category == "Sports" %}selected{% endif %}>
+                    Sports
+                </option>
+
+                <option
+                    value="Groceries"
+                    {% if product.product_category == "Groceries" %}selected{% endif %}>
+                    Groceries
+                </option>
+
+                <option
+                    value="Toys"
+                    {% if product.product_category == "Toys" %}selected{% endif %}>
+                    Toys
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="col-md-6 mb-3">
+
+            <label class="form-label">
+                SKU
+            </label>
+
+            <input
+                class="form-control"
+                type="text"
+                value="{{ product.product_code|default:'Automatically generated' }}"
+                disabled>
+
+            <small class="text-muted">
+                SKU is generated automatically.
+            </small>
+
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6 mb-3">
+
+            <label class="form-label">
+                Old Price (₦)
+            </label>
+
+            <input
+                class="form-control"
+                type="number"
+                value="{{ product.old_product_price|default:'' }}"
+                name="old_product_price"
+                step="0.01"
+                min="0">
+
+        </div>
+
+        <div class="col-md-6 mb-3">
+
+            <label class="form-label">
+                New Price (₦)
+            </label>
+
+            <input
+                class="form-control"
+                type="number"
+                value="{{ product.new_product_price|default:'' }}"
+                name="new_product_price"
+                step="0.01"
+                min="0"
+                required>
+
+        </div>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label class="form-label">
+            Description
+        </label>
+
+        <textarea
+            class="form-control"
+            rows="7"
+            name="product_Desc"
+            required>{{ product.product_Desc|default:'' }}</textarea>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label class="form-label">
+            Badge
+        </label>
+
+        <select
+            name="badge"
+            class="form-select">
+
+            <option value="new"
+                {% if product.badge == "new" %}selected{% endif %}>
+                New
+            </option>
+
+            <option value="hot"
+                {% if product.badge == "hot" %}selected{% endif %}>
+                Hot
+            </option>
+
+            <option value="sale"
+                {% if product.badge == "sale" %}selected{% endif %}>
+                Sale
+            </option>
+
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label class="form-label">
+            Tag
+        </label>
+
+        <select
+            name="tag"
+            class="form-select">
+
+            <option value="featured"
+                {% if product.tag == "featured" %}selected{% endif %}>
+                Featured
+            </option>
+
+            <option value="flash"
+                {% if product.tag == "flash" %}selected{% endif %}>
+                Flash
+            </option>
+
+            <option value="best"
+                {% if product.tag == "best" %}selected{% endif %}>
+                Best
+            </option>
+
+            <option value="new"
+                {% if product.tag == "new" %}selected{% endif %}>
+                New
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+
+
+<div class="card-style">
+
+    <div class="luxe-section-title">
+        Product images
+    </div>
+
+    {% if product %}
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Current product images
+            </label>
+
+            <div
+                id="existing-images"
+                class="luxe-image-preview">
+
+                {% if product.product_image %}
+                    <div class="luxe-image-item">
+
+                        <img
+                            src="{{ product.product_image.url }}"
+                            alt="{{ product.product_name }}">
+
+                        <span class="luxe-image-main">
+                            Main
+                        </span>
+
+                    </div>
+                {% endif %}
+
+                {% for image in product.images.all %}
+
+                    <div class="luxe-image-item">
+
+                        <img
+                            src="{{ image.image.url }}"
+                            alt="{{ product.product_name }}">
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="mb-3">
+
+        <label class="form-label">
+            {% if product %}
+                Add new product images
+            {% else %}
+                Product images
+            {% endif %}
+        </label>
+
+        <input
+            type="file"
+            name="product_images"
+            id="product_images"
+            class="form-control"
+            accept="image/*"
+            multiple
+            {% if not product %}required{% endif %}>
+
+        <small class="text-muted d-block mt-2">
+
+            {% if product %}
+                Select additional images if you want to add more pictures.
+            {% else %}
+                Select multiple pictures. The first picture will be the main product image.
+            {% endif %}
+
+        </small>
+
+    </div>
+
+
+    <div
+        id="image-preview"
+        class="luxe-image-preview">
+
+        <div class="luxe-image-empty">
+            Selected images will appear here.
+        </div>
+
+    </div>
+
+
+    <hr>
+
+
+    <div class="luxe-section-title">
+        Inventory
+    </div>
+
+    <div class="mb-3">
+
+        <label class="form-label">
+            Stock quantity
+        </label>
+
+        <input
+            class="form-control"
+            type="number"
+            name="stock"
+            value="{{ product.stock|default:1 }}"
+            min="0"
+            required>
+
+    </div>
+
+</div>
+
+
+<div class="d-flex justify-content-end gap-2">
+
+    <a
+        class="btn btn-outline-primary"
+        href="{% url 'admin_products' %}">
+
+        Cancel
+
+    </a>
+
+    <button
+        type="submit"
+        class="btn btn-primary">
+
+        {% if product %}
+            Save changes
+        {% else %}
+            Save product
+        {% endif %}
+
+    </button>
+
+</div>
+
 
 </form>
 
 
-<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
-</div></section>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+
+<div class="luxe-footer text-center">
+
+    LUXE Admin • Ecommerce management
+
+</div>
+
+
+
+</div>
+
+</section>
+
 </main>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
+
 <script src="{% static 'admin/js/luxe-admin.js' %}"></script>
-</body></html>
+
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    const imageInput =
+        document.getElementById('product_images');
+
+
+    const imagePreview =
+        document.getElementById('image-preview');
+
+
+    /*
+     * Store selected files here.
+     */
+    let selectedFiles = [];
+
+
+
+    /*
+     * When the user selects images.
+     */
+    imageInput.addEventListener('change', function () {
+
+
+        const newFiles =
+            Array.from(this.files);
+
+
+
+        newFiles.forEach(function (file) {
+
+
+            /*
+             * Only accept image files.
+             */
+            if (!file.type.startsWith('image/')) {
+
+                return;
+
+            }
+
+
+
+            /*
+             * Prevent duplicate images.
+             */
+            const alreadySelected =
+                selectedFiles.some(function (existingFile) {
+
+
+                    return (
+
+                        existingFile.name === file.name &&
+
+                        existingFile.size === file.size &&
+
+                        existingFile.lastModified ===
+                            file.lastModified
+
+                    );
+
+                });
+
+
+
+            if (!alreadySelected) {
+
+                selectedFiles.push(file);
+
+            }
+
+
+        });
+
+
+
+        /*
+         * Update the real file input.
+         */
+        updateFileInput();
+
+
+
+        /*
+         * Display previews.
+         */
+        renderPreviews();
+
+
+    });
+
+
+
+    /*
+     * Render all selected images.
+     */
+    function renderPreviews() {
+
+
+        imagePreview.innerHTML = '';
+
+
+
+        /*
+         * No images selected.
+         */
+        if (selectedFiles.length === 0) {
+
+
+            imagePreview.innerHTML = `
+
+                <div class="luxe-image-empty">
+
+                    Selected product images will appear here.
+
+                </div>
+
+            `;
+
+
+            return;
+
+        }
+
+
+
+        /*
+         * Display every selected image.
+         */
+        selectedFiles.forEach(function (file, index) {
+
+
+            const reader =
+                new FileReader();
+
+
+
+            reader.onload = function (event) {
+
+
+                const wrapper =
+                    document.createElement('div');
+
+
+                wrapper.className =
+                    'luxe-image-item';
+
+
+
+                wrapper.innerHTML = `
+
+
+                    <img
+                        src="${event.target.result}"
+                        alt="Product image ${index + 1}"
+                    >
+
+
+
+                    ${
+                        index === 0
+
+                        ?
+
+                        `
+                        <span
+                            class="main-image-badge">
+
+                            Main
+
+                        </span>
+                        `
+
+                        :
+
+                        ''
+                    }
+
+
+
+                    <button
+                        type="button"
+                        class="remove-image-btn"
+                        data-index="${index}"
+                        title="Remove image"
+                        aria-label="Remove image">
+
+                        ×
+
+                    </button>
+
+
+                `;
+
+
+
+                imagePreview.appendChild(wrapper);
+
+
+            };
+
+
+
+            reader.readAsDataURL(file);
+
+
+        });
+
+
+    }
+
+
+
+    /*
+     * Remove image.
+     */
+    imagePreview.addEventListener(
+        'click',
+        function (event) {
+
+
+            const removeButton =
+                event.target.closest(
+                    '.remove-image-btn'
+                );
+
+
+
+            /*
+             * Click wasn't on a remove button.
+             */
+            if (!removeButton) {
+
+                return;
+
+            }
+
+
+
+            /*
+             * Get image position.
+             */
+            const index =
+                parseInt(
+                    removeButton.dataset.index,
+                    10
+                );
+
+
+
+            /*
+             * Remove image from our list.
+             */
+            selectedFiles.splice(
+                index,
+                1
+            );
+
+
+
+            /*
+             * Update actual file input.
+             */
+            updateFileInput();
+
+
+
+            /*
+             * Re-render images.
+             */
+            renderPreviews();
+
+
+        }
+    );
+
+
+
+    /*
+     * Synchronize the actual
+     * <input type="file">
+     *
+     * with our selectedFiles array.
+     */
+    function updateFileInput() {
+
+
+        const dataTransfer =
+            new DataTransfer();
+
+
+
+        selectedFiles.forEach(function (file) {
+
+            dataTransfer.items.add(file);
+
+        });
+
+
+
+        imageInput.files =
+            dataTransfer.files;
+
+
+    }
+
+
+});
+
+</script>
+
+
+</body>
+
+</html>

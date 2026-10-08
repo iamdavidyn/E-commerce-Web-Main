@@ -6,7 +6,6 @@
 
 /* =========================================================
    STORE SETTINGS
-   Django controls currency + shipping fee
 ========================================================= */
 
 let STORE_SETTINGS = {
@@ -62,13 +61,14 @@ async function loadStoreSettings() {
       currency_symbol: "₦",
       shipping_fee: 0
     };
+
   }
+
 }
 
 
 /* =========================================================
    PRICE FORMATTER
-   Comma formatting restored
 ========================================================= */
 
 const PRICE_FMT = (n) => {
@@ -178,19 +178,11 @@ const DESC =
 
 let PRODUCTS = [];
 
-
-/* =========================================================
-   DYNAMIC CATEGORIES
-   Categories come directly from products in Django.
-========================================================= */
-
 let CATEGORIES = [];
 
 
 /* =========================================================
    GET AVAILABLE CATEGORIES
-   Only categories that currently contain products
-   will be returned.
 ========================================================= */
 
 function getAvailableCategories() {
@@ -203,7 +195,6 @@ function getAvailableCategories() {
     return [];
 
   }
-
 
   return [
     ...new Set(
@@ -232,61 +223,89 @@ fetch("/api/shop/")
   .then(response => {
 
     if (!response.ok) {
+
       throw new Error(
         `Product API failed: ${response.status}`
       );
+
     }
 
     return response.json();
+
   })
 
   .then(data => {
 
-    PRODUCTS = data.map(item => ({
+    PRODUCTS = data.map(item => {
 
-      id: item.id,
+      const mainImage =
+        item.img || '';
 
-      name: item.name,
+      const apiImages =
+        Array.isArray(item.images)
+          ? item.images.filter(Boolean)
+          : [];
 
-      cat: item.cat,
+      const images =
+        apiImages.length
+          ? apiImages
+          : (
+              mainImage
+                ? [mainImage]
+                : []
+            );
 
-      price:
-        Number(item.price) || 0,
+      return {
 
-      old:
-        Number(item.old) || 0,
+        id:
+          item.id,
 
-      img: item.img,
+        name:
+          item.name,
 
-      badge: item.badge,
+        cat:
+          item.cat,
 
-      tags: item.tags,
+        price:
+          Number(item.price) || 0,
 
-      desc: item.desc,
+        old:
+          Number(item.old) || 0,
 
-      rating: item.rating,
+        img:
+          mainImage || images[0] || '',
 
-      reviews: item.reviews,
+        images:
+          images,
 
-      stock:
-        item.stock || 1
+        badge:
+          item.badge,
 
-    }));
+        tags:
+          Array.isArray(item.tags)
+            ? item.tags
+            : [],
 
+        desc:
+          item.desc || '',
 
-    /*
-     * Build the category list from
-     * the products returned by Django.
-     */
+        rating:
+          Number(item.rating) || 0,
+
+        reviews:
+          Number(item.reviews) || 0,
+
+        stock:
+          Number(item.stock) || 1
+
+      };
+
+    });
+
 
     CATEGORIES =
       getAvailableCategories();
 
-
-    /*
-     * Tell the rest of the website
-     * that products are ready.
-     */
 
     document.dispatchEvent(
       new CustomEvent(
@@ -333,8 +352,6 @@ fetch("/api/shop/")
 
 /* =========================================================
    LOCAL STORAGE
-   Wishlist remains local.
-   Guest cart uses luxe_guest_cart.
 ========================================================= */
 
 const Store = {
@@ -500,7 +517,6 @@ function updateCartBadge(count) {
 
 /* =========================================================
    LOCAL CART COUNT
-   Only used for guests.
 ========================================================= */
 
 function getLocalCartCount() {
@@ -530,11 +546,6 @@ async function loadDatabaseCartBadge() {
     document.body.dataset.authenticated === "true";
 
 
-  /* =====================================================
-     GUEST USER
-     Never call Django cart API.
-  ===================================================== */
-
   if (!isAuthenticated) {
 
     updateCartBadge(
@@ -545,11 +556,6 @@ async function loadDatabaseCartBadge() {
 
   }
 
-
-  /* =====================================================
-     LOGGED-IN USER
-     Get cart count from Django.
-  ===================================================== */
 
   try {
 
@@ -599,8 +605,6 @@ async function loadDatabaseCartBadge() {
 
 /* =========================================================
    ADD TO CART
-   Django database is used for logged-in users.
-   localStorage is used for guest users.
 ========================================================= */
 
 async function addToCart(
@@ -632,19 +636,9 @@ async function addToCart(
     findProduct(productId);
 
 
-  /* =====================================================
-     CHECK LOGIN STATUS
-  ===================================================== */
-
   const isAuthenticated =
     document.body.dataset.authenticated === "true";
 
-
-  /* =====================================================
-     GUEST USER
-     Use localStorage only.
-     Do NOT call Django.
-  ===================================================== */
 
   if (!isAuthenticated) {
 
@@ -658,11 +652,6 @@ async function addToCart(
 
   }
 
-
-  /* =====================================================
-     LOGGED-IN USER
-     Use Django database.
-  ===================================================== */
 
   try {
 
@@ -740,10 +729,6 @@ async function addToCart(
     }
 
 
-    /* =====================================================
-       DJANGO ERROR
-    ===================================================== */
-
     if (
       !response.ok ||
       !data.success
@@ -760,10 +745,6 @@ async function addToCart(
 
     }
 
-
-    /* =====================================================
-       SUCCESS
-    ===================================================== */
 
     updateCartBadge(
       data.cart_count || 0
@@ -798,7 +779,6 @@ async function addToCart(
 
 /* =========================================================
    GUEST CART
-   Uses the same localStorage key as cart.js.
 ========================================================= */
 
 function addGuestCart(
@@ -1001,13 +981,6 @@ function updateWishlistBadge() {
 ========================================================= */
 
 function updateBadges() {
-
-  /*
-   * Do NOT use localStorage to overwrite
-   * the Django cart badge.
-   *
-   * Only update wishlist here.
-   */
 
   updateWishlistBadge();
 
@@ -1318,13 +1291,6 @@ function toast(
    HEADER
 ========================================================= */
 
-
-/* =========================================================
-   BUILD HEADER
-   Categories are initially empty because
-   products load asynchronously.
-========================================================= */
-
 function buildHeader() {
 
   const mount =
@@ -1531,8 +1497,6 @@ function buildHeader() {
             id="header-category-menu"
           >
 
-            <!-- Categories are inserted after products load -->
-
           </div>
 
         </div>
@@ -1612,8 +1576,6 @@ function buildHeader() {
       id="mobile-category-list"
     >
 
-      <!-- Categories are inserted after products load -->
-
     </ul>
 
   </div>
@@ -1628,7 +1590,6 @@ function buildHeader() {
 
 /* =========================================================
    UPDATE HEADER CATEGORIES
-   Runs after Django products have loaded.
 ========================================================= */
 
 function updateHeaderCategories() {
@@ -1649,10 +1610,6 @@ function updateHeaderCategories() {
     );
 
 
-  /*
-   * Desktop categories
-   */
-
   if (desktopMenu) {
 
     desktopMenu.innerHTML =
@@ -1670,10 +1627,6 @@ function updateHeaderCategories() {
 
   }
 
-
-  /*
-   * Mobile categories
-   */
 
   if (mobileMenu) {
 
@@ -1693,12 +1646,6 @@ function updateHeaderCategories() {
         .join('');
 
   }
-
-
-  /*
-   * If there are no products/categories,
-   * keep the category menus empty.
-   */
 
 }
 
@@ -2223,7 +2170,6 @@ function setupReveal() {
         obs.observe(el)
     );
 
-
 }
 
 
@@ -2326,11 +2272,6 @@ document.addEventListener(
   'DOMContentLoaded',
   async () => {
 
-    /*
-     * Load currency and shipping
-     * BEFORE building header/footer.
-     */
-
     await loadStoreSettings();
 
 
@@ -2349,10 +2290,6 @@ document.addEventListener(
     setupGlobalClicks();
 
 
-    /*
-     * Wishlist badge and cart badge.
-     */
-
     updateWishlistBadge();
 
 
@@ -2361,16 +2298,6 @@ document.addEventListener(
       50
     );
 
-
-    /*
-     * Load the correct cart count.
-     *
-     * Guest:
-     *    localStorage
-     *
-     * Logged in:
-     *    Django database
-     */
 
     await loadDatabaseCartBadge();
 
@@ -2386,13 +2313,7 @@ document.addEventListener(
   'products:loaded',
   () => {
 
-    /*
-     * Update categories from the actual
-     * products returned by Django.
-     */
-
     updateHeaderCategories();
-
 
     setupGlobalClicks();
 

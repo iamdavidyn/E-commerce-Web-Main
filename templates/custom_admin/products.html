@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -171,7 +172,7 @@
 <div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Products</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Products</li></ol></nav></div></div></div></div>
 
 <div class="card-style">
-<div class="luxe-toolbar mb-20"><div class="d-flex gap-2 flex-wrap"><input class="form-control search" placeholder="Search products..." data-table-search="#productsTable"><select class="form-select" style="width:auto"><option>All categories</option><option>Electronics</option><option>Fashion</option><option>Beauty</option><option>Home</option></select></div><a class="btn btn-primary" href="{% url 'admin_product_form' %}"><i class="lni lni-plus"></i> Add product</a></div>
+<div class="luxe-toolbar mb-20"><div class="d-flex gap-2 flex-wrap"><input class="form-control search" placeholder="Search products..." data-table-search="#productsTable"><select class="form-select" style="width:auto"><option>All categories</option><option>Electronics</option><option>Fashion</option><option>Beauty</option><option>Home</option></select></div><a class="btn btn-primary" href= '/admin/products/add'><i class="lni lni-plus"></i> Add product</a></div>
 <div class="table-responsive"><table class="table luxe-table" id="productsTable"><thead><tr><th>Product</th><th>Cat</th><th>Price</th><th>Stock</th><th class="text-end">Action</th></tr></thead><tbody>
 
 {% if product %}
@@ -199,12 +200,12 @@
             </td>
 
             <td>{{ pdt.product_category }}</td>
-            <td>₦{{ pdt.new_product_price }}</td>
+            <td>₦{{ pdt.new_product_price| intcomma }}</td>
             <td>{{ pdt.stock }}</td>
 
 
             <td class="text-end">
-                <a href="{% url 'admin_product_form' %}"
+                <a href="{% url 'admin_product_form' pdt.id %}"
                    class="btn btn-sm btn-outline-primary">
                     Edit
                 </a>
