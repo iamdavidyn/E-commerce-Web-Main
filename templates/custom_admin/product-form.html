@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Add / Edit Product | LUXE Admin</title>
+    <title>Add / Edit Product | {{ store_name }} Admin</title>
 
     <link rel="shortcut icon"
           href="{% static 'admin/images/favicon.svg' %}"
@@ -222,273 +222,69 @@
 
         <a
             href="{% url 'admin_dashboard' %}"
-            class="luxe-brand">
-
-            LUXE
-
-        </a>
+            class="luxe-brand">{{ store_name }}</a>
 
     </div>
 
 
 
     <nav class="sidebar-nav">
-
         <ul>
-
-
-            <!-- Dashboard -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_dashboard' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-dashboard"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Dashboard
-
-                    </span>
-
+                <a href="{% url 'admin_dashboard' %}">
+                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                    <span class="text">Dashboard</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Products -->
-
             <li class="nav-item">
-
-                <a
-                    class="active"
-                    href="{% url 'admin_products' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-shopping-basket"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Products
-
-                    </span>
-
+                <a class="active" href="{% url 'admin_products' %}">
+                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="text">Products</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Categories -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_categories' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-grid-alt"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Categories
-
-                    </span>
-
+                <a href="{% url 'admin_categories' %}">
+                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="text">Categories</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Orders -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_orders' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-cart"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Orders
-
-                    </span>
-
+                <a href="{% url 'admin_orders' %}">
+                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="text">Orders</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Customers -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_customers' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-users"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Customers
-
-                    </span>
-
+                <a href="{% url 'admin_customers' %}">
+                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="text">Customers</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Inventory -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_inventory' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-package"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Inventory
-
-                    </span>
-
+                <a href="{% url 'admin_reviews' %}">
+                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="text">Reviews</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Reviews -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_reviews' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-comments"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Reviews
-
-                    </span>
-
+                <a href="{% url 'admin_flash_settings' %}">
+                    <span class="icon"><i class="lni lni-offer"></i></span>
+                    <span class="text">Flash Sale</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Discounts -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_discounts' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-offer"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Discounts
-
-                    </span>
-
+                <a href="{% url 'admin_shipping' %}">
+                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="text">Shipping</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Shipping -->
-
             <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_shipping' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-delivery"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Shipping
-
-                    </span>
-
+                <a href="{% url 'admin_settings' %}">
+                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="text">Settings</span>
                 </a>
-
             </li>
-
-
-
-            <!-- Settings -->
-
-            <li class="nav-item">
-
-                <a
-                    href="{% url 'admin_settings' %}">
-
-                    <span class="icon">
-
-                        <i class="lni lni-cog"></i>
-
-                    </span>
-
-                    <span class="text">
-
-                        Settings
-
-                    </span>
-
-                </a>
-
-            </li>
-
-
         </ul>
-
     </nav>
 
 </aside>
@@ -768,52 +564,14 @@
                 name="product_category"
                 class="form-select"
                 required>
-
-                <option value="">
-                    Select category
-                </option>
-
-                <option
-                    value="Electronics"
-                    {% if product.product_category == "Electronics" %}selected{% endif %}>
-                    Electronics
-                </option>
-
-                <option
-                    value="Fashion"
-                    {% if product.product_category == "Fashion" %}selected{% endif %}>
-                    Fashion
-                </option>
-
-                <option
-                    value="Home & Living"
-                    {% if product.product_category == "Home & Living" %}selected{% endif %}>
-                    Home & Living
-                </option>
-
-                <option
-                    value="Beauty"
-                    {% if product.product_category == "Beauty" %}selected{% endif %}>
-                    Beauty
-                </option>
-
-                <option
-                    value="Sports"
-                    {% if product.product_category == "Sports" %}selected{% endif %}>
-                    Sports
-                </option>
-
-                <option
-                    value="Groceries"
-                    {% if product.product_category == "Groceries" %}selected{% endif %}>
-                    Groceries
-                </option>
-
-                <option
-                    value="Toys"
-                    {% if product.product_category == "Toys" %}selected{% endif %}>
-                    Toys
-                </option>
+                  <option value="">Select Category</option>
+    {% if cats %}
+        {% for cat in cats %}
+            <option value="{{cat.name}}">
+                {{cat.name}}
+            </option>
+        {% endfor %}
+    {% endif %}
 
             </select>
 
@@ -1111,7 +869,7 @@
 
 <div class="luxe-footer text-center">
 
-    LUXE Admin • Ecommerce management
+    {{ store_name }} Admin • Ecommerce management
 
 </div>
 

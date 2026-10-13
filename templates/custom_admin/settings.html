@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Store Settings | LUXE Admin</title>
+<title>Store Settings | {{ store_name }} Admin</title>
 <link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
 <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
@@ -14,28 +14,65 @@
 <body>
 <div id="preloader"><div class="spinner"></div></div>
 <aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
-  <nav class="sidebar-nav"><ul><li class="nav-item"><a class="" href="{% url 'admin_dashboard' %}">
-          <span class="icon"><i class="lni lni-dashboard"></i></span><span class="text">Dashboard</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_products' %}">
-          <span class="icon"><i class="lni lni-shopping-basket"></i></span><span class="text">Products</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_categories' %}">
-          <span class="icon"><i class="lni lni-grid-alt"></i></span><span class="text">Categories</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_orders' %}">
-          <span class="icon"><i class="lni lni-cart"></i></span><span class="text">Orders</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_customers' %}">
-          <span class="icon"><i class="lni lni-users"></i></span><span class="text">Customers</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_inventory' %}">
-          <span class="icon"><i class="lni lni-package"></i></span><span class="text">Inventory</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_reviews' %}">
-          <span class="icon"><i class="lni lni-comments"></i></span><span class="text">Reviews</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_discounts' %}">
-          <span class="icon"><i class="lni lni-offer"></i></span><span class="text">Discounts</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_shipping' %}">
-          <span class="icon"><i class="lni lni-delivery"></i></span><span class="text">Shipping</span>
-        </a></li><li class="nav-item"><a class="active" href="{% url 'admin_settings' %}">
-          <span class="icon"><i class="lni lni-cog"></i></span><span class="text">Settings</span>
-        </a></li></ul></nav>
+  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a></div>
+  <nav class="sidebar-nav">
+        <ul>
+            <li class="nav-item">
+                <a href="{% url 'admin_dashboard' %}">
+                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                    <span class="text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_products' %}">
+                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="text">Products</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_categories' %}">
+                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="text">Categories</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_orders' %}">
+                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="text">Orders</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_customers' %}">
+                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="text">Customers</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_reviews' %}">
+                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="text">Reviews</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_flash_settings' %}">
+                    <span class="icon"><i class="lni lni-offer"></i></span>
+                    <span class="text">Flash Sale</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_shipping' %}">
+                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="text">Shipping</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="active" href="{% url 'admin_settings' %}">
+                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </aside>
 <div class="overlay"></div>
 <main class="main-wrapper">
@@ -78,7 +115,7 @@
                 class="form-control"
                 type="text"
                 name="store_name"
-                value="{{ store.store_name|default:'LUXE' }}"
+                value="{{ store.store_name }}"
                 maxlength="200"
                 required>
 
@@ -95,7 +132,7 @@
                 class="form-control"
                 type="email"
                 name="store_email"
-                value="{{ store.store_email|default:'support@luxe.store' }}"
+                value="{{ store.store_email }}"
                 required>
 
         </div>
@@ -106,24 +143,29 @@
             <label class="form-label">
                 Currency
             </label>
+            
+                 <input
+                class="form-control"
+                type="text"
+                value="{{ store.currency_symbol }}"
+                name="currency"
+                required>
 
-            <select
-                class="form-select"
-                name="currency">
+        </div>
+        
+        
+        <div class="mb-3">
 
-                <option
-                    value="NGN"
-                    {% if store.currency == "NGN" %}selected{% endif %}>
-                    NGN — ₦
-                </option>
-
-                <option
-                    value="USD"
-                    {% if store.currency == "USD" %}selected{% endif %}>
-                    USD — $
-                </option>
-
-            </select>
+            <label class="form-label">
+                Shipping fee
+            </label>
+            
+                 <input
+                class="form-control"
+                type="text"
+                value="{{ store.shipping_fee }}"
+                name="shipping_fee"
+                required>
 
         </div>
 
@@ -138,7 +180,7 @@
                 class="form-control"
                 rows="4"
                 name="store_desc"
-                required>{{ store.store_desc|default:'Premium online shopping for electronics, fashion, beauty and home essentials.' }}</textarea>
+                required>{{ store.store_desc }}</textarea>
 
         </div>
 
@@ -153,83 +195,12 @@
 
     </div>
 
-
-    <div class="card-style">
-
-        <div class="luxe-section-title">
-            Checkout
-        </div>
-
-
-        <div class="form-check form-switch mb-3">
-
-            <input
-                class="form-check-input"
-                type="checkbox"
-                name="guest_checkout"
-                value="1"
-                {% if store.guest_checkout %}checked{% endif %}>
-
-            <label class="form-check-label">
-                Enable guest checkout
-            </label>
-
-        </div>
-
-
-        <div class="form-check form-switch mb-3">
-
-            <input
-                class="form-check-input"
-                type="checkbox"
-                name="saved_addresses"
-                value="1"
-                {% if store.saved_addresses %}checked{% endif %}>
-
-            <label class="form-check-label">
-                Enable saved addresses
-            </label>
-
-        </div>
-
-
-        <div class="form-check form-switch mb-3">
-
-            <input
-                class="form-check-input"
-                type="checkbox"
-                name="paystack_payments"
-                value="1"
-                {% if store.paystack_payments %}checked{% endif %}>
-
-            <label class="form-check-label">
-                Paystack payments
-            </label>
-
-        </div>
-
-
-        <div class="form-check form-switch">
-
-            <input
-                class="form-check-input"
-                type="checkbox"
-                name="product_reviews"
-                value="1"
-                {% if store.product_reviews %}checked{% endif %}>
-
-            <label class="form-check-label">
-                Product reviews
-            </label>
-
-        </div>
-
     </div>
 
 </div>
 </form>
 
-<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
+<div class="luxe-footer text-center">{{ store_name }} Admin • Ecommerce management</div>
 </div></section>
 </main>
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>

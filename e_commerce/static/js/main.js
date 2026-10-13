@@ -9,8 +9,8 @@
 ========================================================= */
 
 let STORE_SETTINGS = {
-  currency: "NGN",
-  currency_symbol: "₦",
+  company_name: "",
+  currency_symbol: "",
   shipping_fee: 0
 };
 
@@ -20,15 +20,15 @@ let STORE_SETTINGS = {
 ========================================================= */
 
 async function loadStoreSettings() {
-
   try {
-
-    const response = await fetch(
-      "/api/store-settings/",
-      {
-        credentials: "same-origin"
+    const response = await fetch("/api/store-settings/", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json"
       }
-    );
+    });
 
     if (!response.ok) {
       throw new Error(
@@ -39,31 +39,18 @@ async function loadStoreSettings() {
     const data = await response.json();
 
     STORE_SETTINGS = {
-      currency:
-        data.currency || "NGN",
-
-      currency_symbol:
-        data.currency_symbol || "₦",
-
-      shipping_fee:
-        Number(data.shipping_fee) || 0
+      company_name: data.company_name || "",
+      currency_symbol: data.currency_symbol || "",
+      shipping_fee: Number(data.shipping_fee) || 0
     };
+
+    return true;
 
   } catch (error) {
+    console.error("STORE SETTINGS ERROR:", error);
 
-    console.error(
-      "STORE SETTINGS ERROR:",
-      error
-    );
-
-    STORE_SETTINGS = {
-      currency: "NGN",
-      currency_symbol: "₦",
-      shipping_fee: 0
-    };
-
+    return false;
   }
-
 }
 
 
@@ -72,18 +59,16 @@ async function loadStoreSettings() {
 ========================================================= */
 
 const PRICE_FMT = (n) => {
+  const amount = Number(n || 0);
 
-  const amount =
-    Number(n || 0);
+  const formattedAmount = amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 
-  return (
-    STORE_SETTINGS.currency_symbol +
-    amount.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })
-  );
+  const symbol = STORE_SETTINGS.currency_symbol || "";
 
+  return `${symbol}${formattedAmount}`;
 };
 
 
@@ -177,7 +162,6 @@ const DESC =
   "Crafted with premium materials and precision engineering, this product blends standout design with everyday durability. Backed by our quality guarantee and free 30-day returns, it is built to impress and made to last.";
 
 let PRODUCTS = [];
-
 let CATEGORIES = [];
 
 
@@ -186,168 +170,102 @@ let CATEGORIES = [];
 ========================================================= */
 
 function getAvailableCategories() {
-
-  if (
-    typeof PRODUCTS === "undefined" ||
-    !Array.isArray(PRODUCTS)
-  ) {
-
+  if (!Array.isArray(PRODUCTS)) {
     return [];
-
   }
 
   return [
     ...new Set(
-
       PRODUCTS
-
         .map(product =>
-          String(
-            product.cat || ''
-          ).trim()
+          String(product.cat || '').trim()
         )
-
         .filter(Boolean)
-
     )
   ];
-
 }
 
 
 /* =========================================================
    PRODUCT API
+   Settings are loaded before products to prevent prices
+   from rendering before the currency symbol is available.
 ========================================================= */
 
-fetch("/api/shop/")
-  .then(response => {
+async function loadProducts() {
+  try {
+    const response = await fetch("/api/shop/", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
 
     if (!response.ok) {
-
       throw new Error(
         `Product API failed: ${response.status}`
       );
-
     }
 
-    return response.json();
-
-  })
-
-  .then(data => {
+    const data = await response.json();
 
     PRODUCTS = data.map(item => {
+      const mainImage = item.img || '';
 
-      const mainImage =
-        item.img || '';
+      const apiImages = Array.isArray(item.images)
+        ? item.images.filter(Boolean)
+        : [];
 
-      const apiImages =
-        Array.isArray(item.images)
-          ? item.images.filter(Boolean)
-          : [];
-
-      const images =
-        apiImages.length
-          ? apiImages
-          : (
-              mainImage
-                ? [mainImage]
-                : []
-            );
+      const images = apiImages.length
+        ? apiImages
+        : (mainImage ? [mainImage] : []);
 
       return {
+        id: item.id,
+        name: item.name,
+        cat: item.cat,
+        price: Number(item.price) || 0,
+        old: Number(item.old) || 0,
 
-        id:
-          item.id,
+        img: mainImage || images[0] || '',
+        images: images,
 
-        name:
-          item.name,
+        badge: item.badge,
 
-        cat:
-          item.cat,
+        tags: Array.isArray(item.tags)
+          ? item.tags
+          : [],
 
-        price:
-          Number(item.price) || 0,
+        desc: item.desc || '',
 
-        old:
-          Number(item.old) || 0,
+        rating: Number(item.rating) || 0,
+        reviews: Number(item.reviews) || 0,
 
-        img:
-          mainImage || images[0] || '',
-
-        images:
-          images,
-
-        badge:
-          item.badge,
-
-        tags:
-          Array.isArray(item.tags)
-            ? item.tags
-            : [],
-
-        desc:
-          item.desc || '',
-
-        rating:
-          Number(item.rating) || 0,
-
-        reviews:
-          Number(item.reviews) || 0,
-
-        stock:
-          Number(item.stock) || 1
-
+        stock: Number(item.stock) || 1
       };
-
     });
 
-
-    CATEGORIES =
-      getAvailableCategories();
-
+    CATEGORIES = getAvailableCategories();
 
     document.dispatchEvent(
-      new CustomEvent(
-        'products:loaded',
-        {
-          detail: PRODUCTS
-        }
-      )
+      new CustomEvent('products:loaded', {
+        detail: PRODUCTS
+      })
     );
 
+    const id = Number(getParam("id"));
+    const product = findProduct(id);
 
-    const id =
-      Number(getParam("id"));
-
-    const p =
-      findProduct(id);
-
-
-    if (!p) {
-      return;
+    if (product && typeof renderDetail === "function") {
+      renderDetail(product);
     }
 
-
-    if (
-      typeof renderDetail ===
-      "function"
-    ) {
-
-      renderDetail(p);
-
-    }
-
-  })
-
-  .catch(error => {
-
-    console.error(
-      "PRODUCT API ERROR:",
-      error
-    );
-
-  });
+  } catch (error) {
+    console.error("PRODUCT API ERROR:", error);
+  }
+}
 
 
 /* =========================================================
@@ -357,62 +275,39 @@ fetch("/api/shop/")
 const Store = {
 
   get cart() {
-
     try {
-
       return JSON.parse(
-        localStorage.getItem(
-          'luxe_guest_cart'
-        ) || '[]'
+        localStorage.getItem('luxe_guest_cart') || '[]'
       );
-
     } catch {
-
       return [];
-
     }
-
   },
 
-
   set cart(value) {
-
     localStorage.setItem(
       'luxe_guest_cart',
       JSON.stringify(value)
     );
-
   },
-
 
   get wishlist() {
-
     try {
-
       return JSON.parse(
-        localStorage.getItem(
-          'luxe_wishlist'
-        ) || '[]'
+        localStorage.getItem('luxe_wishlist') || '[]'
       );
-
     } catch {
-
       return [];
-
     }
-
   },
 
-
   set wishlist(value) {
-
     localStorage.setItem(
       'luxe_wishlist',
       JSON.stringify(value)
     );
 
     updateWishlistBadge();
-
   }
 
 };
@@ -423,12 +318,9 @@ const Store = {
 ========================================================= */
 
 function findProduct(id) {
-
   return PRODUCTS.find(
-    p =>
-      p.id === Number(id)
+    product => product.id === Number(id)
   );
-
 }
 
 
@@ -437,51 +329,25 @@ function findProduct(id) {
 ========================================================= */
 
 function getCookie(name) {
-
   let cookieValue = null;
 
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
 
-  if (
-    document.cookie &&
-    document.cookie !== ""
-  ) {
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
 
-    const cookies =
-      document.cookie.split(";");
-
-
-    for (
-      let cookie of cookies
-    ) {
-
-      cookie =
-        cookie.trim();
-
-
-      if (
-        cookie.startsWith(
-          name + "="
-        )
-      ) {
-
-        cookieValue =
-          decodeURIComponent(
-            cookie.substring(
-              name.length + 1
-            )
-          );
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(
+          cookie.substring(name.length + 1)
+        );
 
         break;
-
       }
-
     }
-
   }
 
-
   return cookieValue;
-
 }
 
 
@@ -490,28 +356,17 @@ function getCookie(name) {
 ========================================================= */
 
 function updateCartBadge(count) {
-
-  const numericCount =
-    Number(count) || 0;
-
+  const numericCount = Number(count) || 0;
 
   document
-    .querySelectorAll(
-      '[data-cart-count]'
-    )
+    .querySelectorAll('[data-cart-count]')
     .forEach(el => {
+      el.textContent = numericCount;
 
-      el.textContent =
-        numericCount;
-
-
-      el.style.display =
-        numericCount > 0
-          ? 'grid'
-          : 'none';
-
+      el.style.display = numericCount > 0
+        ? 'grid'
+        : 'none';
     });
-
 }
 
 
@@ -520,19 +375,11 @@ function updateCartBadge(count) {
 ========================================================= */
 
 function getLocalCartCount() {
-
   return Store.cart.reduce(
-    (
-      total,
-      item
-    ) =>
-      total +
-      Number(
-        item.qty || 0
-      ),
+    (total, item) =>
+      total + Number(item.qty || 0),
     0
   );
-
 }
 
 
@@ -541,65 +388,39 @@ function getLocalCartCount() {
 ========================================================= */
 
 async function loadDatabaseCartBadge() {
-
   const isAuthenticated =
     document.body.dataset.authenticated === "true";
 
-
   if (!isAuthenticated) {
-
-    updateCartBadge(
-      getLocalCartCount()
-    );
-
+    updateCartBadge(getLocalCartCount());
     return;
-
   }
 
-
   try {
-
-    const response =
-      await fetch(
-        "/api/cart/",
-        {
-          method: "GET",
-          credentials: "same-origin",
-          headers: {
-            "Accept": "application/json"
-          }
-        }
-      );
-
+    const response = await fetch("/api/cart/", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
 
     if (!response.ok) {
-
       return;
-
     }
 
-
-    const data =
-      await response.json();
-
+    const data = await response.json();
 
     if (data.success) {
-
-      updateCartBadge(
-        data.cart_count || 0
-      );
-
+      updateCartBadge(data.cart_count || 0);
     }
 
   } catch (error) {
-
     console.error(
       "DATABASE CART BADGE ERROR:",
       error
     );
-
   }
-
 }
 
 
@@ -607,149 +428,74 @@ async function loadDatabaseCartBadge() {
    ADD TO CART
 ========================================================= */
 
-async function addToCart(
-  id,
-  qty = 1
-) {
-
-  const productId =
-    Number(id);
-
-
-  const quantity =
-    Number(qty) || 1;
-
+async function addToCart(id, qty = 1) {
+  const productId = Number(id);
+  const quantity = Number(qty) || 1;
 
   if (!productId) {
-
-    console.error(
-      "Invalid product ID:",
-      id
-    );
-
+    console.error("Invalid product ID:", id);
     return;
-
   }
 
-
-  const product =
-    findProduct(productId);
-
+  const product = findProduct(productId);
 
   const isAuthenticated =
     document.body.dataset.authenticated === "true";
 
-
   if (!isAuthenticated) {
-
-    addGuestCart(
-      productId,
-      quantity,
-      product
-    );
-
+    addGuestCart(productId, quantity, product);
     return;
-
   }
 
-
   try {
+    const response = await fetch("/cart/add/", {
+      method: "POST",
 
-    const response =
-      await fetch(
-        "/cart/add/",
-        {
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type":
+          "application/x-www-form-urlencoded; charset=UTF-8"
+      },
 
-          method: "POST",
+      body: new URLSearchParams({
+        product_id: productId,
+        quantity: quantity
+      }),
 
-          headers: {
+      credentials: "same-origin"
+    });
 
-            "X-CSRFToken":
-              getCookie(
-                "csrftoken"
-              ),
-
-            "X-Requested-With":
-              "XMLHttpRequest",
-
-            "Content-Type":
-              "application/x-www-form-urlencoded; charset=UTF-8"
-
-          },
-
-          body:
-            new URLSearchParams({
-
-              product_id:
-                productId,
-
-              quantity:
-                quantity
-
-            }),
-
-          credentials:
-            "same-origin",
-
-          redirect:
-            "follow"
-
-        }
-      );
-
-
-    const text =
-      await response.text();
-
+    const responseText = await response.text();
 
     let data;
 
-
     try {
-
-      data =
-        JSON.parse(text);
-
-    } catch (error) {
-
+      data = JSON.parse(responseText);
+    } catch {
       console.error(
         "INVALID DJANGO RESPONSE:",
-        text
+        responseText
       );
-
 
       toast(
         "Unable to add product to cart.",
         "close"
       );
 
-
       return;
-
     }
 
-
-    if (
-      !response.ok ||
-      !data.success
-    ) {
-
+    if (!response.ok || !data.success) {
       toast(
-        data.message ||
-        "Unable to add product to cart.",
+        data.message || "Unable to add product to cart.",
         "close"
       );
 
-
       return;
-
     }
 
-
-    updateCartBadge(
-      data.cart_count || 0
-    );
-
+    updateCartBadge(data.cart_count || 0);
 
     toast(
       product
@@ -758,22 +504,14 @@ async function addToCart(
       "cart"
     );
 
-
   } catch (error) {
-
-    console.error(
-      "ADD TO CART ERROR:",
-      error
-    );
-
+    console.error("ADD TO CART ERROR:", error);
 
     toast(
       "Unable to add product to cart.",
       "close"
     );
-
   }
-
 }
 
 
@@ -781,70 +519,33 @@ async function addToCart(
    GUEST CART
 ========================================================= */
 
-function addGuestCart(
-  productId,
-  quantity,
-  product
-) {
+function addGuestCart(productId, quantity, product) {
+  const cart = Store.cart;
 
-  const cart =
-    Store.cart;
-
-
-  const existing =
-    cart.find(
-      item =>
-        Number(item.id) ===
-        Number(productId)
-    );
-
-
-  if (existing) {
-
-    existing.qty =
-      Number(existing.qty || 0) +
-      Number(quantity);
-
-  } else {
-
-    cart.push({
-
-      id:
-        Number(productId),
-
-      qty:
-        Number(quantity),
-
-      name:
-        product?.name ||
-        "Unknown Product",
-
-      price:
-        Number(
-          product?.price
-        ) || 0,
-
-      img:
-        product?.img ||
-        "",
-
-      cat:
-        product?.cat ||
-        ""
-
-    });
-
-  }
-
-
-  Store.cart =
-    cart;
-
-
-  updateCartBadge(
-    getLocalCartCount()
+  const existing = cart.find(
+    item => Number(item.id) === Number(productId)
   );
 
+  if (existing) {
+    existing.qty =
+      Number(existing.qty || 0) + Number(quantity);
+
+  } else {
+    cart.push({
+      id: Number(productId),
+      qty: Number(quantity),
+
+      name: product?.name || "Unknown Product",
+      price: Number(product?.price) || 0,
+
+      img: product?.img || '',
+      cat: product?.cat || ''
+    });
+  }
+
+  Store.cart = cart;
+
+  updateCartBadge(getLocalCartCount());
 
   toast(
     product
@@ -852,7 +553,6 @@ function addGuestCart(
       : "Product added to cart",
     "cart"
   );
-
 }
 
 
@@ -861,88 +561,43 @@ function addGuestCart(
 ========================================================= */
 
 function toggleWishlist(id) {
+  let productId = id;
+  let metaName = null;
 
-  let prodId =
-    id;
-
-  let metaName =
-    null;
-
-
-  if (
-    id &&
-    id.dataset
-  ) {
-
-    prodId =
-      id.dataset.id;
-
-    metaName =
-      id.dataset.name;
-
+  if (id && id.dataset) {
+    productId = id.dataset.id;
+    metaName = id.dataset.name;
   }
 
+  const normalizedId = Number(productId);
 
-  const normalizedId =
-    Number(prodId);
+  let wishlist = Store.wishlist;
 
-
-  let wishlist =
-    Store.wishlist;
-
-
-  const exists =
-    wishlist.includes(
-      normalizedId
-    );
-
+  const exists = wishlist.includes(normalizedId);
 
   if (exists) {
-
-    wishlist =
-      wishlist.filter(
-        x =>
-          x !== normalizedId
-      );
-
-  } else {
-
-    wishlist.push(
-      normalizedId
+    wishlist = wishlist.filter(
+      itemId => itemId !== normalizedId
     );
-
+  } else {
+    wishlist.push(normalizedId);
   }
 
+  Store.wishlist = wishlist;
 
-  Store.wishlist =
-    wishlist;
-
-
-  const product =
-    findProduct(
-      normalizedId
-    );
-
+  const product = findProduct(normalizedId);
 
   const name =
-    product?.name ||
-    metaName ||
-    "Item";
-
+    product?.name || metaName || "Item";
 
   toast(
-
     exists
       ? `${name} removed from wishlist`
       : `${name} added to wishlist`,
-
     "heart"
-
   );
 
-
   return !exists;
-
 }
 
 
@@ -951,28 +606,17 @@ function toggleWishlist(id) {
 ========================================================= */
 
 function updateWishlistBadge() {
-
-  const wishlistCount =
-    Store.wishlist.length;
-
+  const wishlistCount = Store.wishlist.length;
 
   document
-    .querySelectorAll(
-      '[data-wishlist-count]'
-    )
+    .querySelectorAll('[data-wishlist-count]')
     .forEach(el => {
+      el.textContent = wishlistCount;
 
-      el.textContent =
-        wishlistCount;
-
-
-      el.style.display =
-        wishlistCount
-          ? 'grid'
-          : 'none';
-
+      el.style.display = wishlistCount
+        ? 'grid'
+        : 'none';
     });
-
 }
 
 
@@ -981,9 +625,7 @@ function updateWishlistBadge() {
 ========================================================= */
 
 function updateBadges() {
-
   updateWishlistBadge();
-
 }
 
 
@@ -991,47 +633,25 @@ function updateBadges() {
    STARS
 ========================================================= */
 
-function starsHTML(
-  rating,
-  count
-) {
-
+function starsHTML(rating, count) {
   let html =
     '<div class="stars" aria-label="Rated ' +
     rating +
     ' out of 5">';
 
-
-  for (
-    let i = 1;
-    i <= 5;
-    i++
-  ) {
-
-    html +=
-      i <= Math.round(rating)
-        ? icon('star')
-        : icon('starOff');
-
+  for (let i = 1; i <= 5; i++) {
+    html += i <= Math.round(rating)
+      ? icon('star')
+      : icon('starOff');
   }
 
-
-  if (
-    count !== undefined
-  ) {
-
-    html +=
-      `<span class="rating-count">(${count})</span>`;
-
+  if (count !== undefined) {
+    html += `<span class="rating-count">(${count})</span>`;
   }
 
-
-  html +=
-    '</div>';
-
+  html += '</div>';
 
   return html;
-
 }
 
 
@@ -1040,144 +660,108 @@ function starsHTML(
 ========================================================= */
 
 function productCard(p) {
+  const wished = Store.wishlist.includes(p.id);
 
-  const wished =
-    Store.wishlist.includes(
-      p.id
-    );
+  const badge = p.badge
+    ? `<span class="badge badge-${p.badge}">
+        ${
+          p.badge === 'sale'
+            ? 'Sale'
+            : p.badge === 'new'
+              ? 'New'
+              : 'Hot'
+        }
+      </span>`
+    : '';
 
-
-  const badge =
-    p.badge
-
-      ? `<span class="badge badge-${p.badge}">
-          ${
-            p.badge === 'sale'
-              ? 'Sale'
-              : p.badge === 'new'
-                ? 'New'
-                : 'Hot'
-          }
-        </span>`
-
-      : '';
-
-
-  const oldPrice =
-    p.old
-
-      ? `<span class="price-old">
-          ${PRICE_FMT(p.old)}
-        </span>`
-
-      : '';
-
+  const oldPrice = p.old
+    ? `<span class="price-old">${PRICE_FMT(p.old)}</span>`
+    : '';
 
   return `
+    <article class="product-card">
 
-  <article class="product-card">
+      <div class="product-media">
 
-    <div class="product-media">
+        <div class="product-badges">
+          ${badge}
+        </div>
 
-      <div class="product-badges">
-        ${badge}
-      </div>
+        <div class="product-actions">
 
+          <button
+            class="js-wishlist ${wished ? 'active' : ''}"
+            data-id="${p.id}"
+            aria-label="Add to wishlist"
+          >
+            ${icon('heart')}
+          </button>
 
-      <div class="product-actions">
+          <a
+            href="/product?id=${p.id}"
+            aria-label="View ${p.name}"
+            style="
+              display:grid;
+              place-items:center;
+              background:var(--color-surface);
+              width:40px;
+              height:40px;
+              border-radius:999px;
+              box-shadow:var(--shadow);
+              color:var(--color-charcoal)
+            "
+          >
+            ${icon('eye')}
+          </a>
 
-        <button
-          class="js-wishlist ${wished ? 'active' : ''}"
-          data-id="${p.id}"
-          aria-label="Add to wishlist"
-        >
-          ${icon('heart')}
-        </button>
-
-
-        <a
-          href="/product?id=${p.id}"
-          aria-label="View ${p.name}"
-          style="
-            display:grid;
-            place-items:center;
-            background:var(--color-surface);
-            width:40px;
-            height:40px;
-            border-radius:999px;
-            box-shadow:var(--shadow);
-            color:var(--color-charcoal)
-          "
-        >
-          ${icon('eye')}
-        </a>
-
-      </div>
-
-
-      <a href="/product?id=${p.id}">
-
-        <img
-          src="${p.img}"
-          alt="${p.name}"
-          loading="lazy"
-        >
-
-      </a>
-
-    </div>
-
-
-    <div class="product-body">
-
-      <span class="product-cat">
-        ${p.cat}
-      </span>
-
-
-      <h3 class="product-title">
+        </div>
 
         <a href="/product?id=${p.id}">
-          ${p.name}
+          <img
+            src="${p.img}"
+            alt="${p.name}"
+            loading="lazy"
+          >
         </a>
-
-      </h3>
-
-
-      ${starsHTML(
-        p.rating,
-        p.reviews
-      )}
-
-
-      <div class="product-price">
-
-        <span class="price-now">
-          ${PRICE_FMT(p.price)}
-        </span>
-
-        ${oldPrice}
 
       </div>
 
+      <div class="product-body">
 
-      <button
-        class="btn btn-ghost btn-block js-add"
-        data-id="${p.id}"
-      >
+        <span class="product-cat">
+          ${p.cat}
+        </span>
 
-        ${icon('cart')}
+        <h3 class="product-title">
+          <a href="/product?id=${p.id}">
+            ${p.name}
+          </a>
+        </h3>
 
-        Add to Cart
+        ${starsHTML(p.rating, p.reviews)}
 
-      </button>
+        <div class="product-price">
 
-    </div>
+          <span class="price-now">
+            ${PRICE_FMT(p.price)}
+          </span>
 
-  </article>
+          ${oldPrice}
 
+        </div>
+
+        <button
+          class="btn btn-ghost btn-block js-add"
+          data-id="${p.id}"
+        >
+          ${icon('cart')}
+          Add to Cart
+        </button>
+
+      </div>
+
+    </article>
   `;
-
 }
 
 
@@ -1185,25 +769,14 @@ function productCard(p) {
    RENDER PRODUCTS
 ========================================================= */
 
-function renderProducts(
-  selector,
-  list
-) {
-
-  const el =
-    document.querySelector(
-      selector
-    );
-
+function renderProducts(selector, list) {
+  const el = document.querySelector(selector);
 
   if (!el) return;
 
-
-  el.innerHTML =
-    list
-      .map(productCard)
-      .join('');
-
+  el.innerHTML = list
+    .map(productCard)
+    .join('');
 }
 
 
@@ -1211,79 +784,42 @@ function renderProducts(
    TOAST NOTIFICATION
 ========================================================= */
 
-function toast(
-  msg,
-  ic = 'check'
-) {
-
+function toast(msg, ic = 'check') {
   let container =
-    document.querySelector(
-      '.toast-container'
-    );
-
+    document.querySelector('.toast-container');
 
   if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
 
-    container =
-      document.createElement(
-        'div'
-      );
-
-
-    container.className =
-      'toast-container';
-
-
-    document.body.appendChild(
-      container
-    );
-
+    document.body.appendChild(container);
   }
 
+  const toastElement = document.createElement('div');
+  toastElement.className = 'toast';
 
-  const toastElement =
-    document.createElement(
-      'div'
-    );
+  const iconElement = document.createElement('span');
+  iconElement.innerHTML = icon(ic);
 
+  const messageElement = document.createElement('span');
+  messageElement.textContent = msg;
 
-  toastElement.className =
-    'toast';
+  toastElement.appendChild(iconElement);
+  toastElement.appendChild(messageElement);
 
-
-  toastElement.innerHTML =
-    `${icon(ic)}<span>${msg}</span>`;
-
-
-  container.appendChild(
-    toastElement
-  );
-
+  container.appendChild(toastElement);
 
   requestAnimationFrame(() => {
-
-    toastElement.classList.add(
-      'show'
-    );
-
+    toastElement.classList.add('show');
   });
 
-
   setTimeout(() => {
-
-    toastElement.classList.remove(
-      'show'
-    );
-
+    toastElement.classList.remove('show');
 
     setTimeout(() => {
-
       toastElement.remove();
-
     }, 400);
-
   }, 2600);
-
 }
 
 
@@ -1292,299 +828,188 @@ function toast(
 ========================================================= */
 
 function buildHeader() {
-
-  const mount =
-    document.querySelector(
-      '#site-header'
-    );
-
+  const mount = document.querySelector('#site-header');
 
   if (!mount) return;
 
+  const page = document.body.dataset.page || '';
 
-  const page =
-    document.body.dataset.page ||
-    '';
+  const companyName = STORE_SETTINGS.company_name;
 
-
-  const link = (
-    href,
-    label,
-    key
-  ) => `
-
+  const link = (href, label, key) => `
     <li>
-
       <a
         href="${href}"
         class="${page === key ? 'active' : ''}"
       >
         ${label}
       </a>
-
     </li>
-
   `;
-
 
   const navLinks = `
-
     ${link('/', 'Home', 'home')}
-
     ${link('/shop', 'Shop', 'shop')}
-
     ${link('/about', 'About', 'about')}
-
     ${link('/blog', 'Blog', 'blog')}
-
     ${link('/contact', 'Contact', 'contact')}
-
     ${link('/faq', 'FAQ', 'faq')}
-
   `;
 
-
   mount.innerHTML = `
+    <header class="header">
 
-  <header class="header">
+      <div class="topbar">
+        <div class="container">
 
-    <div class="topbar">
+          <span>
+            Free shipping on orders over ${PRICE_FMT(50)} • 30-day returns
+          </span>
 
-      <div class="container">
+          <div class="topbar-links">
+            <a href="/account">Track Order</a>
+            <a href="/contact">Help</a>
+            <a href="/login">Sign In</a>
+          </div>
 
-        <span>
-          Free shipping on orders over ${PRICE_FMT(50)} • 30-day returns
-        </span>
+        </div>
+      </div>
 
+      <div class="container header-main">
 
-        <div class="topbar-links">
+        <button
+          class="icon-btn menu-toggle js-menu-open"
+          aria-label="Open menu"
+        >
+          ${icon('menu')}
+        </button>
 
-          <a href="/account">
-            Track Order
+        <a href="/" class="logo">
+          ${companyName ? `${companyName}<span>.</span>` : ''}
+        </a>
+
+        <form class="search-bar js-search" role="search">
+
+          <input
+            type="search"
+            placeholder="Search for products, brands and more..."
+            aria-label="Search products"
+          >
+
+          <button type="submit" aria-label="Search">
+            ${icon('search')}
+          </button>
+
+        </form>
+
+        <div class="header-actions">
+
+          <a href="/wishlist" class="icon-btn" aria-label="Wishlist">
+            ${icon('heart')}
+
+            <span
+              class="count"
+              data-wishlist-count
+              style="display:none"
+            >0</span>
           </a>
 
-          <a href="/contact">
-            Help
+          <a href="/cart" class="icon-btn" aria-label="Cart">
+            ${icon('cart')}
+
+            <span
+              class="count"
+              data-cart-count
+              style="display:none"
+            >0</span>
           </a>
 
-          <a href="/login">
-            Sign In
+          <a href="/account" class="icon-btn" aria-label="Account">
+            ${icon('user')}
           </a>
 
         </div>
 
       </div>
 
-    </div>
+      <nav class="nav">
+        <div class="container">
 
+          <div class="nav-dropdown">
 
-    <div class="container header-main">
+            <button class="nav-cats">
+              ${icon('grid')}
+              Categories
+              ${icon('chevron')}
+            </button>
 
-      <button
-        class="icon-btn menu-toggle js-menu-open"
-        aria-label="Open menu"
-      >
-        ${icon('menu')}
-      </button>
+            <div
+              class="dropdown-menu"
+              id="header-category-menu"
+            ></div>
 
+          </div>
 
-      <a
-        href="/"
-        class="logo"
-      >
-        LUXE<span>.</span>
-      </a>
+          <ul class="nav-list">
+            ${navLinks}
+          </ul>
 
+        </div>
+      </nav>
+
+    </header>
+
+    <div class="mobile-drawer js-drawer">
+
+      <div class="drawer-head">
+
+        <a href="/" class="logo">
+          ${companyName ? `${companyName}<span>.</span>` : ''}
+        </a>
+
+        <button
+          class="icon-btn js-menu-close"
+          aria-label="Close menu"
+        >
+          ${icon('close')}
+        </button>
+
+      </div>
 
       <form
         class="search-bar js-search"
-        role="search"
+        style="display:flex;margin-bottom:1.5rem"
       >
 
         <input
           type="search"
-          placeholder="Search for products, brands and more..."
-          aria-label="Search products"
-        >
-
-
-        <button
-          type="submit"
+          placeholder="Search for products..."
           aria-label="Search"
         >
+
+        <button type="submit" aria-label="Search">
           ${icon('search')}
         </button>
 
       </form>
 
+      <ul class="nav-list">
+        ${navLinks}
+      </ul>
 
-      <div class="header-actions">
+      <h4 style="margin:1.5rem 0 .5rem">
+        Categories
+      </h4>
 
-        <a
-          href="/wishlist"
-          class="icon-btn"
-          aria-label="Wishlist"
-        >
-
-          ${icon('heart')}
-
-
-          <span
-            class="count"
-            data-wishlist-count
-            style="display:none"
-          >
-            0
-          </span>
-
-        </a>
-
-
-        <a
-          href="/cart"
-          class="icon-btn"
-          aria-label="Cart"
-        >
-
-          ${icon('cart')}
-
-
-          <span
-            class="count"
-            data-cart-count
-            style="display:none"
-          >
-            0
-          </span>
-
-        </a>
-
-
-        <a
-          href="/account"
-          class="icon-btn"
-          aria-label="Account"
-        >
-
-          ${icon('user')}
-
-        </a>
-
-      </div>
+      <ul
+        class="nav-list"
+        id="mobile-category-list"
+      ></ul>
 
     </div>
 
-
-    <nav class="nav">
-
-      <div class="container">
-
-        <div class="nav-dropdown">
-
-          <button class="nav-cats">
-
-            ${icon('grid')}
-
-            Categories
-
-            ${icon('chevron')}
-
-          </button>
-
-
-          <div
-            class="dropdown-menu"
-            id="header-category-menu"
-          >
-
-          </div>
-
-        </div>
-
-
-        <ul class="nav-list">
-
-          ${navLinks}
-
-        </ul>
-
-      </div>
-
-    </nav>
-
-  </header>
-
-
-  <div class="mobile-drawer js-drawer">
-
-    <div class="drawer-head">
-
-      <a
-        href="/"
-        class="logo"
-      >
-        LUXE<span>.</span>
-      </a>
-
-
-      <button
-        class="icon-btn js-menu-close"
-        aria-label="Close menu"
-      >
-        ${icon('close')}
-      </button>
-
-    </div>
-
-
-    <form
-      class="search-bar js-search"
-      style="display:flex;margin-bottom:1.5rem"
-    >
-
-      <input
-        type="search"
-        placeholder="Search for products..."
-        aria-label="Search"
-      >
-
-
-      <button
-        type="submit"
-        aria-label="Search"
-      >
-        ${icon('search')}
-      </button>
-
-    </form>
-
-
-    <ul class="nav-list">
-
-      ${navLinks}
-
-    </ul>
-
-
-    <h4 style="margin:1.5rem 0 .5rem">
-      Categories
-    </h4>
-
-
-    <ul
-      class="nav-list"
-      id="mobile-category-list"
-    >
-
-    </ul>
-
-  </div>
-
-
-  <div class="drawer-overlay js-overlay"></div>
-
+    <div class="drawer-overlay js-overlay"></div>
   `;
-
 }
 
 
@@ -1593,60 +1018,35 @@ function buildHeader() {
 ========================================================= */
 
 function updateHeaderCategories() {
-
-  CATEGORIES =
-    getAvailableCategories();
-
+  CATEGORIES = getAvailableCategories();
 
   const desktopMenu =
-    document.querySelector(
-      '#header-category-menu'
-    );
-
+    document.querySelector('#header-category-menu');
 
   const mobileMenu =
-    document.querySelector(
-      '#mobile-category-list'
-    );
-
+    document.querySelector('#mobile-category-list');
 
   if (desktopMenu) {
-
-    desktopMenu.innerHTML =
-      CATEGORIES
-        .map(
-          category => `
-            <a
-              href="/shop?cat=${encodeURIComponent(category)}"
-            >
-              ${category}
-            </a>
-          `
-        )
-        .join('');
-
+    desktopMenu.innerHTML = CATEGORIES
+      .map(category => `
+        <a href="/shop?cat=${encodeURIComponent(category)}">
+          ${category}
+        </a>
+      `)
+      .join('');
   }
-
 
   if (mobileMenu) {
-
-    mobileMenu.innerHTML =
-      CATEGORIES
-        .map(
-          category => `
-            <li>
-              <a
-                href="/shop?cat=${encodeURIComponent(category)}"
-              >
-                ${category}
-              </a>
-            </li>
-          `
-        )
-        .join('');
-
+    mobileMenu.innerHTML = CATEGORIES
+      .map(category => `
+        <li>
+          <a href="/shop?cat=${encodeURIComponent(category)}">
+            ${category}
+          </a>
+        </li>
+      `)
+      .join('');
   }
-
 }
 
 
@@ -1655,184 +1055,135 @@ function updateHeaderCategories() {
 ========================================================= */
 
 function buildFooter() {
-
-  const mount =
-    document.querySelector(
-      '#site-footer'
-    );
-
+  const mount = document.querySelector('#site-footer');
 
   if (!mount) return;
 
+  const companyName = STORE_SETTINGS.company_name;
 
-  const col = (
-    title,
-    links
-  ) => `
-
+  const col = (title, links) => `
     <div>
 
       <h4>${title}</h4>
 
-
       <ul class="footer-links">
-
         ${links
-          .map(
-            l =>
-              `<li>
-                <a href="${l[1]}">
-                  ${l[0]}
-                </a>
-              </li>`
-          )
+          .map(link => `
+            <li>
+              <a href="${link[1]}">
+                ${link[0]}
+              </a>
+            </li>
+          `)
           .join('')}
-
       </ul>
 
     </div>
-
   `;
 
-
   mount.innerHTML = `
+    <footer class="footer">
 
-  <footer class="footer">
+      <div class="container">
 
-    <div class="container">
+        <div class="footer-grid">
 
-      <div class="footer-grid">
+          <div>
 
-        <div>
+            <a href="/" class="logo">
+              ${companyName ? `${companyName}<span>.</span>` : ''}
+            </a>
 
-          <a
-            href="/"
-            class="logo"
-          >
-            LUXE<span>.</span>
-          </a>
+            <p style="margin-top:1rem">
+              Your destination for curated products across
+              electronics, fashion, beauty and more.
+              Quality you can trust, delivered fast.
+            </p>
 
+            <div class="footer-newsletter">
 
-          <p style="margin-top:1rem">
+              <input
+                type="email"
+                placeholder="Your email address"
+                aria-label="Email"
+              >
 
-            Your premium destination for curated products
-            across electronics, fashion, beauty and more.
-            Quality you can trust, delivered fast.
+              <button class="js-newsletter">
+                Subscribe
+              </button>
 
-          </p>
+            </div>
 
+            <div class="socials">
 
-          <div class="footer-newsletter">
+              <a href="#" aria-label="Facebook">
+                ${icon('facebook')}
+              </a>
 
-            <input
-              type="email"
-              placeholder="Your email address"
-              aria-label="Email"
-            >
+              <a href="#" aria-label="Instagram">
+                ${icon('instagram')}
+              </a>
 
+              <a href="#" aria-label="Twitter">
+                ${icon('twitter')}
+              </a>
 
-            <button class="js-newsletter">
-              Subscribe
-            </button>
+              <a href="#" aria-label="YouTube">
+                ${icon('youtube')}
+              </a>
+
+            </div>
 
           </div>
 
-
-          <div class="socials">
-
-            <a href="#" aria-label="Facebook">
-              ${icon('facebook')}
-            </a>
-
-            <a href="#" aria-label="Instagram">
-              ${icon('instagram')}
-            </a>
-
-            <a href="#" aria-label="Twitter">
-              ${icon('twitter')}
-            </a>
-
-            <a href="#" aria-label="YouTube">
-              ${icon('youtube')}
-            </a>
-
-          </div>
-
-        </div>
-
-
-        ${col(
-          'Company',
-          [
+          ${col('Company', [
             ['About Us', '/about'],
             ['Our Story', '/about'],
             ['Careers', '#'],
             ['Press', '#'],
             ['Blog', '/blog']
-          ]
-        )}
+          ])}
 
-
-        ${col(
-          'Customer Service',
-          [
+          ${col('Customer Service', [
             ['Contact Us', '/contact'],
             ['FAQ', '/faq'],
             ['Shipping Info', '/shipping'],
             ['Track Order', '/account'],
             ['Help Center', '/contact']
-          ]
-        )}
+          ])}
 
-
-        ${col(
-          'Policies',
-          [
+          ${col('Policies', [
             ['Privacy Policy', '/privacy'],
             ['Terms & Conditions', '/terms'],
             ['Return Policy', '/returns'],
             ['Shipping Policy', '/shipping'],
             ['Cookie Policy', '#']
-          ]
-        )}
+          ])}
 
-      </div>
+        </div>
 
+        <div class="footer-bottom">
 
-      <div class="footer-bottom">
+          <span>
+            © ${new Date().getFullYear()}
+            ${companyName} Store.
+            All rights reserved.
+          </span>
 
-        <span>
-
-          © ${new Date().getFullYear()}
-
-          LUXE Store.
-          All rights reserved.
-
-        </span>
-
-
-        <div class="payment-icons">
-
-          <span>VISA</span>
-
-          <span>MASTERCARD</span>
-
-          <span>AMEX</span>
-
-          <span>PAYPAL</span>
-
-          <span>APPLE PAY</span>
+          <div class="payment-icons">
+            <span>VISA</span>
+            <span>MASTERCARD</span>
+            <span>AMEX</span>
+            <span>PAYPAL</span>
+            <span>APPLE PAY</span>
+          </div>
 
         </div>
 
       </div>
 
-    </div>
-
-  </footer>
-
+    </footer>
   `;
-
 }
 
 
@@ -1841,54 +1192,32 @@ function buildFooter() {
 ========================================================= */
 
 function setupBackToTop() {
+  const btn = document.createElement('button');
 
-  const btn =
-    document.createElement(
-      'button'
-    );
-
-
-  btn.className =
-    'back-to-top';
-
+  btn.className = 'back-to-top';
 
   btn.setAttribute(
     'aria-label',
     'Back to top'
   );
 
+  btn.innerHTML = icon('arrowUp');
 
-  btn.innerHTML =
-    icon('arrowUp');
+  document.body.appendChild(btn);
 
+  btn.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
 
-  document.body.appendChild(
-    btn
-  );
-
-
-  btn.addEventListener(
-    'click',
-    () =>
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      })
-  );
-
-
-  window.addEventListener(
-    'scroll',
-    () => {
-
-      btn.classList.toggle(
-        'show',
-        window.scrollY > 500
-      );
-
-    }
-  );
-
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle(
+      'show',
+      window.scrollY > 500
+    );
+  });
 }
 
 
@@ -1897,93 +1226,42 @@ function setupBackToTop() {
 ========================================================= */
 
 function setupDrawer() {
-
-  const drawer =
-    document.querySelector(
-      '.js-drawer'
-    );
-
-
-  const overlay =
-    document.querySelector(
-      '.js-overlay'
-    );
-
+  const drawer = document.querySelector('.js-drawer');
+  const overlay = document.querySelector('.js-overlay');
 
   if (!drawer) return;
 
-
   const open = () => {
-
-    drawer.classList.add(
-      'open'
-    );
-
+    drawer.classList.add('open');
 
     if (overlay) {
-
-      overlay.classList.add(
-        'open'
-      );
-
+      overlay.classList.add('open');
     }
-
   };
-
 
   const close = () => {
-
-    drawer.classList.remove(
-      'open'
-    );
-
+    drawer.classList.remove('open');
 
     if (overlay) {
-
-      overlay.classList.remove(
-        'open'
-      );
-
+      overlay.classList.remove('open');
     }
-
   };
 
+  document
+    .querySelectorAll('.js-menu-open')
+    .forEach(button => {
+      button.addEventListener('click', open);
+    });
 
   document
-    .querySelectorAll(
-      '.js-menu-open'
-    )
-    .forEach(
-      b =>
-        b.addEventListener(
-          'click',
-          open
-        )
-    );
-
-
-  document
-    .querySelectorAll(
-      '.js-menu-close'
-    )
-    .forEach(
-      b =>
-        b.addEventListener(
-          'click',
-          close
-        )
-    );
-
+    .querySelectorAll('.js-menu-close')
+    .forEach(button => {
+      button.addEventListener('click', close);
+    });
 
   if (overlay) {
-
-    overlay.addEventListener(
-      'click',
-      close
-    );
-
+    overlay.addEventListener('click', close);
   }
-
 }
 
 
@@ -1992,46 +1270,27 @@ function setupDrawer() {
 ========================================================= */
 
 function setupSearch() {
-
   document
-    .querySelectorAll(
-      '.js-search'
-    )
+    .querySelectorAll('.js-search')
     .forEach(form => {
+      form.addEventListener('submit', event => {
+        event.preventDefault();
 
-      form.addEventListener(
-        'submit',
-        e => {
+        const input = form.querySelector('input');
 
-          e.preventDefault();
+        const query = input
+          ? input.value.trim()
+          : '';
 
-
-          const q =
-            form
-              .querySelector('input')
-              .value
-              .trim();
-
-
-          window.location.href =
-            '/shop' +
-
-            (
-
-              q
-
-                ? '?q=' +
-                  encodeURIComponent(q)
-
-                : ''
-
-            );
-
-        }
-      );
-
+        window.location.href =
+          '/shop' +
+          (
+            query
+              ? '?q=' + encodeURIComponent(query)
+              : ''
+          );
+      });
     });
-
 }
 
 
@@ -2040,78 +1299,44 @@ function setupSearch() {
 ========================================================= */
 
 function setupNewsletter() {
-
   document
-    .querySelectorAll(
-      '.js-newsletter, .js-newsletter-form'
-    )
-    .forEach(el => {
-
-      const handler = e => {
-
-        e.preventDefault();
-
+    .querySelectorAll('.js-newsletter, .js-newsletter-form')
+    .forEach(element => {
+      const handler = event => {
+        event.preventDefault();
 
         const input =
-          el.tagName === 'FORM'
-
-            ? el.querySelector('input')
-
-            : el
-                .closest(
-                  '.footer-newsletter, .newsletter-form'
-                )
+          element.tagName === 'FORM'
+            ? element.querySelector('input')
+            : element
+                .closest('.footer-newsletter, .newsletter-form')
                 ?.querySelector('input');
-
 
         if (
           input &&
-          /^[^@\s]+@[^@\s]+\.[^@\s]+$/
-            .test(
-              input.value
-            )
+          /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.value)
         ) {
-
           toast(
-            'Subscribed! Check your inbox.',
+            'Email format accepted. Connect the newsletter API to complete subscription.',
             'mail'
           );
-
 
           input.value = '';
 
         } else {
-
           toast(
             'Please enter a valid email.',
             'mail'
           );
-
         }
-
       };
 
-
-      if (
-        el.tagName === 'FORM'
-      ) {
-
-        el.addEventListener(
-          'submit',
-          handler
-        );
-
+      if (element.tagName === 'FORM') {
+        element.addEventListener('submit', handler);
       } else {
-
-        el.addEventListener(
-          'click',
-          handler
-        );
-
+        element.addEventListener('click', handler);
       }
-
     });
-
 }
 
 
@@ -2120,56 +1345,30 @@ function setupNewsletter() {
 ========================================================= */
 
 function setupReveal() {
-
-  if (
-    typeof IntersectionObserver ===
-    'undefined'
-  ) {
-
+  if (typeof IntersectionObserver === 'undefined') {
     return;
-
   }
 
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
 
-  const obs =
-    new IntersectionObserver(
-      entries => {
-
-        entries.forEach(en => {
-
-          if (
-            en.isIntersecting
-          ) {
-
-            en.target.classList.add(
-              'in'
-            );
-
-
-            obs.unobserve(
-              en.target
-            );
-
-          }
-
-        });
-
-      },
-      {
-        threshold: 0.1
-      }
-    );
-
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.1
+    }
+  );
 
   document
-    .querySelectorAll(
-      '.reveal'
-    )
-    .forEach(
-      el =>
-        obs.observe(el)
-    );
-
+    .querySelectorAll('.reveal')
+    .forEach(element => {
+      observer.observe(element);
+    });
 }
 
 
@@ -2177,77 +1376,37 @@ function setupReveal() {
    GLOBAL ADD-TO-CART / WISHLIST CLICKS
 ========================================================= */
 
-let globalClicksRegistered =
-  false;
-
+let globalClicksRegistered = false;
 
 function setupGlobalClicks() {
-
-  if (
-    globalClicksRegistered
-  ) {
-
+  if (globalClicksRegistered) {
     return;
-
   }
 
+  document.addEventListener('click', event => {
+    const addBtn = event.target.closest('.js-add');
 
-  document.addEventListener(
-    'click',
-    e => {
+    if (addBtn) {
+      event.preventDefault();
 
-      const addBtn =
-        e.target.closest(
-          '.js-add'
-        );
+      addToCart(addBtn.dataset.id);
 
-
-      if (addBtn) {
-
-        e.preventDefault();
-
-
-        addToCart(
-          addBtn.dataset.id
-        );
-
-
-        return;
-
-      }
-
-
-      const wlBtn =
-        e.target.closest(
-          '.js-wishlist'
-        );
-
-
-      if (wlBtn) {
-
-        e.preventDefault();
-
-
-        const active =
-          toggleWishlist(
-            wlBtn
-          );
-
-
-        wlBtn.classList.toggle(
-          'active',
-          active
-        );
-
-      }
-
+      return;
     }
-  );
 
+    const wishlistBtn =
+      event.target.closest('.js-wishlist');
 
-  globalClicksRegistered =
-    true;
+    if (wishlistBtn) {
+      event.preventDefault();
 
+      const active = toggleWishlist(wishlistBtn);
+
+      wishlistBtn.classList.toggle('active', active);
+    }
+  });
+
+  globalClicksRegistered = true;
 }
 
 
@@ -2256,11 +1415,9 @@ function setupGlobalClicks() {
 ========================================================= */
 
 function getParam(name) {
-
   return new URLSearchParams(
     window.location.search
   ).get(name);
-
 }
 
 
@@ -2268,56 +1425,44 @@ function getParam(name) {
    INITIALIZATION
 ========================================================= */
 
-document.addEventListener(
-  'DOMContentLoaded',
-  async () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
-    await loadStoreSettings();
+  /*
+   * Load store settings first.
+   * Then build the header and footer.
+   * Finally load products so their prices use the symbol.
+   */
 
+  await loadStoreSettings();
 
-    buildHeader();
+  buildHeader();
+  buildFooter();
 
-    buildFooter();
+  setupDrawer();
+  setupSearch();
+  setupNewsletter();
+  setupBackToTop();
+  setupGlobalClicks();
 
-    setupDrawer();
+  updateWishlistBadge();
 
-    setupSearch();
+  setTimeout(setupReveal, 50);
 
-    setupNewsletter();
+  await loadProducts();
 
-    setupBackToTop();
+  await loadDatabaseCartBadge();
 
-    setupGlobalClicks();
-
-
-    updateWishlistBadge();
-
-
-    setTimeout(
-      setupReveal,
-      50
-    );
-
-
-    await loadDatabaseCartBadge();
-
-  }
-);
+});
 
 
 /* =========================================================
    PRODUCTS LOADED
 ========================================================= */
 
-document.addEventListener(
-  'products:loaded',
-  () => {
+document.addEventListener('products:loaded', () => {
+  updateHeaderCategories();
 
-    updateHeaderCategories();
+  setupGlobalClicks();
 
-    setupGlobalClicks();
-
-    updateWishlistBadge();
-
-  }
-);
+  updateWishlistBadge();
+});

@@ -157,11 +157,14 @@
             <span>they'll actually use.</span>
           </h1>
 
-
+            {% if desc %}
+            {% for descs in desc %}
           <p>
-            Tech, fashion, beauty and home pieces for birthdays,
-            weddings and everything in between.
+           {{ descs.store_desc}}
           </p>
+          
+          {% endfor %}
+          {% endif %}
 
 
           <div class="luxe-hero-actions">

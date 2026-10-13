@@ -2,127 +2,488 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Categories | LUXE Admin</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Categories | {{ store_name }} Admin</title>
+
 <link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
 <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+
+<style>
+.category-form-card {
+    border: 1px solid #e8e6df;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 24px;
+}
+
+.category-form-card .form-control {
+    min-height: 44px;
+}
+
+.category-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+}
+
+.category-message.success {
+    background: #e8f7ed;
+    color: #176b35;
+}
+
+.category-message.error {
+    background: #fff0ee;
+    color: #a52b20;
+}
+
+.category-name {
+    font-weight: 600;
+    color: #171715;
+}
+
+.category-empty {
+    text-align: center;
+    padding: 35px 15px;
+    color: #777;
+}
+
+.category-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.category-table-card {
+    border-radius: 12px;
+}
+
+.category-count {
+    font-size: 13px;
+    color: #777;
+}
+
+@media (max-width: 576px) {
+    .category-form-card {
+        padding: 16px;
+    }
+
+    .category-form-card button {
+        width: 100%;
+    }
+
+    .category-actions button {
+        padding: 6px 10px;
+    }
+
+    .category-table-card {
+        padding: 14px;
+    }
+}
+</style>
 </head>
+
 <body>
-<div id="preloader"><div class="spinner"></div></div>
+
+<div id="preloader">
+    <div class="spinner"></div>
+</div>
+
+<!-- SIDEBAR -->
 <aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
-   <nav class="sidebar-nav">
+
+    <div class="navbar-logo">
+        <a href="{% url 'admin_dashboard' %}" class="luxe-brand">
+            {{ store_name }}
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
         <ul>
+
             <li class="nav-item">
-                <a class="active" href="{% url 'admin_dashboard' %}">
-                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                <a href="{% url 'admin_dashboard' %}">
+                    <span class="icon">
+                        <i class="lni lni-dashboard"></i>
+                    </span>
                     <span class="text">Dashboard</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="{% url 'admin_products' %}">
-                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-shopping-basket"></i>
+                    </span>
                     <span class="text">Products</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="active" href="{% url 'admin_categories' %}">
-                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-grid-alt"></i>
+                    </span>
                     <span class="text">Categories</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="{% url 'admin_orders' %}">
-                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-cart"></i>
+                    </span>
                     <span class="text">Orders</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="{% url 'admin_customers' %}">
-                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-users"></i>
+                    </span>
                     <span class="text">Customers</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="{% url 'admin_inventory' %}">
-                    <span class="icon"><i class="lni lni-package"></i></span>
-                    <span class="text">Inventory</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
                 <a href="{% url 'admin_reviews' %}">
-                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-comments"></i>
+                    </span>
                     <span class="text">Reviews</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="{% url 'admin_discounts' %}">
-                    <span class="icon"><i class="lni lni-offer"></i></span>
-                    <span class="text">Discounts</span>
+                <a href="{% url 'admin_flash_settings' %}">
+                    <span class="icon">
+                        <i class="lni lni-offer"></i>
+                    </span>
+                    <span class="text">Flash Sale</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="{% url 'admin_shipping' %}">
-                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-delivery"></i>
+                    </span>
                     <span class="text">Shipping</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="{% url 'admin_settings' %}">
-                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-cog"></i>
+                    </span>
                     <span class="text">Settings</span>
                 </a>
             </li>
+
         </ul>
     </nav>
+
 </aside>
+
 <div class="overlay"></div>
+
+<!-- MAIN CONTENT -->
 <main class="main-wrapper">
-<header class="header">
-  <div class="container-fluid"><div class="row align-items-center">
-    <div class="col-lg-5 col-md-5 col-6">
-      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
-      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
-    </div>
-    <div class="col-lg-7 col-md-7 col-6">
-      <div class="d-flex justify-content-end align-items-center gap-3">
-        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
-        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
-          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+
+                <div class="col-lg-5 col-md-5 col-6">
+
+                    <button id="menu-toggle"
+                            class="main-btn primary-btn btn-hover">
+                        <i class="lni lni-menu"></i>
+                    </button>
+
+                    <span class="ms-3 fw-semibold d-none d-md-inline">
+                        Store Administration
+                    </span>
+
+                </div>
+
+                <div class="col-lg-7 col-md-7 col-6">
+                    <div class="d-flex justify-content-end align-items-center gap-3">
+
+                        <a href="/"
+                           class="text-muted small"
+                           target="_blank">
+                            View store ↗
+                        </a>
+
+                        <div class="dropdown">
+
+                            <button class="btn btn-sm dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                Admin
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'admin_profile' %}">
+                                        Profile
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'admin_login' %}">
+                                        Sign out
+                                    </a>
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
-      </div>
-    </div>
-  </div></div>
-</header>
-<section class="section">
-<div class="container-fluid">
-<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Categories</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Categories</li></ol></nav></div></div></div></div>
+    </header>
 
-<div class="luxe-two"><div class="card-style"><div class="luxe-toolbar mb-3"><div class="luxe-section-title mb-0">Product categories</div><button class="btn btn-primary" onclick="LUXE.toast('Category form ready')">Add category</button></div>
-<div class="table-responsive"><table class="table luxe-table"><thead><tr><th>Category</th><th>Products</th><th>Status</th><th></th></tr></thead><tbody>
-<tr><td><strong>Electronics</strong></td><td>42</td><td><span class="luxe-badge success">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary">Edit</button></td></tr>
-<tr><td><strong>Fashion</strong></td><td>36</td><td><span class="luxe-badge success">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary">Edit</button></td></tr>
-<tr><td><strong>Beauty</strong></td><td>18</td><td><span class="luxe-badge success">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary">Edit</button></td></tr>
-<tr><td><strong>Home</strong></td><td>24</td><td><span class="luxe-badge success">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary">Edit</button></td></tr>
-</tbody></table></div></div>
-<div class="card-style"><div class="luxe-section-title">Category settings</div><p class="text-muted small">Use categories to organize products and power the storefront filters. Product counts update from your database once the Django endpoints are connected.</p><div class="luxe-alert">Recommended: keep categories short and customer-friendly.</div></div></div>
+    <!-- PAGE CONTENT -->
+    <section class="section">
+        <div class="container-fluid">
 
-<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
-</div></section>
+            <!-- PAGE TITLE -->
+            <div class="title-wrapper pt-30 mb-25">
+
+                <div class="row align-items-center">
+
+                    <div class="col-md-6">
+                        <h2 class="page-title">Categories</h2>
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="breadcrumb-wrapper">
+
+                            <nav aria-label="breadcrumb">
+
+                                <ol class="breadcrumb justify-content-md-end">
+
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'admin_dashboard' %}">
+                                            Admin
+                                        </a>
+                                    </li>
+
+                                    <li class="breadcrumb-item active">
+                                        Categories
+                                    </li>
+
+                                </ol>
+
+                            </nav>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- SUCCESS AND ERROR MESSAGES -->
+            {% if messages %}
+                {% for message in messages %}
+
+                    <div class="category-message
+                        {% if 'success' in message.tags %}
+                            success
+                        {% else %}
+                            error
+                        {% endif %}">
+
+                        {{ message }}
+
+                    </div>
+
+                {% endfor %}
+            {% endif %}
+
+            <!-- ADD CATEGORY FORM -->
+            <div class="card-style category-form-card">
+
+                <div class="luxe-section-title mb-3">
+                    Add a category
+                </div>
+
+                <form method="POST"
+                      action="{% url 'admin_categories' %}">
+
+                    {% csrf_token %}
+
+                    <input type="hidden"
+                           name="action"
+                           value="add">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-8">
+
+                            <label class="form-label"
+                                   for="categoryName">
+                                Category name
+                            </label>
+
+                            <input type="text"
+                                   id="categoryName"
+                                   name="name"
+                                   class="form-control"
+                                   maxlength="100"
+                                   placeholder="e.g. Musical Instruments"
+                                   required>
+
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-end">
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100">
+                                <i class="lni lni-plus"></i>
+                                Add Category
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- AVAILABLE CATEGORIES -->
+            <div class="card-style category-table-card">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div class="luxe-section-title mb-0">
+                        Available Categories
+                    </div>
+
+                    <span class="category-count">
+                        {{ categories|length }} categories
+                    </span>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table luxe-table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for category in categories %}
+
+                                <tr>
+
+                                    <td>
+                                        <span class="category-name">
+                                            {{ category.name }}
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end">
+
+                                        <form method="POST"
+                                              action="{% url 'admin_categories' %}"
+                                              onsubmit="return confirm('Are you sure you want to delete this category?');"
+                                              style="display:inline;">
+
+                                            {% csrf_token %}
+
+                                            <input type="hidden"
+                                                   name="action"
+                                                   value="delete">
+
+                                            <input type="hidden"
+                                                   name="category_id"
+                                                   value="{{ category.id }}">
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger">
+
+                                                <i class="lni lni-trash-can"></i>
+                                                Delete
+
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+
+                                    <td colspan="2">
+
+                                        <div class="category-empty">
+
+                                            <h5>No categories available</h5>
+
+                                            <p>
+                                                Add your first category using the form above.
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="luxe-footer text-center">
+                {{ store_name }} Admin • Ecommerce management
+            </div>
+
+        </div>
+    </section>
+
 </main>
+
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'admin/js/luxe-admin.js' %}"></script>
-</body></html>
+
+</body>
+</html>

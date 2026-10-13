@@ -1,21 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order, SavedAddress, ProductImage
+from .models import User, Product, Cart_Items, Cart, FlashSaleSettings, StoreSettings, CustomersReview, Order, SavedAddress, ProductImage, Category
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django.views import View
+from django.db.models import Count
+from django.db import IntegrityError
+from django.db.models import Sum
 import uuid
 
 
 # Create your views here.
 
 def home(request):
+    desc = StoreSettings.objects.all()
+    
 
-  return render(request, 'index.html')
+    return render(request, 'index.html',{'desc' : desc})
 
 # Login view
 
@@ -402,13 +408,12 @@ def store_settings_api(request):
 
     if not settings:
         settings = StoreSettings.objects.create(
-            currency="NGN",
             currency_symbol="₦",
             shipping_fee=0
         )
 
     return JsonResponse({
-        "currency": settings.currency,
+        "company_name" : settings.store_name,
         "currency_symbol": settings.currency_symbol,
         "shipping_fee": float(settings.shipping_fee),
     })
@@ -716,10 +721,7 @@ def checkout(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def addresses(request):
-
-    # =========================
-    # GET SAVED ADDRESSES
-    # =========================
+    
     if request.method == "GET":
 
         addresses = SavedAddress.objects.filter(
@@ -960,116 +962,152 @@ def address_detail(request, address_id):
 
 
 def admin_dashboard(request):
-    return render(request, "custom_admin/dashboard.html")
+    user = User.objects.count()
+    orders = Order.objects.count()
+    pdt = Product.objects.count()
+    currency = StoreSettings.objects.first()
+    
+    
+    total_revenue = Order.objects.filter().aggregate(
+        total=Sum('subtotal')
+    )['total'] or 0
+
+    context = {
+       
+    }
+    
+    return render(request, "custom_admin/dashboard.html", {'users' :  user , 'orders' : orders, 'pdt' : pdt,  'total_revenue': total_revenue, 'currency' : currency})
 
 
 def admin_products(request):
     
     pdt = Product.objects.all()
+    currency = StoreSettings.objects.first()
     
-    return render(request, "custom_admin/products.html",{'product' : pdt})
+    return render(request, "custom_admin/products.html",{'product' : pdt, 'currency' : currency})
 
 
+def admin_product_form(request, pdt_id=None):
+    if pdt_id:
+        product = get_object_or_404(Product, id=pdt_id)
+    else:
+        product = Product()
 
-def admin_product_create(request):
+    cats = Category.objects.all()
 
     if request.method == "POST":
-
-        product_name = request.POST.get("product_name")
-        product_category = request.POST.get("product_category")
-        old_product_price = request.POST.get("old_product_price")
-        new_product_price = request.POST.get("new_product_price")
-        product_Desc = request.POST.get("product_Desc")
-        badge = request.POST.get("badge")
-        tag = request.POST.get("tag")
-        stock = request.POST.get("stock")
+        product_name = request.POST.get("product_name", "").strip()
+        product_category = request.POST.get("product_category", "").strip()
+        old_product_price = request.POST.get("old_product_price") or 0
+        new_product_price = request.POST.get("new_product_price") or 0
+        product_Desc = request.POST.get("product_Desc", "").strip()
+        badge = request.POST.get("badge", "hot")
+        tag = request.POST.get("tag", "best")
+        stock = request.POST.get("stock") or 0
 
         images = request.FILES.getlist("product_images")
 
-        if not images:
-            return redirect("admin_product_form")
+        product.product_name = product_name
+        product.product_category = product_category
+        product.old_product_price = old_product_price
+        product.new_product_price = new_product_price
+        product.product_Desc = product_Desc
+        product.badge = badge
+        product.tag = tag
+        product.stock = stock
 
-        product = Product.objects.create(
-            product_code=uuid.uuid4().hex[:6].upper(),
-            product_name=product_name,
-            product_category=product_category,
-            old_product_price=old_product_price or 0,
-            new_product_price=new_product_price,
-            product_Desc=product_Desc,
-            badge=badge,
-            tag=tag,
-            stock=stock or 0,
-            product_image=images[0]
-        )
+        # Set the main image if one was uploaded
+        if images:
+            product.product_image = images[0]
 
-        for image in images[1:]:
-            ProductImage.objects.create(
-                product=product,
-                image=image
-            )
+        # IMPORTANT: Save the product first to generate its primary key
+        product.save()
 
+        # Now it is safe to attach additional images
+        if images:
+            for image in images[1:]:
+                ProductImage.objects.create(
+                    product=product,
+                    image=image
+                )
+
+        messages.success(request, "Product saved successfully.")
         return redirect("admin_products")
 
-    return render(
-        request,
-        "custom_admin/product-form.html"
-    )
+    return render(request, "custom_admin/product-form.html", {
+        "product": product if pdt_id else None,
+        "cats": cats,
+    })
 
 
-
-
-
-def admin_product_form(request, pdt_id):
-    
-    pdt = get_object_or_404(Product, id=pdt_id)
-
+def admin_delete_product(request, pdt_id):
     if request.method == "POST":
+        product = get_object_or_404(Product, id=pdt_id)
+        product.delete()
 
-        product_name = request.POST.get("product_name")
-        product_category = request.POST.get("product_category")
-        old_product_price = request.POST.get("old_product_price")
-        new_product_price = request.POST.get("new_product_price")
-        product_Desc = request.POST.get("product_Desc")
-        badge = request.POST.get("badge")
-        tag = request.POST.get("tag")
-        stock = request.POST.get("stock")
+        messages.success(request, "Product deleted successfully.")
 
-        images = request.FILES.getlist("product_images")
-
-        if not images:
-            return redirect("admin_product_form")
-
-        product = Product.objects.create(
-            product_code=uuid.uuid4().hex[:6].upper(),
-            product_name=product_name,
-            product_category=product_category,
-            old_product_price=old_product_price or 0,
-            new_product_price=new_product_price,
-            product_Desc=product_Desc,
-            badge=badge,
-            tag=tag,
-            stock=stock or 0,
-            product_image=images[0]
-        )
-
-        for image in images[1:]:
-            ProductImage.objects.create(
-                product=product,
-                image=image
-            )
-
-        return redirect("admin_products")
-
-    return render(
-        request,
-        "custom_admin/product-form.html", {'product' : pdt}
-    )
-
+    return redirect("admin_products")
 
 
 def admin_categories(request):
-    return render(request, "custom_admin/categories.html")
 
+    if request.method == "POST":
+
+        action = request.POST.get("action")
+
+        # ADD CATEGORY
+        if action == "add":
+
+            name = request.POST.get("name", "").strip()
+
+            if not name:
+                messages.error(request, "Enter a category name.")
+
+            elif Category.objects.filter(name__iexact=name).exists():
+                messages.error(
+                    request,
+                    f'The category "{name}" already exists.'
+                )
+
+            else:
+                Category.objects.create(name=name)
+
+                messages.success(
+                    request,
+                    f'Category "{name}" added successfully.'
+                )
+
+        # DELETE CATEGORY
+        elif action == "delete":
+
+            category_id = request.POST.get("category_id")
+
+            category = get_object_or_404(
+                Category,
+                id=category_id
+            )
+
+            category_name = category.name
+
+            category.delete()
+
+            messages.success(
+                request,
+                f'Category "{category_name}" deleted successfully.'
+            )
+
+        return redirect("admin_categories")
+
+    categories = Category.objects.all().order_by("name")
+
+    return render(
+        request,
+        "custom_admin/categories.html",
+        {
+            "categories": categories,
+        }
+    )
 
 def admin_orders(request):
     return render(request, "custom_admin/orders.html")
@@ -1096,8 +1134,76 @@ def admin_reviews(request):
     return render(request, "custom_admin/reviews.html")
 
 
-def admin_discounts(request):
-    return render(request, "custom_admin/discounts.html")
+@require_http_methods(["GET", "POST"])
+def admin_flash_settings(request):
+
+    # Retrieve the existing settings record.
+    flash_settings = FlashSaleSettings.objects.first()
+
+    if request.method == "POST":
+
+        # Get submitted form values.
+        is_active = request.POST.get("is_active") == "on"
+
+        start_time_raw = request.POST.get(
+            "start_time", ""
+        ).strip()
+
+        end_time_raw = request.POST.get(
+            "end_time", ""
+        ).strip()
+
+        # Convert the submitted date strings.
+        start_time = parse_datetime(start_time_raw)
+        end_time = parse_datetime(end_time_raw)
+
+        # Validate the dates.
+        if not start_time or not end_time:
+            messages.error(
+                request,
+                "Please enter a valid start date and end date."
+            )
+
+        else:
+            # Apply Django's current timezone when needed.
+            if timezone.is_naive(start_time):
+                start_time = timezone.make_aware(
+                    start_time,
+                    timezone.get_current_timezone()
+                )
+
+            if timezone.is_naive(end_time):
+                end_time = timezone.make_aware(
+                    end_time,
+                    timezone.get_current_timezone()
+                )
+
+            if end_time <= start_time:
+                messages.error(
+                    request,
+                    "The end date and time must be later than the start date and time."
+                )
+
+            else:
+                # Create a record only if one does not exist.
+                if flash_settings is None:
+                    flash_settings = FlashSaleSettings()
+
+                # Update the settings.
+                flash_settings.is_active = is_active
+                flash_settings.start_time = start_time
+                flash_settings.end_time = end_time
+
+                flash_settings.save()
+
+                messages.success(
+                    request,
+                    "Flash sale settings saved successfully!"
+                )
+
+                return redirect("admin_flash_settings")
+
+    return render(request, "custom_admin/flash_settings.html", {'flash_settings' : flash_settings})
 
 
 def admin_shipping(request):
@@ -1105,47 +1211,37 @@ def admin_shipping(request):
 
 
 def admin_settings(request):
-    
-    store = StoreSettings.objects.first()
 
-    if not store:
-        store = StoreSettings.objects.create(
-            store_name="LUXE",
-            store_email="support@luxe.store",
-            store_desc="Premium online shopping for electronics, fashion, beauty and home essentials.",
-            currency="NGN",
-            guest_checkout=True,
-            saved_addresses=True,
-            paystack_payments=True,
-            product_reviews=True,
-        )
+    store = StoreSettings.objects.first()
 
     if request.method == "POST":
 
-        store.store_name = request.POST.get("store_name")
-        store.store_email = request.POST.get("store_email")
-        store.store_desc = request.POST.get("store_desc")
-        store.currency = request.POST.get("currency", "NGN")
+        store_name = request.POST.get("store_name")
+        store_email = request.POST.get("store_email")
+        store_desc = request.POST.get("store_desc")
+        shipping_fee = request.POST.get("shipping_fee")
+        currency_symbol = request.POST.get("currency")
 
-        store.guest_checkout = (
-            request.POST.get("guest_checkout") == "1"
-        )
+        if store:
+            # Update existing store settings
+            store.store_name = store_name
+            store.store_email = store_email
+            store.store_desc = store_desc
+            store.shipping_fee = shipping_fee
+            store.currency_symbol = currency_symbol
+            store.save()
 
-        store.saved_addresses = (
-            request.POST.get("saved_addresses") == "1"
-        )
+        else:
+            # Create settings only if none exist
+            StoreSettings.objects.create(
+                store_name=store_name,
+                store_email=store_email,
+                store_desc=store_desc,
+                shipping_fee = shipping_fee,
+                currency_symbol=currency_symbol
+            )
 
-        store.paystack_payments = (
-            request.POST.get("paystack_payments") == "1"
-        )
-
-        store.product_reviews = (
-            request.POST.get("product_reviews") == "1"
-        )
-
-        store.save()
-
-        return redirect("store_settings")
+        return redirect("admin_settings")
 
     return render(
         request,

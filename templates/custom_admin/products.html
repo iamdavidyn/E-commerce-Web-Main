@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Products | LUXE Admin</title>
+<title>Products | {{ store_name }} Admin</title>
 <link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
 <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
@@ -126,28 +126,65 @@
 <body>
 <div id="preloader"><div class="spinner"></div></div>
 <aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a></div>
-  <nav class="sidebar-nav"><ul><li class="nav-item"><a class="" href="{% url 'admin_dashboard' %}">
-          <span class="icon"><i class="lni lni-dashboard"></i></span><span class="text">Dashboard</span>
-        </a></li><li class="nav-item"><a class="active" href="{% url 'admin_products' %}">
-          <span class="icon"><i class="lni lni-shopping-basket"></i></span><span class="text">Products</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_categories' %}">
-          <span class="icon"><i class="lni lni-grid-alt"></i></span><span class="text">Categories</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_orders' %}">
-          <span class="icon"><i class="lni lni-cart"></i></span><span class="text">Orders</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_customers' %}">
-          <span class="icon"><i class="lni lni-users"></i></span><span class="text">Customers</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_inventory' %}">
-          <span class="icon"><i class="lni lni-package"></i></span><span class="text">Inventory</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_reviews' %}">
-          <span class="icon"><i class="lni lni-comments"></i></span><span class="text">Reviews</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_discounts' %}">
-          <span class="icon"><i class="lni lni-offer"></i></span><span class="text">Discounts</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_shipping' %}">
-          <span class="icon"><i class="lni lni-delivery"></i></span><span class="text">Shipping</span>
-        </a></li><li class="nav-item"><a class="" href="{% url 'admin_settings' %}">
-          <span class="icon"><i class="lni lni-cog"></i></span><span class="text">Settings</span>
-        </a></li></ul></nav>
+  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a></div>
+  <nav class="sidebar-nav">
+        <ul>
+            <li class="nav-item">
+                <a href="{% url 'admin_dashboard' %}">
+                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                    <span class="text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="active" href="{% url 'admin_products' %}">
+                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="text">Products</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_categories' %}">
+                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="text">Categories</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_orders' %}">
+                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="text">Orders</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_customers' %}">
+                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="text">Customers</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_reviews' %}">
+                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="text">Reviews</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_flash_settings' %}">
+                    <span class="icon"><i class="lni lni-offer"></i></span>
+                    <span class="text">Flash Sale</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_shipping' %}">
+                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="text">Shipping</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_settings' %}">
+                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </aside>
 <div class="overlay"></div>
 <main class="main-wrapper">
@@ -200,7 +237,7 @@
             </td>
 
             <td>{{ pdt.product_category }}</td>
-            <td>₦{{ pdt.new_product_price| intcomma }}</td>
+            <td>{{currency.currency_symbol}}{{ pdt.new_product_price| intcomma }}</td>
             <td>{{ pdt.stock }}</td>
 
 
@@ -209,14 +246,27 @@
                    class="btn btn-sm btn-outline-primary">
                     Edit
                 </a>
+                <td class="text-end">
+    <form method="POST"
+          action="{% url 'admin_delete_product' pdt.id %}"
+          onsubmit="return confirm('Are you sure you want to delete this product permanently?');"
+          style="display: inline;">    {% csrf_token %}
+
+    <button type="submit" class="btn btn-sm btn-outline-danger">
+        Delete
+    </button>
+</form>
+
+</td>
             </td>
+       
         </tr>
     {% endfor %}
 {% endif %}
 
 </tbody></table></div></div>
 
-<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
+<div class="luxe-footer text-center">{{ store_name }} Admin • Ecommerce management</div>
 </div></section>
 </main>
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>

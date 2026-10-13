@@ -1,0 +1,968 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Flash Sale Settings | {{ store_name }} Admin</title>
+
+<link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+
+<style>
+/* FLASH SALE PAGE */
+.flash-page .flash-card {
+    background: #fff;
+    border: 1px solid #e8e6df;
+    border-radius: 12px;
+    padding: 24px;
+    height: 100%;
+}
+
+.flash-page .flash-description {
+    color: #77776f;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.flash-page .flash-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.flash-page .flash-field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 9px;
+}
+
+.flash-page .flash-field {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid #d6d3ca;
+    border-radius: 8px;
+    background: #fff;
+    color: #171715;
+    font-size: 14px;
+}
+
+.flash-page .flash-field:focus {
+    outline: none;
+    border-color: #ff6b00;
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, .10);
+}
+
+.flash-page .flash-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border: 1px solid #e8e6df;
+    background: #faf9f6;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.flash-page .flash-toggle-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.flash-page .flash-toggle-description {
+    color: #77776f;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.flash-page .form-check-input {
+    width: 2.7em;
+    height: 1.4em;
+    cursor: pointer;
+}
+
+.flash-page .form-check-input:checked {
+    background-color: #ff6b00;
+    border-color: #ff6b00;
+}
+
+.flash-page .flash-save-button {
+    background: #ff6b00;
+    border: 1px solid #ff6b00;
+    color: #fff;
+    padding: 12px 19px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.flash-page .flash-save-button:hover {
+    background: #e85f00;
+    border-color: #e85f00;
+    color: #fff;
+}
+
+.flash-page .flash-stat-card {
+    background: #fff;
+    border: 1px solid #e8e6df;
+    border-radius: 10px;
+    padding: 19px;
+    height: 100%;
+}
+
+.flash-page .flash-stat-label {
+    font-size: 12px;
+    color: #77776f;
+    margin-bottom: 9px;
+}
+
+.flash-page .flash-stat-value {
+    font-size: 20px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.flash-page .flash-status-on {
+    color: #16803d;
+}
+
+.flash-page .flash-status-off {
+    color: #77776f;
+}
+
+/* COUNTDOWN PREVIEW */
+.flash-page .flash-preview {
+    background: #171715;
+    border-radius: 12px;
+    padding: 23px 17px;
+    text-align: center;
+    color: #fff;
+}
+
+.flash-page .flash-preview-label {
+    color: #ff6b00;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.flash-page .flash-preview-title {
+    font-size: 25px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 24px;
+}
+
+.flash-page .flash-countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 19px;
+}
+
+.flash-page .flash-count-box {
+    background: #292925;
+    border: 1px solid #41413a;
+    border-radius: 8px;
+    padding: 15px 4px;
+    min-width: 0;
+}
+
+.flash-page .flash-count-number {
+    display: block;
+    color: #ff6b00;
+    font-size: clamp(20px, 2.5vw, 30px);
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.flash-page .flash-count-label {
+    display: block;
+    color: #c8c8c1;
+    font-size: 9px;
+    text-transform: uppercase;
+    margin-top: 6px;
+}
+
+.flash-page .flash-countdown-status {
+    color: #d6d3ca;
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.flash-page .flash-info-box {
+    padding: 13px 15px;
+    border-radius: 8px;
+    background: #fff8f2;
+    border: 1px solid #ffe0c7;
+    color: #7d4925;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.flash-page .flash-date-display {
+    font-size: 13px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.flash-page .flash-stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 39px;
+    height: 39px;
+    border-radius: 9px;
+    background: #fff0e5;
+    color: #ff6b00;
+    font-size: 20px;
+    margin-bottom: 13px;
+}
+
+@media (max-width: 767px) {
+    .flash-page .flash-card {
+        padding: 17px;
+    }
+
+    .flash-page .flash-preview {
+        padding: 19px 10px;
+    }
+
+    .flash-page .flash-countdown-grid {
+        gap: 5px;
+    }
+
+    .flash-page .flash-count-box {
+        padding: 12px 2px;
+    }
+
+    .flash-page .flash-count-label {
+        font-size: 8px;
+    }
+
+    .flash-page .flash-preview-title {
+        font-size: 22px;
+    }
+
+    .flash-page .flash-stat-value {
+        font-size: 18px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="preloader">
+    <div class="spinner"></div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar-nav-wrapper" id="sidebar">
+
+    <div class="navbar-logo">
+        <a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul>
+            <li class="nav-item">
+                <a href="{% url 'admin_dashboard' %}">
+                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                    <span class="text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_products' %}">
+                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="text">Products</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_categories' %}">
+                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="text">Categories</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_orders' %}">
+                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="text">Orders</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_customers' %}">
+                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="text">Customers</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_reviews' %}">
+                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="text">Reviews</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="active" href="{% url 'admin_flash_settings' %}">
+                    <span class="icon"><i class="lni lni-offer"></i></span>
+                    <span class="text">Flash Sale</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_shipping' %}">
+                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="text">Shipping</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'admin_settings' %}">
+                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<div class="overlay"></div>
+
+<!-- MAIN WRAPPER -->
+<main class="main-wrapper">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+
+                <div class="col-lg-5 col-md-5 col-6">
+                    <button
+                        id="menu-toggle"
+                        class="main-btn primary-btn btn-hover"
+                        type="button">
+                        <i class="lni lni-menu"></i>
+                    </button>
+
+                    <span class="ms-3 fw-semibold d-none d-md-inline">
+                        Store Administration
+                    </span>
+                </div>
+
+                <div class="col-lg-7 col-md-7 col-6">
+                    <div class="d-flex justify-content-end align-items-center gap-3">
+
+                        <a href="/" class="text-muted small" target="_blank">
+                            View store ↗
+                        </a>
+
+                        <div class="dropdown">
+
+                            <button
+                                class="btn btn-sm dropdown-toggle"
+                                data-bs-toggle="dropdown"
+                                type="button">
+                                Admin
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'admin_profile' %}">
+                                        Profile
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'admin_login' %}">
+                                        Sign out
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <section class="section flash-page">
+        <div class="container-fluid">
+
+            <!-- TITLE AND BREADCRUMB -->
+            <div class="title-wrapper pt-30 mb-25">
+
+                <div class="row align-items-center">
+
+                    <div class="col-md-6">
+                        <div class="title">
+                            <h2 class="page-title">
+                                Flash Sale Settings
+                            </h2>
+
+                            <p class="text-muted small mb-0 mt-2">
+                                Manage your store's limited-time offers.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="breadcrumb-wrapper">
+
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb justify-content-md-end">
+
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'admin_dashboard' %}">
+                                            Admin
+                                        </a>
+                                    </li>
+
+                                    <li class="breadcrumb-item active"
+                                        aria-current="page">
+                                        Flash Sale
+                                    </li>
+
+                                </ol>
+                            </nav>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- DJANGO MESSAGES -->
+            {% if messages %}
+                {% for message in messages %}
+
+                    <div class="alert
+                        {% if message.tags == 'error' %}
+                            alert-danger
+                        {% elif message.tags == 'success' %}
+                            alert-success
+                        {% else %}
+                            alert-info
+                        {% endif %}
+                        alert-dismissible fade show"
+                        role="alert">
+
+                        {{ message }}
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Close">
+                        </button>
+
+                    </div>
+
+                {% endfor %}
+            {% endif %}
+
+            <!-- SUMMARY CARDS -->
+            <div class="luxe-grid mb-20">
+
+                <div class="card-style luxe-stat">
+                    <div class="label">Flash Sale Status</div>
+
+                    <div class="value
+                        {% if flash_settings and flash_settings.is_active %}
+                            flash-status-on
+                        {% else %}
+                            flash-status-off
+                        {% endif %}">
+
+                        {% if flash_settings and flash_settings.is_active %}
+                            Enabled
+                        {% else %}
+                            Disabled
+                        {% endif %}
+
+                    </div>
+
+                    <div class="delta">
+                        {% if flash_settings and flash_settings.is_active %}
+                            Sale activation is enabled
+                        {% else %}
+                            Sale activation is disabled
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-style luxe-stat">
+                    <div class="label">Sale Start</div>
+
+                    <div class="value" style="font-size:19px;">
+                        {% if flash_settings and flash_settings.start_time %}
+                            {{ flash_settings.start_time|date:"M d, Y" }}
+                        {% else %}
+                            Not set
+                        {% endif %}
+                    </div>
+
+                    <div class="delta">
+                        {% if flash_settings and flash_settings.start_time %}
+                            {{ flash_settings.start_time|date:"h:i A" }}
+                        {% else %}
+                            Choose a start date
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-style luxe-stat">
+                    <div class="label">Sale End</div>
+
+                    <div class="value" style="font-size:19px;">
+                        {% if flash_settings and flash_settings.end_time %}
+                            {{ flash_settings.end_time|date:"M d, Y" }}
+                        {% else %}
+                            Not set
+                        {% endif %}
+                    </div>
+
+                    <div class="delta">
+                        {% if flash_settings and flash_settings.end_time %}
+                            {{ flash_settings.end_time|date:"h:i A" }}
+                        {% else %}
+                            Choose an end date
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-style luxe-stat">
+                    <div class="label">Countdown</div>
+
+                    <div class="value" style="font-size:19px;">
+                        <span id="summary-countdown">--:--:--</span>
+                    </div>
+
+                    <div class="delta">
+                        Time until start or sale expiry
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SETTINGS AND PREVIEW -->
+            <div class="luxe-two mb-20">
+
+                <!-- SETTINGS FORM -->
+                <div class="card-style">
+
+                    <div class="luxe-toolbar mb-3">
+                        <div class="luxe-section-title mb-0">
+                            Sale Schedule
+                        </div>
+                    </div>
+
+                    <p class="flash-description mb-4">
+                        Choose when your flash sale should begin and end.
+                        Save your settings to update the schedule.
+                    </p>
+
+                    <form method="POST" action="">
+                        {% csrf_token %}
+
+                        <!-- ENABLE SWITCH -->
+                        <div class="flash-toggle-row">
+
+                            <div>
+                                <div class="flash-toggle-title">
+                                    Enable Flash Sale
+                                </div>
+
+                                <div class="flash-toggle-description">
+                                    Enable or disable the scheduled sale.
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-0">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    id="is_active"
+                                    name="is_active"
+                                    value="on"
+                                    {% if flash_settings and flash_settings.is_active %}
+                                        checked
+                                    {% endif %}>
+
+                            </div>
+
+                        </div>
+
+                        <!-- START DATE -->
+                        <div class="mb-4">
+
+                            <label for="start_time"
+                                   class="flash-field-label">
+                                Start Date and Time
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                class="flash-field"
+                                id="start_time"
+                                name="start_time"
+                                value="{% if flash_settings and flash_settings.start_time %}{{ flash_settings.start_time|date:'Y-m-d\\TH:i' }}{% endif %}"
+                                required>
+
+                            <small class="flash-description d-block mt-2">
+                                The countdown will show the time remaining
+                                until the sale starts.
+                            </small>
+
+                        </div>
+
+                        <!-- END DATE -->
+                        <div class="mb-4">
+
+                            <label for="end_time"
+                                   class="flash-field-label">
+                                End Date and Time
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                class="flash-field"
+                                id="end_time"
+                                name="end_time"
+                                value="{% if flash_settings and flash_settings.end_time %}{{ flash_settings.end_time|date:'Y-m-d\\TH:i' }}{% endif %}"
+                                required>
+
+                            <small class="flash-description d-block mt-2">
+                                Once the sale starts, the countdown will
+                                show the time remaining until it ends.
+                            </small>
+
+                        </div>
+
+                        <div class="flash-info-box mb-4">
+                            <strong>Important:</strong>
+                            The sale is active only when it is enabled
+                            and the current time is between the scheduled
+                            start and end times.
+                        </div>
+
+                        <button type="submit" class="flash-save-button">
+                            <i class="lni lni-save me-1"></i>
+                            Save Flash Sale Settings
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <!-- COUNTDOWN PREVIEW -->
+                <div class="card-style">
+
+                    <div class="luxe-section-title">
+                        Countdown Preview
+                    </div>
+
+                    <p class="flash-description mb-4">
+                        Preview the countdown using your selected dates.
+                    </p>
+
+                    <div class="flash-preview">
+
+                        <div class="flash-preview-label">
+                            LIMITED-TIME OFFER
+                        </div>
+
+                        <h3 class="flash-preview-title" id="preview-title">
+                            FLASH SALE
+                        </h3>
+
+                        <div class="flash-countdown-grid">
+
+                            <div class="flash-count-box">
+                                <span class="flash-count-number"
+                                      id="count-days">00</span>
+                                <span class="flash-count-label">Days</span>
+                            </div>
+
+                            <div class="flash-count-box">
+                                <span class="flash-count-number"
+                                      id="count-hours">00</span>
+                                <span class="flash-count-label">Hours</span>
+                            </div>
+
+                            <div class="flash-count-box">
+                                <span class="flash-count-number"
+                                      id="count-minutes">00</span>
+                                <span class="flash-count-label">Minutes</span>
+                            </div>
+
+                            <div class="flash-count-box">
+                                <span class="flash-count-number"
+                                      id="count-seconds">00</span>
+                                <span class="flash-count-label">Seconds</span>
+                            </div>
+
+                        </div>
+
+                        <p class="flash-countdown-status"
+                           id="countdown-status"
+                           aria-live="polite">
+                            Select your sale dates to preview the countdown.
+                        </p>
+
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="luxe-section-title">
+                            How it works
+                        </div>
+
+                        <div class="d-flex gap-3 py-3 border-bottom">
+                            <i class="lni lni-calendar text-warning fs-4"></i>
+
+                            <div>
+                                <strong class="d-block small">
+                                    Scheduled Start
+                                </strong>
+
+                                <span class="flash-description">
+                                    The countdown initially measures the
+                                    time until the sale starts.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 py-3 border-bottom">
+                            <i class="lni lni-timer text-warning fs-4"></i>
+
+                            <div>
+                                <strong class="d-block small">
+                                    Sale in Progress
+                                </strong>
+
+                                <span class="flash-description">
+                                    The countdown switches to the time
+                                    remaining until the sale ends.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 py-3">
+                            <i class="lni lni-checkmark-circle text-warning fs-4"></i>
+
+                            <div>
+                                <strong class="d-block small">
+                                    Sale Ended
+                                </strong>
+
+                                <span class="flash-description">
+                                    The preview stops when the end time
+                                    is reached.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="luxe-footer text-center">
+                {{ store_name }} Admin • Flash Sale Management
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'admin/js/luxe-admin.js' %}"></script>
+
+<!-- FLASH SALE COUNTDOWN -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const startInput = document.getElementById("start_time");
+    const endInput = document.getElementById("end_time");
+    const activeInput = document.getElementById("is_active");
+
+    const daysElement = document.getElementById("count-days");
+    const hoursElement = document.getElementById("count-hours");
+    const minutesElement = document.getElementById("count-minutes");
+    const secondsElement = document.getElementById("count-seconds");
+
+    const statusElement = document.getElementById("countdown-status");
+    const summaryCountdown = document.getElementById("summary-countdown");
+
+    if (
+        !startInput ||
+        !endInput ||
+        !activeInput ||
+        !daysElement ||
+        !hoursElement ||
+        !minutesElement ||
+        !secondsElement ||
+        !statusElement
+    ) {
+        console.error("Flash Sale: Required countdown elements are missing.");
+        return;
+    }
+
+    let countdownInterval = null;
+
+    function pad(value) {
+        return String(value).padStart(2, "0");
+    }
+
+    function getDate(input) {
+        if (!input.value) {
+            return null;
+        }
+
+        const date = new Date(input.value);
+
+        if (Number.isNaN(date.getTime())) {
+            return null;
+        }
+
+        return date;
+    }
+
+    function resetCountdown() {
+        daysElement.textContent = "00";
+        hoursElement.textContent = "00";
+        minutesElement.textContent = "00";
+        secondsElement.textContent = "00";
+
+        if (summaryCountdown) {
+            summaryCountdown.textContent = "00:00:00";
+        }
+    }
+
+    function renderCountdown(milliseconds) {
+        const totalSeconds = Math.max(
+            0,
+            Math.floor(milliseconds / 1000)
+        );
+
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        daysElement.textContent = pad(days);
+        hoursElement.textContent = pad(hours);
+        minutesElement.textContent = pad(minutes);
+        secondsElement.textContent = pad(seconds);
+
+        if (summaryCountdown) {
+            summaryCountdown.textContent =
+                pad(hours + days * 24) + ":" +
+                pad(minutes) + ":" +
+                pad(seconds);
+        }
+    }
+
+    function updateCountdown() {
+        const now = new Date();
+
+        const startTime = getDate(startInput);
+        const endTime = getDate(endInput);
+
+        if (!startTime || !endTime) {
+            resetCountdown();
+
+            statusElement.textContent =
+                "Select a valid start date and end date to preview the countdown.";
+
+            return;
+        }
+
+        if (endTime <= startTime) {
+            resetCountdown();
+
+            statusElement.textContent =
+                "The end date and time must be later than the start date and time.";
+
+            return;
+        }
+
+        if (!activeInput.checked) {
+            resetCountdown();
+
+            statusElement.textContent =
+                "Flash Sale is disabled. Enable it to preview the countdown.";
+
+            return;
+        }
+
+        if (now < startTime) {
+            renderCountdown(startTime.getTime() - now.getTime());
+
+            statusElement.textContent =
+                "Flash Sale has not started. Countdown shows time until the start.";
+
+            return;
+        }
+
+        if (now >= endTime) {
+            resetCountdown();
+
+            statusElement.textContent =
+                "Flash Sale has ended.";
+
+            return;
+        }
+
+        renderCountdown(endTime.getTime() - now.getTime());
+
+        statusElement.textContent =
+            "Flash Sale is running! Countdown shows time remaining.";
+    }
+
+    startInput.addEventListener("input", updateCountdown);
+    startInput.addEventListener("change", updateCountdown);
+
+    endInput.addEventListener("input", updateCountdown);
+    endInput.addEventListener("change", updateCountdown);
+
+    activeInput.addEventListener("change", updateCountdown);
+
+    updateCountdown();
+
+    countdownInterval = window.setInterval(updateCountdown, 1000);
+
+    window.addEventListener("pagehide", function () {
+        if (countdownInterval !== null) {
+            window.clearInterval(countdownInterval);
+        }
+    });
+
+});
+</script>
+
+</body>
+</html>

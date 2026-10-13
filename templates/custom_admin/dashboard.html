@@ -1,9 +1,10 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard | LUXE Admin</title>
+<title>Dashboard | {{ store_name }} Admin</title>
 <link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
 <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
@@ -15,7 +16,7 @@
 <div id="preloader"><div class="spinner"></div></div>
 <aside class="sidebar-nav-wrapper" id="sidebar">
     <div class="navbar-logo">
-        <a href="{% url 'admin_dashboard' %}" class="luxe-brand">LUXE</a>
+        <a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a>
     </div>
 
     <nav class="sidebar-nav">
@@ -26,63 +27,48 @@
                     <span class="text">Dashboard</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_products' %}">
                     <span class="icon"><i class="lni lni-shopping-basket"></i></span>
                     <span class="text">Products</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_categories' %}">
                     <span class="icon"><i class="lni lni-grid-alt"></i></span>
                     <span class="text">Categories</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_orders' %}">
                     <span class="icon"><i class="lni lni-cart"></i></span>
                     <span class="text">Orders</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_customers' %}">
                     <span class="icon"><i class="lni lni-users"></i></span>
                     <span class="text">Customers</span>
                 </a>
             </li>
-
-            <li class="nav-item">
-                <a href="{% url 'admin_inventory' %}">
-                    <span class="icon"><i class="lni lni-package"></i></span>
-                    <span class="text">Inventory</span>
-                </a>
-            </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_reviews' %}">
                     <span class="icon"><i class="lni lni-comments"></i></span>
                     <span class="text">Reviews</span>
                 </a>
             </li>
-
             <li class="nav-item">
-                <a href="{% url 'admin_discounts' %}">
+                <a href="{% url 'admin_flash_settings' %}">
                     <span class="icon"><i class="lni lni-offer"></i></span>
-                    <span class="text">Discounts</span>
+                    <span class="text">Flash Sale</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_shipping' %}">
                     <span class="icon"><i class="lni lni-delivery"></i></span>
                     <span class="text">Shipping</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="{% url 'admin_settings' %}">
                     <span class="icon"><i class="lni lni-cog"></i></span>
@@ -115,10 +101,10 @@
 <div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Dashboard</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Dashboard</li></ol></nav></div></div></div></div>
 
 <div class="luxe-grid mb-20">
-<div class="card-style luxe-stat"><div class="label">Today's sales</div><div class="value">₦284,500</div><div class="delta luxe-success">↑ 12.4% vs yesterday</div></div>
-<div class="card-style luxe-stat"><div class="label">Orders</div><div class="value">128</div><div class="delta luxe-success">↑ 8.1% this week</div></div>
-<div class="card-style luxe-stat"><div class="label">Customers</div><div class="value">3,426</div><div class="delta luxe-success">+86 this month</div></div>
-<div class="card-style luxe-stat"><div class="label">Low stock</div><div class="value">17</div><div class="delta luxe-danger">Needs attention</div></div>
+<div class="card-style luxe-stat"><div class="label">Today's sales</div><div class="value">{{currency.currency_symbol}}{{total_revenue|intcomma}}</div><div class="delta luxe-success">↑ Total amount of sales </div></div>
+<div class="card-style luxe-stat"><div class="label">Orders</div><div class="value">{{orders}}</div><div class="delta luxe-success">Numbers of orders made</div></div>
+<div class="card-style luxe-stat"><div class="label">Customers</div><div class="value">{{users}}</div><div class="delta luxe-success">Numbers of users available</div></div>
+<div class="card-style luxe-stat"><div class="label">Stocks available</div><div class="value">{{pdt}}</div><div class="delta luxe-success">Numbers of stock available</div></div>
 </div>
 <div class="luxe-two mb-20">
 <div class="card-style"><div class="luxe-toolbar mb-3"><div class="luxe-section-title mb-0">Sales overview</div><select class="form-select" style="width:auto"><option>Last 30 days</option><option>Last 7 days</option><option>This year</option></select></div><canvas id="salesChart" height="130"></canvas></div>
@@ -139,7 +125,7 @@
 window.addEventListener('load',()=>{const c=document.getElementById('salesChart');if(c&&window.Chart)new Chart(c,{type:'line',data:{labels:['Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'],datasets:[{label:'Sales',data:[320000,410000,360000,520000,610000],borderWidth:2,tension:.35,fill:false}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}})})
 </script>
 
-<div class="luxe-footer text-center">LUXE Admin • Ecommerce management</div>
+<div class="luxe-footer text-center">{{ store_name }} Admin • Ecommerce management</div>
 </div></section>
 </main>
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>

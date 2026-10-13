@@ -30,16 +30,6 @@ class Product(models.Model):
         ('new', 'new'),
     )
 
-    CAT_CHOICES = (
-        ('Electronics', 'Electronics'),
-        ('Fashion', 'Fashion'),
-        ('Home & Living', 'Home & Living'),
-        ('Beauty', 'Beauty'),
-        ('Sports', 'Sports'),
-        ('Groceries', 'Groceries'),
-        ('Toys', 'Toys'),
-    )
-
     product_code = models.CharField(
         max_length=20,
         unique=True,
@@ -69,8 +59,7 @@ class Product(models.Model):
     )
 
     product_category = models.CharField(
-        max_length=50,
-        choices=CAT_CHOICES
+        max_length=50
     )
 
     badge = models.CharField(
@@ -96,7 +85,6 @@ class Product(models.Model):
 
         if not self.product_code:
             self.product_code = (
-                "LUXE-" +
                 uuid.uuid4().hex[:8].upper()
             )
 
@@ -130,6 +118,27 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.product_name} - {self.image.name}"
+        
+        
+class Category(models.Model):
+    name = models.CharField(
+        max_length=100,
+        unique=True
+    )
+    
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+    
+    class Meta:
+        ordering = ["name"]
+        verbose_name_plural = "Categories"
+
+
 
 class Cart_Items(models.Model):
     cart = models.ForeignKey(
@@ -182,26 +191,9 @@ class StoreSettings(models.Model):
         blank=True,
         null=True
     )
-    
-    
-    CURRENCY_CHOICES = [
-        ("NGN", "Nigerian Naira (₦)"),
-        ("USD", "US Dollar ($)"),
-        ("GBP", "British Pound (£)"),
-        ("EUR", "Euro (€)"),
-        ("CAD", "Canadian Dollar (C$)"),
-        ("AUD", "Australian Dollar (A$)"),
-    ]
-
-    currency = models.CharField(
-        max_length=3,
-        choices=CURRENCY_CHOICES,
-        default="NGN"
-    )
 
     currency_symbol = models.CharField(
         max_length=5,
-        default="₦"
     )
 
     shipping_fee = models.DecimalField(
@@ -209,28 +201,9 @@ class StoreSettings(models.Model):
         decimal_places=2,
         default=0
     )
-    
-    
-    guest_checkout = models.BooleanField(
-        default=True
-    )
-
-    saved_addresses = models.BooleanField(
-        default=True
-    )
-
-    paystack_payments = models.BooleanField(
-        default=True
-    )
-
-    product_reviews = models.BooleanField(
-        default=True
-    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Store Settings ({self.currency})"
         
 class CustomersReview(models.Model):
     product = models.ForeignKey(

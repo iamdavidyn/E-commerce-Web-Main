@@ -66,8 +66,6 @@ urlpatterns = [
 
     path("admin/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("admin/products/", views.admin_products, name="admin_products"),
-    path("admin/products/add/", views.admin_product_create, name="admin_product_form"),
-    path("admin/products/add/<int:pdt_id>/", views.admin_product_form, name="admin_product_form"),
     path("admin/categories/", views.admin_categories, name="admin_categories"),
     path("admin/orders/", views.admin_orders, name="admin_orders"),
     path(
@@ -78,11 +76,30 @@ urlpatterns = [
     path("admin/customers/", views.admin_customers, name="admin_customers"),
     path("admin/inventory/", views.admin_inventory, name="admin_inventory"),
     path("admin/reviews/", views.admin_reviews, name="admin_reviews"),
-    path("admin/discounts/", views.admin_discounts, name="admin_discounts"),
+    path(
+        "admin/flash/",
+        views.admin_flash_settings,
+        name="admin_flash_settings",
+    ),
+    path(
+        "admin/products/add/",
+        views.admin_product_form,
+        name="admin_product_add"
+    ),
+    path(
+        "admin/products/edit/<int:pdt_id>/",
+        views.admin_product_form,
+        name="admin_product_form"
+    ),
     path("admin/shipping/", views.admin_shipping, name="admin_shipping"),
     path("admin/settings/", views.admin_settings, name="admin_settings"),
     path("admin/profile/", views.admin_profile, name="admin_profile"),
     path("admin/login/", views.admin_login, name="admin_login"),
+    path(
+    "admin/products/delete/<int:pdt_id>/",
+    views.admin_delete_product,
+    name="admin_delete_product"
+),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
