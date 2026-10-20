@@ -102,4 +102,6 @@ urlpatterns = [
 ),
 
 
+    path('api/categories/', views.api_categories, name='api_categories'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

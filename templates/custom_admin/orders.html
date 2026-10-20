@@ -2,19 +2,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Orders | {{ store_name }} Admin</title>
+
 <link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
 <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+
+<style>
+:root {
+    --luxe-bg: #f6f5f1;
+    --luxe-white: #ffffff;
+    --luxe-text: #171715;
+    --luxe-muted: #77766f;
+    --luxe-border: #e8e6df;
+    --luxe-accent: #9b8e78;
+    --luxe-radius: 15px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--luxe-bg);
+    color: var(--luxe-text);
+    overflow-x: hidden;
+}
+
+.main-wrapper {
+    min-width: 0;
+}
+
+.header {
+    background: var(--luxe-white);
+    border-bottom: 1px solid var(--luxe-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.luxe-brand {
+    color: var(--luxe-text);
+    font-size: 22px;
+    font-weight: 800;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.page-title {
+    color: var(--luxe-text);
+    font-size: clamp(23px, 3vw, 30px);
+    font-weight: 800;
+}
+
+.luxe-orders-card {
+    background: var(--luxe-white);
+    border: 1px solid var(--luxe-border);
+    border-radius: var(--luxe-radius);
+    padding: 22px;
+    box-shadow: 0 4px 18px rgba(23, 23, 21, 0.025);
+    min-width: 0;
+}
+
+.luxe-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.luxe-toolbar-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.luxe-toolbar-description {
+    font-size: 12px;
+    color: var(--luxe-muted);
+    margin-top: 5px;
+}
+
+.luxe-filter-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+}
+
+.luxe-search {
+    flex: 1;
+    min-width: 0;
+    min-height: 45px;
+    border: 1px solid var(--luxe-border);
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.luxe-filter {
+    width: 165px;
+    flex-shrink: 0;
+    min-height: 45px;
+    border: 1px solid var(--luxe-border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    background: #fff;
+}
+
+.luxe-search:focus,
+.luxe-filter:focus {
+    outline: none;
+    border-color: var(--luxe-accent);
+    box-shadow: 0 0 0 3px rgba(155, 142, 120, 0.12);
+}
+
+.luxe-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--luxe-border);
+    border-radius: 12px;
+}
+
+.luxe-orders-table {
+    width: 100%;
+    min-width: 800px;
+    margin: 0;
+    vertical-align: middle;
+}
+
+.luxe-orders-table thead th {
+    background: #faf9f6;
+    color: var(--luxe-muted);
+    padding: 15px 14px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--luxe-border);
+}
+
+.luxe-orders-table tbody td {
+    padding: 16px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--luxe-border);
+}
+
+.luxe-orders-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.luxe-orders-table tbody tr:hover {
+    background: #fcfbf9;
+}
+
+.luxe-order-link {
+    color: var(--luxe-text);
+    text-decoration: none;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.luxe-order-link:hover {
+    color: var(--luxe-accent);
+}
+
+.luxe-customer-name {
+    color: var(--luxe-text);
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.luxe-customer-email {
+    display: block;
+    color: var(--luxe-muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.luxe-order-date {
+    white-space: nowrap;
+    color: #55544e;
+}
+
+.luxe-amount {
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.luxe-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.luxe-badge.success {
+    color: #16835d;
+    background: #e1f6ec;
+}
+
+.luxe-badge.warning {
+    color: #a56a12;
+    background: #fff2d9;
+}
+
+.luxe-badge.danger {
+    color: #c0392b;
+    background: #fde8e6;
+}
+
+.luxe-badge.neutral {
+    color: #55544e;
+    background: #efeee9;
+}
+
+.luxe-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 35px;
+    padding: 7px 12px;
+    background: #fff;
+    border: 1px solid var(--luxe-border);
+    border-radius: 8px;
+    color: var(--luxe-text);
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.luxe-view-btn:hover {
+    background: var(--luxe-text);
+    color: #fff;
+    border-color: var(--luxe-text);
+}
+
+.luxe-empty {
+    text-align: center;
+    padding: 45px 18px !important;
+    color: var(--luxe-muted);
+}
+
+.luxe-empty i {
+    display: block;
+    font-size: 34px;
+    margin-bottom: 12px;
+}
+
+.luxe-empty strong {
+    display: block;
+    color: var(--luxe-text);
+    margin-bottom: 6px;
+    font-size: 15px;
+}
+
+.luxe-table-hint {
+    display: none;
+    color: var(--luxe-muted);
+    font-size: 11px;
+    margin-top: 10px;
+}
+
+.luxe-footer {
+    padding: 26px 10px;
+    color: var(--luxe-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Tablet */
+@media (max-width: 991px) {
+    .luxe-orders-card {
+        padding: 18px;
+    }
+
+    .luxe-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .luxe-filter-row {
+        width: 100%;
+    }
+
+    .luxe-search {
+        width: 100%;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .section > .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .header .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .header .row {
+        --bs-gutter-x: 8px;
+    }
+
+    #menu-toggle {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 8px 11px;
+    }
+
+    .header .dropdown-toggle {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .title-wrapper {
+        padding-top: 22px !important;
+        margin-bottom: 18px !important;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .breadcrumb-wrapper {
+        margin-top: 8px;
+    }
+
+    .breadcrumb {
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+
+    .luxe-orders-card {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .luxe-toolbar {
+        gap: 14px;
+        margin-bottom: 15px;
+    }
+
+    .luxe-toolbar-title {
+        font-size: 16px;
+    }
+
+    .luxe-filter-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 9px;
+    }
+
+    .luxe-search,
+    .luxe-filter {
+        width: 100%;
+        min-height: 46px;
+        font-size: 14px;
+    }
+
+    .luxe-table-container {
+        border-radius: 10px;
+    }
+
+    .luxe-orders-table {
+        min-width: 760px;
+    }
+
+    .luxe-orders-table thead th {
+        padding: 13px 12px;
+        font-size: 10px;
+    }
+
+    .luxe-orders-table tbody td {
+        padding: 14px 12px;
+        font-size: 12px;
+    }
+
+    .luxe-view-btn {
+        min-height: 38px;
+        padding: 8px 12px;
+    }
+
+    .luxe-table-hint {
+        display: block;
+    }
+
+    .luxe-footer {
+        padding: 22px 5px;
+    }
+}
+
+@media (max-width: 380px) {
+    .luxe-orders-card {
+        padding: 11px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
+    .header .text-muted.small {
+        display: none !important;
+    }
+}
+</style>
 </head>
+
 <body>
-<div id="preloader"><div class="spinner"></div></div>
+
+<div id="preloader">
+    <div class="spinner"></div>
+</div>
+
+<!-- Sidebar -->
 <aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a></div>
+
+    <div class="navbar-logo">
+        <a href="{% url 'admin_dashboard' %}" class="luxe-brand">
+            {{ store_name }}
+        </a>
+    </div>
+
     <nav class="sidebar-nav">
         <ul>
             <li class="nav-item">
@@ -23,48 +451,56 @@
                     <span class="text">Dashboard</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_products' %}">
                     <span class="icon"><i class="lni lni-shopping-basket"></i></span>
                     <span class="text">Products</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_categories' %}">
                     <span class="icon"><i class="lni lni-grid-alt"></i></span>
                     <span class="text">Categories</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="active" href="{% url 'admin_orders' %}">
                     <span class="icon"><i class="lni lni-cart"></i></span>
                     <span class="text">Orders</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_customers' %}">
                     <span class="icon"><i class="lni lni-users"></i></span>
                     <span class="text">Customers</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_reviews' %}">
                     <span class="icon"><i class="lni lni-comments"></i></span>
                     <span class="text">Reviews</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_flash_settings' %}">
                     <span class="icon"><i class="lni lni-offer"></i></span>
                     <span class="text">Flash Sale</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_shipping' %}">
                     <span class="icon"><i class="lni lni-delivery"></i></span>
                     <span class="text">Shipping</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_settings' %}">
                     <span class="icon"><i class="lni lni-cog"></i></span>
@@ -74,38 +510,318 @@
         </ul>
     </nav>
 </aside>
+
 <div class="overlay"></div>
+
 <main class="main-wrapper">
-<header class="header">
-  <div class="container-fluid"><div class="row align-items-center">
-    <div class="col-lg-5 col-md-5 col-6">
-      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
-      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
-    </div>
-    <div class="col-lg-7 col-md-7 col-6">
-      <div class="d-flex justify-content-end align-items-center gap-3">
-        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
-        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
-          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+
+                <div class="col-lg-5 col-md-5 col-6">
+                    <button
+                        id="menu-toggle"
+                        class="main-btn primary-btn btn-hover"
+                        type="button"
+                        aria-label="Toggle navigation"
+                    >
+                        <i class="lni lni-menu"></i>
+                    </button>
+
+                    <span class="ms-2 ms-md-3 fw-semibold d-none d-md-inline">
+                        Store Administration
+                    </span>
+                </div>
+
+                <div class="col-lg-7 col-md-7 col-6">
+                    <div class="d-flex justify-content-end align-items-center gap-2 gap-md-3">
+
+                        <a href="/" class="text-muted small" target="_blank" rel="noopener">
+                            View store ↗
+                        </a>
+
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-sm dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                Admin
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin_profile' %}">
+                                        Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin_login' %}">
+                                        Sign out
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
-      </div>
-    </div>
-  </div></div>
-</header>
-<section class="section">
-<div class="container-fluid">
-<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Orders</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Orders</li></ol></nav></div></div></div></div>
+    </header>
 
-<div class="card-style"><div class="luxe-toolbar mb-3"><div class="d-flex gap-2 flex-wrap"><input class="form-control search" placeholder="Search order or customer..." data-table-search="#ordersTable"><select class="form-select" style="width:auto"><option>All statuses</option><option>Pending</option><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></div></div>
-<div class="table-responsive"><table class="table luxe-table" id="ordersTable"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Payment</th><th>Total</th><th>Fulfillment</th><th></th></tr></thead><tbody>
-<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10482</strong></a></td><td>David Okafor<br><small class="text-muted">david@example.com</small></td><td>Oct 06</td><td><span class="luxe-badge success">Paid</span></td><td>₦85,000</td><td><span class="luxe-badge warning">Processing</span></td><td><a href="{% url 'admin_order_detail' order_id=10480 %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
-<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10481</strong></a></td><td>Amaka Nwosu<br><small class="text-muted">amaka@example.com</small></td><td>Oct 06</td><td><span class="luxe-badge success">Paid</span></td><td>₦42,500</td><td><span class="luxe-badge warning">Processing</span></td><td><a href="{% url 'admin_order_detail' order_id=10480 %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
-<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10480</strong></a></td><td>John Ade<br><small class="text-muted">john@example.com</small></td><td>Oct 05</td><td><span class="luxe-badge success">Paid</span></td><td>₦128,900</td><td><span class="luxe-badge success">Shipped</span></td><td><a href="{% url 'admin_order_detail' order_id=10480 %}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
-</tbody></table></div></div>
+    <section class="section">
+        <div class="container-fluid">
 
-<div class="luxe-footer text-center">{{ store_name }} Admin • Ecommerce management</div>
-</div></section>
+            <!-- Page heading -->
+            <div class="title-wrapper pt-30 mb-25">
+                <div class="row align-items-center">
+
+                    <div class="col-md-6">
+                        <div class="title">
+                            <h2 class="page-title">Orders</h2>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="breadcrumb-wrapper">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb justify-content-md-end">
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'admin_dashboard' %}">Admin</a>
+                                    </li>
+                                    <li class="breadcrumb-item active" aria-current="page">
+                                        Orders
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Orders card -->
+            <div class="luxe-orders-card">
+
+                <div class="luxe-toolbar">
+
+                    <div>
+                        <h3 class="luxe-toolbar-title">All Orders</h3>
+                        <div class="luxe-toolbar-description">
+                            View and manage customer orders.
+                        </div>
+                    </div>
+
+                    <div class="luxe-filter-row">
+
+                        <input
+                            type="search"
+                            class="luxe-search"
+                            id="orderSearch"
+                            placeholder="Search order or customer..."
+                            aria-label="Search orders"
+                        >
+
+                        <select
+                            class="luxe-filter"
+                            id="statusFilter"
+                            aria-label="Filter by order status"
+                        >
+                            <option value="">All statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="luxe-table-container" id="ordersTableContainer">
+
+                    <table class="table luxe-orders-table" id="ordersTable">
+
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Payment</th>
+                                <th>Total</th>
+                                <th>Fulfillment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="ordersTableBody">
+
+                            {% for orders in order %}
+
+                            <tr class="order-row">
+
+                                <td>
+                                    <a
+                                        href="{% url 'admin_order_detail' order_id=orders.id %}"
+                                        class="luxe-order-link"
+                                    >
+                                        #{{ orders.item_code }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <div class="luxe-customer-name">
+                                        {{ orders.first_name }} {{ orders.last_name }}
+                                    </div>
+
+                                    <span class="luxe-customer-email">
+                                        {{ orders.email }}
+                                    </span>
+                                </td>
+
+                                <td class="luxe-order-date">
+                                    {{ orders.created_at|date:"M d, Y" }}
+                                </td>
+
+                                <td>
+                                    {% if orders.payment_status == "paid" or orders.payment_status == "successful" %}
+                                        <span class="luxe-badge success">Paid</span>
+                                    {% elif orders.payment_status == "failed" %}
+                                        <span class="luxe-badge danger">Failed</span>
+                                    {% else %}
+                                        <span class="luxe-badge neutral">
+                                            {{ orders.payment_status|default:"Pending"|title }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="luxe-amount">
+                                    ₦{{ orders.total|default:orders.subtotal|floatformat:2 }}
+                                </td>
+
+                                <td>
+                                    {% with status=orders.status|default:"processing"|lower %}
+                                        {% if status == "delivered" %}
+                                            <span class="luxe-badge success">Delivered</span>
+                                        {% elif status == "shipped" %}
+                                            <span class="luxe-badge success">Shipped</span>
+                                        {% elif status == "cancelled" %}
+                                            <span class="luxe-badge danger">Cancelled</span>
+                                        {% elif status == "pending" %}
+                                            <span class="luxe-badge neutral">Pending</span>
+                                        {% else %}
+                                            <span class="luxe-badge warning">
+                                                {{ status|title }}
+                                            </span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'admin_order_detail' orders.id %}"
+                                        class="luxe-view-btn"
+                                    >
+                                        View <i class="lni lni-chevron-right"></i>
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr id="noOrdersRow">
+                                <td colspan="7" class="luxe-empty">
+                                    <i class="lni lni-cart"></i>
+                                    <strong>No orders yet</strong>
+                                    Orders will appear here when customers place them.
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+
+                            <tr id="noSearchResults" style="display:none;">
+                                <td colspan="7" class="luxe-empty">
+                                    <i class="lni lni-search-alt"></i>
+                                    <strong>No matching orders</strong>
+                                    Try another search term or status.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="luxe-table-hint">
+                    <i class="lni lni-arrow-left-right me-1"></i>
+                    Swipe horizontally to view all order details.
+                </div>
+
+            </div>
+
+            <div class="luxe-footer">
+                {{ store_name }} Admin &bull; Ecommerce Management
+            </div>
+
+        </div>
+    </section>
+
 </main>
+
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'admin/js/luxe-admin.js' %}"></script>
-</body></html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("orderSearch");
+    const statusFilter = document.getElementById("statusFilter");
+    const rows = document.querySelectorAll("#ordersTableBody .order-row");
+    const noResults = document.getElementById("noSearchResults");
+
+    function filterOrders() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const selectedStatus = statusFilter.value.toLowerCase();
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const rowText = row.textContent.toLowerCase();
+            const matchesSearch = rowText.includes(searchTerm);
+
+            const statusCell = row.cells[5];
+            const rowStatus = statusCell
+                ? statusCell.textContent.trim().toLowerCase()
+                : "";
+
+            const matchesStatus = !selectedStatus ||
+                rowStatus.includes(selectedStatus);
+
+            const visible = matchesSearch && matchesStatus;
+
+            row.style.display = visible ? "" : "none";
+
+            if (visible) {
+                visibleCount++;
+            }
+        });
+
+        if (noResults) {
+            noResults.style.display =
+                rows.length > 0 && visibleCount === 0 ? "" : "none";
+        }
+    }
+
+    searchInput.addEventListener("input", filterOrders);
+    statusFilter.addEventListener("change", filterOrders);
+});
+</script>
+
+</body>
+</html>

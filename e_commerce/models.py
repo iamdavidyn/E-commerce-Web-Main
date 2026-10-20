@@ -247,8 +247,12 @@ class CustomersReview(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="order"
     )
+    
+    item_code = models.CharField(max_length=50,
+        editable=False)
 
     email = models.EmailField()
     phone = models.CharField(max_length=30)
@@ -304,6 +308,38 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.user} - {self.email}"
+
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    product_name = models.CharField(max_length=255)
+
+    product_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+    @property
+    def subtotal(self):
+        return self.product_price * self.quantity
 
 
 

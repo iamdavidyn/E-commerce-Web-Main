@@ -1,111 +1,685 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Customers | {{ store_name }} Admin</title>
-<link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
-<link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customers | {{ store_name }} Admin</title>
+
+    <link rel="shortcut icon"
+          href="{% static 'admin/images/favicon.svg' %}"
+          type="image/x-icon">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/bootstrap.min.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/lineicons.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/materialdesignicons.min.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/main.css' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'admin/css/luxe-admin.css' %}">
+
+    <style>
+        .customers-page {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .customers-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .customers-search {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .customers-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .customers-table {
+            width: 100%;
+            min-width: 700px;
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+
+        .customers-table th {
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 15px 16px;
+        }
+
+        .customers-table td {
+            padding: 16px;
+            font-size: 13px;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .customer-email {
+            display: inline-block;
+            margin-top: 4px;
+            overflow-wrap: anywhere;
+        }
+
+        .customer-avatar {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f0eee8;
+            color: #514a3f;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 180px;
+        }
+
+        .customer-spending {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .customer-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            padding: 5px 9px;
+            border-radius: 6px;
+            background: #f4f2ed;
+            font-weight: 600;
+        }
+
+        .customer-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .customer-status.active {
+            color: #167747;
+            background: #e5f6ec;
+        }
+
+        .customer-status.inactive {
+            color: #777;
+            background: #ededed;
+        }
+
+        .customer-empty {
+            padding: 45px 15px !important;
+            text-align: center;
+        }
+
+        .customer-empty i {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 10px;
+            color: #9b8e78;
+        }
+
+        .customers-footer {
+            margin-top: 25px;
+            padding: 15px 0;
+            font-size: 12px;
+            color: #777;
+        }
+
+        @media (max-width: 576px) {
+            .customers-toolbar {
+                align-items: stretch;
+            }
+
+            .customers-search {
+                max-width: 100%;
+            }
+
+            .customers-toolbar .btn {
+                width: 100%;
+            }
+
+            .customers-table th,
+            .customers-table td {
+                padding: 12px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div id="preloader"><div class="spinner"></div></div>
+
+<div id="preloader">
+    <div class="spinner"></div>
+</div>
+
+<!-- SIDEBAR -->
 <aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a></div>
-   <nav class="sidebar-nav">
+
+    <div class="navbar-logo">
+        <a href="{% url 'admin_dashboard' %}" class="luxe-brand">
+            {{ store_name }}
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
         <ul>
+
             <li class="nav-item">
                 <a href="{% url 'admin_dashboard' %}">
-                    <span class="icon"><i class="lni lni-dashboard"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-dashboard"></i>
+                    </span>
                     <span class="text">Dashboard</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_products' %}">
-                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-shopping-basket"></i>
+                    </span>
                     <span class="text">Products</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_categories' %}">
-                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-grid-alt"></i>
+                    </span>
                     <span class="text">Categories</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_orders' %}">
-                    <span class="icon"><i class="lni lni-cart"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-cart"></i>
+                    </span>
                     <span class="text">Orders</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="active" href="{% url 'admin_customers' %}">
-                    <span class="icon"><i class="lni lni-users"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-users"></i>
+                    </span>
                     <span class="text">Customers</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_reviews' %}">
-                    <span class="icon"><i class="lni lni-comments"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-comments"></i>
+                    </span>
                     <span class="text">Reviews</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_flash_settings' %}">
-                    <span class="icon"><i class="lni lni-offer"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-offer"></i>
+                    </span>
                     <span class="text">Flash Sale</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_shipping' %}">
-                    <span class="icon"><i class="lni lni-delivery"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-delivery"></i>
+                    </span>
                     <span class="text">Shipping</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="{% url 'admin_settings' %}">
-                    <span class="icon"><i class="lni lni-cog"></i></span>
+                    <span class="icon">
+                        <i class="lni lni-cog"></i>
+                    </span>
                     <span class="text">Settings</span>
                 </a>
             </li>
+
         </ul>
     </nav>
 </aside>
+
 <div class="overlay"></div>
+
+<!-- MAIN CONTENT -->
 <main class="main-wrapper">
-<header class="header">
-  <div class="container-fluid"><div class="row align-items-center">
-    <div class="col-lg-5 col-md-5 col-6">
-      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
-      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
-    </div>
-    <div class="col-lg-7 col-md-7 col-6">
-      <div class="d-flex justify-content-end align-items-center gap-3">
-        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
-        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
-          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+
+                <div class="col-lg-5 col-md-5 col-6">
+                    <button id="menu-toggle"
+                            class="main-btn primary-btn btn-hover"
+                            type="button">
+                        <i class="lni lni-menu"></i>
+                    </button>
+
+                    <span class="ms-3 fw-semibold d-none d-md-inline">
+                        Store Administration
+                    </span>
+                </div>
+
+                <div class="col-lg-7 col-md-7 col-6">
+                    <div class="d-flex justify-content-end align-items-center gap-3">
+
+                        <a href="/"
+                           class="text-muted small"
+                           target="_blank"
+                           rel="noopener">
+                            View store ↗
+                        </a>
+
+                        <div class="dropdown">
+                            <button class="btn btn-sm dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                Admin
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'admin_profile' %}">
+                                        Profile
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'admin_login' %}">
+                                        Sign out
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
-      </div>
-    </div>
-  </div></div>
-</header>
-<section class="section">
-<div class="container-fluid">
-<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Customers</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Customers</li></ol></nav></div></div></div></div>
+    </header>
 
-<div class="card-style"><div class="luxe-toolbar mb-3"><input class="form-control search" placeholder="Search customers..." data-table-search="#customersTable"><button class="btn btn-outline-primary">Export</button></div>
-<div class="table-responsive"><table class="table luxe-table" id="customersTable"><thead><tr><th>Customer</th><th>Orders</th><th>Total spent</th><th>Joined</th><th>Status</th></tr></thead><tbody>
-<tr><td><strong>David Okafor</strong><br><small class="text-muted">david@example.com</small></td><td>14</td><td>₦1,284,000</td><td>Aug 2026</td><td><span class="luxe-badge success">Active</span></td></tr>
-<tr><td><strong>Amaka Nwosu</strong><br><small class="text-muted">amaka@example.com</small></td><td>7</td><td>₦428,500</td><td>Sep 2026</td><td><span class="luxe-badge success">Active</span></td></tr>
-<tr><td><strong>John Ade</strong><br><small class="text-muted">john@example.com</small></td><td>2</td><td>₦198,900</td><td>Oct 2026</td><td><span class="luxe-badge neutral">New</span></td></tr>
-</tbody></table></div></div>
+    <!-- PAGE -->
+    <section class="section customers-page">
 
-<div class="luxe-footer text-center">{{ store_name }} Admin • Ecommerce management</div>
-</div></section>
+        <div class="container-fluid">
+
+            <!-- TITLE -->
+            <div class="title-wrapper pt-30 mb-25">
+                <div class="row align-items-center">
+
+                    <div class="col-md-6">
+                        <div class="title">
+                            <h2 class="page-title">Customers</h2>
+                            <p class="text-muted mt-2 mb-0">
+                                View your registered customers and their purchase history.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="breadcrumb-wrapper">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb justify-content-md-end">
+
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'admin_dashboard' %}">
+                                            Admin
+                                        </a>
+                                    </li>
+
+                                    <li class="breadcrumb-item active"
+                                        aria-current="page">
+                                        Customers
+                                    </li>
+
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- CUSTOMER TABLE -->
+            <div class="card-style">
+
+                <div class="customers-toolbar mb-4">
+
+                    <div>
+                        <h5 class="mb-1">All Customers</h5>
+
+                        <small class="text-muted">
+                            Total registered customers:
+                            <strong>{{ customers|length }}</strong>
+                        </small>
+                    </div>
+
+                    <input
+                        type="search"
+                        id="customerSearch"
+                        class="form-control customers-search"
+                        placeholder="Search by name or email..."
+                        aria-label="Search customers"
+                    >
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary"
+                        id="exportCustomersBtn">
+                        <i class="lni lni-download"></i>
+                        Export CSV
+                    </button>
+
+                </div>
+
+                <div class="customers-table-wrapper">
+
+                    <table class="table luxe-table customers-table"
+                           id="customersTable">
+
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="customersTableBody">
+
+                            {% for customer in customers %}
+
+                            <tr class="customer-row">
+
+                                <!-- CUSTOMER DETAILS -->
+                                <td>
+                                    <div class="customer-info">
+
+                                        <div class="customer-avatar">
+                                            {% if customer.first_name %}
+                                                {{ customer.first_name|first|upper }}
+                                            {% else %}
+                                                {{ customer.username|first|upper }}
+                                            {% endif %}
+                                        </div>
+
+                                        <div>
+                                            <div class="customer-name">
+                                                {% if customer.get_full_name %}
+                                                    {{ customer.get_full_name }}
+                                                {% else %}
+                                                    {{ customer.username }}
+                                                {% endif %}
+                                            </div>
+
+                                            <small class="text-muted customer-email">
+                                                {{ customer.email|default:"No email provided" }}
+                                            </small>
+                                        </div>
+
+                                    </div>
+                                </td>
+
+                                <!-- ORDERS -->
+                                <td>
+                                    <span class="customer-count">
+                                        {{ customer.orders_count }}
+                                    </span>
+                                </td>
+
+                                <!-- TOTAL SPENT -->
+                                <td>
+                                    <span class="customer-spending">
+                                        {{currency.currency_symbol}}{{ customer.total_spent|floatformat:2 | intcomma }}
+                                    </span>
+                                </td>
+
+                                <!-- REGISTRATION DATE -->
+                                <td>
+                                    {% if customer.date_joined %}
+                                        {{ customer.date_joined|date:"d M Y" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <!-- ACCOUNT STATUS -->
+                                <td>
+                                    {% if customer.is_active %}
+                                        <span class="customer-status active">
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="customer-status inactive">
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr id="emptyCustomersRow">
+                                <td colspan="5" class="customer-empty">
+                                    <i class="lni lni-users"></i>
+
+                                    <strong>No customers found</strong>
+
+                                    <p class="text-muted mb-0 mt-2">
+                                        Registered customers will appear here.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+
+                            <!-- SEARCH EMPTY STATE -->
+                            <tr id="noSearchResults" style="display:none;">
+                                <td colspan="5" class="customer-empty">
+                                    <strong>No matching customers</strong>
+
+                                    <p class="text-muted mb-0 mt-2">
+                                        Try another name or email address.
+                                    </p>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="customers-footer text-center">
+                {{ store_name }} Admin &bull; Ecommerce management
+            </div>
+
+        </div>
+
+    </section>
+
 </main>
+
+<!-- SCRIPTS -->
 <script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'admin/js/luxe-admin.js' %}"></script>
-</body></html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("customerSearch");
+    const tableBody = document.getElementById("customersTableBody");
+    const exportButton = document.getElementById("exportCustomersBtn");
+    const noResults = document.getElementById("noSearchResults");
+
+    // CUSTOMER SEARCH
+    if (searchInput && tableBody) {
+
+        searchInput.addEventListener("input", function () {
+
+            const searchTerm = this.value.toLowerCase().trim();
+
+            const rows = tableBody.querySelectorAll("tr.customer-row");
+
+            let visibleRows = 0;
+
+            rows.forEach(function (row) {
+
+                const customerText = row.innerText.toLowerCase();
+                const matches = customerText.includes(searchTerm);
+
+                row.style.display = matches ? "" : "none";
+
+                if (matches) {
+                    visibleRows++;
+                }
+            });
+
+            if (noResults) {
+                noResults.style.display =
+                    rows.length > 0 && visibleRows === 0 ? "" : "none";
+            }
+        });
+    }
+
+    // EXPORT CUSTOMER TABLE TO CSV
+    if (exportButton) {
+
+        exportButton.addEventListener("click", function () {
+
+            const table = document.getElementById("customersTable");
+
+            const headers = Array.from(
+                table.querySelectorAll("thead th")
+            ).map(function (cell) {
+                return cell.innerText.trim();
+            });
+
+            // Export all customers, including rows hidden by search.
+            const rows = Array.from(
+                table.querySelectorAll("tbody tr.customer-row")
+            );
+
+            if (rows.length === 0) {
+                alert("There are no customers to export.");
+                return;
+            }
+
+            const csvRows = [headers];
+
+            rows.forEach(function (row) {
+
+                const cells = Array.from(
+                    row.querySelectorAll("td")
+                ).map(function (cell) {
+
+                    return cell.innerText
+                        .replace(/\s+/g, " ")
+                        .trim();
+                });
+
+                csvRows.push(cells);
+            });
+
+            const csvContent = csvRows.map(function (row) {
+
+                return row.map(function (value) {
+
+                    let safeValue = String(value).replace(/"/g, '""');
+
+                    // Reduce CSV formula injection risk.
+                    if (/^[\s]*[=+\-@]/.test(safeValue)) {
+                        safeValue = "'" + safeValue;
+                    }
+
+                    return '"' + safeValue + '"';
+
+                }).join(",");
+
+            }).join("\r\n");
+
+            const blob = new Blob(
+                ["\uFEFF" + csvContent],
+                { type: "text/csv;charset=utf-8;" }
+            );
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = "customers.csv";
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setTimeout(function () {
+                URL.revokeObjectURL(url);
+            }, 1000);
+
+        });
+    }
+
+});
+</script>
+
+</body>
+</html>

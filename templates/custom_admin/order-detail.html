@@ -1,109 +1,961 @@
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% load humanize %}
+
+<!DOCTYPE html><html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Order #LUX-10482 | {{ store_name }} Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Order {{ order.item_code }} | {{ store_name }} Admin</title>
+
 <link rel="shortcut icon" href="{% static 'admin/images/favicon.svg' %}" type="image/x-icon">
 <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lineicons.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/materialdesignicons.min.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
-</head>
-<body>
-<div id="preloader"><div class="spinner"></div></div>
-<aside class="sidebar-nav-wrapper" id="sidebar">
-  <div class="navbar-logo"><a href="{% url 'admin_dashboard' %}" class="luxe-brand">{{ store_name }}</a></div>
-  <nav class="sidebar-nav">
-        <ul>
-            <li class="nav-item">
-                <a href="{% url 'admin_dashboard' %}">
-                    <span class="icon"><i class="lni lni-dashboard"></i></span>
-                    <span class="text">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_products' %}">
-                    <span class="icon"><i class="lni lni-shopping-basket"></i></span>
-                    <span class="text">Products</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_categories' %}">
-                    <span class="icon"><i class="lni lni-grid-alt"></i></span>
-                    <span class="text">Categories</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="active" href="{% url 'admin_orders' %}">
-                    <span class="icon"><i class="lni lni-cart"></i></span>
-                    <span class="text">Orders</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_customers' %}">
-                    <span class="icon"><i class="lni lni-users"></i></span>
-                    <span class="text">Customers</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_reviews' %}">
-                    <span class="icon"><i class="lni lni-comments"></i></span>
-                    <span class="text">Reviews</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_flash_settings' %}">
-                    <span class="icon"><i class="lni lni-offer"></i></span>
-                    <span class="text">Flash Sale</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_shipping' %}">
-                    <span class="icon"><i class="lni lni-delivery"></i></span>
-                    <span class="text">Shipping</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'admin_settings' %}">
-                    <span class="icon"><i class="lni lni-cog"></i></span>
-                    <span class="text">Settings</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</aside>
-<div class="overlay"></div>
-<main class="main-wrapper">
+
+<style>
+    :root {
+        --luxe-bg: #f6f5f1;
+        --luxe-white: #ffffff;
+        --luxe-text: #171715;
+        --luxe-muted: #77766f;
+        --luxe-border: #e8e6df;
+        --luxe-accent: #9b8e78;
+        --luxe-success: #16835d;
+        --luxe-warning: #a56a12;
+        --luxe-danger: #c0392b;
+        --luxe-radius: 16px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--luxe-bg);
+        color: var(--luxe-text);
+        overflow-x: hidden;
+    }
+
+    .main-wrapper {
+        min-width: 0;
+    }
+
+    .header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--luxe-white);
+        border-bottom: 1px solid var(--luxe-border);
+    }
+
+    .luxe-brand {
+        font-size: 23px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: var(--luxe-text);
+        text-decoration: none;
+        overflow-wrap: anywhere;
+    }
+
+    .page-title {
+        font-size: clamp(22px, 3vw, 30px);
+        font-weight: 750;
+        color: var(--luxe-text);
+        overflow-wrap: anywhere;
+    }
+
+    .luxe-card {
+        background: var(--luxe-white);
+        border: 1px solid var(--luxe-border);
+        border-radius: var(--luxe-radius);
+        padding: 24px;
+        box-shadow: 0 4px 18px rgba(23, 23, 21, 0.025);
+        min-width: 0;
+    }
+
+    .luxe-card + .luxe-card {
+        margin-top: 20px;
+    }
+
+    .luxe-section-title {
+        font-size: 17px;
+        font-weight: 750;
+        margin-bottom: 18px;
+        color: var(--luxe-text);
+    }
+
+    .luxe-order-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+        gap: 20px;
+        align-items: start;
+    }
+
+    .luxe-order-main,
+    .luxe-order-sidebar {
+        min-width: 0;
+    }
+
+    .luxe-order-sidebar {
+        position: sticky;
+        top: 95px;
+    }
+
+    .luxe-order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+    }
+
+    .luxe-order-number {
+        font-size: 21px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .luxe-order-date {
+        color: var(--luxe-muted);
+        font-size: 13px;
+        margin-top: 6px;
+    }
+
+    .luxe-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .luxe-badge.warning {
+        background: #fff2d9;
+        color: var(--luxe-warning);
+    }
+
+    .luxe-badge.success {
+        background: #e1f6ec;
+        color: var(--luxe-success);
+    }
+
+    .luxe-badge.danger {
+        background: #fde8e6;
+        color: var(--luxe-danger);
+    }
+
+    .luxe-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--luxe-border);
+        border-radius: 12px;
+    }
+
+    .luxe-table {
+        width: 100%;
+        min-width: 490px;
+        margin: 0;
+        vertical-align: middle;
+    }
+
+    .luxe-table thead th {
+        background: #faf9f6;
+        color: var(--luxe-muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 15px;
+        border-bottom: 1px solid var(--luxe-border);
+        white-space: nowrap;
+    }
+
+    .luxe-table tbody td {
+        padding: 17px 15px;
+        border-bottom: 1px solid var(--luxe-border);
+        font-size: 14px;
+    }
+
+    .luxe-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .luxe-product-name {
+        font-weight: 700;
+        color: var(--luxe-text);
+    }
+
+    .luxe-total-box {
+        width: 100%;
+        max-width: 310px;
+        margin-left: auto;
+    }
+
+    .luxe-total-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0;
+        font-size: 14px;
+    }
+
+    .luxe-total-row span {
+        color: var(--luxe-muted);
+    }
+
+    .luxe-total-row strong {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .luxe-grand-total {
+        border-top: 1px solid var(--luxe-border);
+        margin-top: 8px;
+        padding-top: 16px;
+        font-size: 17px;
+    }
+
+    .luxe-grand-total span,
+    .luxe-grand-total strong {
+        color: var(--luxe-text);
+        font-weight: 800;
+    }
+
+    .luxe-info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 17px;
+        min-width: 0;
+    }
+
+    .luxe-info-icon {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        border-radius: 11px;
+        background: #f2f0eb;
+        color: var(--luxe-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .luxe-info-content {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .luxe-info-label {
+        font-size: 12px;
+        color: var(--luxe-muted);
+        margin-bottom: 5px;
+    }
+
+    .luxe-info-value {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .luxe-divider {
+        border: 0;
+        border-top: 1px solid var(--luxe-border);
+        margin: 20px 0;
+        opacity: 1;
+    }
+
+    .luxe-form-label {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 9px;
+    }
+
+    .luxe-form-control {
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid #dedbd3;
+        border-radius: 10px;
+        padding: 11px 13px;
+        background: #fff;
+        color: var(--luxe-text);
+        font-size: 14px;
+    }
+
+    .luxe-form-control:focus {
+        border-color: var(--luxe-accent);
+        outline: 3px solid rgba(155, 142, 120, 0.12);
+    }
+
+    .luxe-primary-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 10px;
+        background: var(--luxe-text);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+    }
+
+    .luxe-primary-btn:hover {
+        color: #fff;
+        opacity: 0.88;
+    }
+
+    .luxe-secondary-btn {
+        background: #f0eee8;
+        color: var(--luxe-text);
+    }
+
+    .luxe-secondary-btn:hover {
+        color: var(--luxe-text);
+    }
+
+    .luxe-payment-reference {
+        display: block;
+        padding: 11px 12px;
+        border-radius: 9px;
+        background: #f8f7f4;
+        color: var(--luxe-text);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .luxe-footer {
+        padding: 28px 10px;
+        color: var(--luxe-muted);
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .luxe-empty-items {
+        padding: 24px 15px !important;
+        text-align: center;
+        color: var(--luxe-muted);
+    }
+
+    @media (max-width: 991px) {
+        .luxe-order-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .luxe-order-sidebar {
+            position: static;
+        }
+
+        .luxe-order-sidebar .luxe-card {
+            margin-top: 0;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .header .container-fluid {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .header .row {
+            --bs-gutter-x: 8px;
+        }
+
+        .header .main-btn {
+            min-width: 40px;
+            min-height: 40px;
+            padding: 8px 11px;
+        }
+
+        .header .dropdown-toggle {
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .section > .container-fluid {
+            padding-left: 13px;
+            padding-right: 13px;
+        }
+
+        .title-wrapper {
+            padding-top: 22px !important;
+            margin-bottom: 18px !important;
+        }
+
+        .breadcrumb-wrapper {
+            margin-top: 8px;
+        }
+
+        .breadcrumb {
+            font-size: 12px;
+            margin-bottom: 0;
+        }
+
+        .luxe-card {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .luxe-card + .luxe-card {
+            margin-top: 14px;
+        }
+
+        .luxe-order-layout {
+            gap: 14px;
+        }
+
+        .luxe-order-header {
+            gap: 10px;
+            margin-bottom: 17px;
+        }
+
+        .luxe-order-number {
+            font-size: 18px;
+        }
+
+        .luxe-order-date {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .luxe-section-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .luxe-table thead th {
+            padding: 12px;
+            font-size: 11px;
+        }
+
+        .luxe-table tbody td {
+            padding: 14px 12px;
+            font-size: 13px;
+        }
+
+        .luxe-total-box {
+            max-width: 100%;
+        }
+
+        .luxe-info-row {
+            gap: 10px;
+        }
+
+        .luxe-info-icon {
+            width: 35px;
+            height: 35px;
+        }
+
+        .luxe-primary-btn {
+            width: 100%;
+            min-height: 48px;
+        }
+
+        .luxe-footer {
+            padding: 22px 5px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .luxe-card {
+            padding: 13px;
+        }
+
+        .page-title {
+            font-size: 21px;
+        }
+
+        .luxe-order-number {
+            font-size: 16px;
+        }
+
+        .luxe-badge {
+            padding: 6px 9px;
+            font-size: 11px;
+        }
+
+        .header .text-muted.small {
+            display: none !important;
+        }
+    }
+</style>
+
+</head><body><div id="preloader">
+    <div class="spinner"></div>
+</div><!-- Sidebar --><aside class="sidebar-nav-wrapper" id="sidebar"><div class="navbar-logo">
+    <a href="{% url 'admin_dashboard' %}" class="luxe-brand">
+        {{ store_name }}
+    </a>
+</div>
+
+<nav class="sidebar-nav">
+    <ul>
+        <li class="nav-item">
+            <a href="{% url 'admin_dashboard' %}">
+                <span class="icon"><i class="lni lni-dashboard"></i></span>
+                <span class="text">Dashboard</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_products' %}">
+                <span class="icon"><i class="lni lni-shopping-basket"></i></span>
+                <span class="text">Products</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_categories' %}">
+                <span class="icon"><i class="lni lni-grid-alt"></i></span>
+                <span class="text">Categories</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="active" href="{% url 'admin_orders' %}">
+                <span class="icon"><i class="lni lni-cart"></i></span>
+                <span class="text">Orders</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_customers' %}">
+                <span class="icon"><i class="lni lni-users"></i></span>
+                <span class="text">Customers</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_reviews' %}">
+                <span class="icon"><i class="lni lni-comments"></i></span>
+                <span class="text">Reviews</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_flash_settings' %}">
+                <span class="icon"><i class="lni lni-offer"></i></span>
+                <span class="text">Flash Sale</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_shipping' %}">
+                <span class="icon"><i class="lni lni-delivery"></i></span>
+                <span class="text">Shipping</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'admin_settings' %}">
+                <span class="icon"><i class="lni lni-cog"></i></span>
+                <span class="text">Settings</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+</aside><div class="overlay"></div><!-- Main content --><main class="main-wrapper"><!-- Header -->
 <header class="header">
-  <div class="container-fluid"><div class="row align-items-center">
-    <div class="col-lg-5 col-md-5 col-6">
-      <button id="menu-toggle" class="main-btn primary-btn btn-hover"><i class="lni lni-menu"></i></button>
-      <span class="ms-3 fw-semibold d-none d-md-inline">Store Administration</span>
-    </div>
-    <div class="col-lg-7 col-md-7 col-6">
-      <div class="d-flex justify-content-end align-items-center gap-3">
-        <a href="../" class="text-muted small" target="_blank">View store ↗</a>
-        <div class="dropdown"><button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
-          <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="{% url 'admin_profile' %}">Profile</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{% url 'admin_login' %}">Sign out</a></li></ul>
+    <div class="container-fluid">
+        <div class="row align-items-center">
+
+            <div class="col-lg-5 col-md-5 col-6">
+                <button
+                    id="menu-toggle"
+                    class="main-btn primary-btn btn-hover"
+                    type="button"
+                    aria-label="Toggle navigation"
+                    aria-controls="sidebar"
+                >
+                    <i class="lni lni-menu"></i>
+                </button>
+
+                <span class="ms-2 ms-md-3 fw-semibold d-none d-md-inline">
+                    Store Administration
+                </span>
+            </div>
+
+            <div class="col-lg-7 col-md-7 col-6">
+                <div class="d-flex justify-content-end align-items-center gap-2 gap-md-3">
+
+                    <a href="/" class="text-muted small" target="_blank" rel="noopener">
+                        View store ↗
+                    </a>
+
+                    <div class="dropdown">
+                        <button
+                            class="btn btn-sm dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                        >
+                            Admin
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'admin_profile' %}">
+                                    Profile
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <li>
+                                <a class="dropdown-item" href="{% url 'admin_login' %}">
+                                    Sign out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
-      </div>
     </div>
-  </div></div>
 </header>
+
 <section class="section">
-<div class="container-fluid">
-<div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Order #LUX-10482</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Order #LUX-10482</li></ol></nav></div></div></div></div>
+    <div class="container-fluid">
 
-<div class="luxe-two mb-20"><div class="card-style"><div class="luxe-toolbar mb-3"><div><div class="luxe-section-title mb-1">Order #LUX-10482</div><small class="text-muted">Placed October 06, 2026 at 10:42 AM</small></div><span class="luxe-badge warning">Processing</span></div>
-<div class="table-responsive"><table class="table luxe-table"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody><tr><td>Premium Wireless Headphones</td><td>1</td><td>₦85,000</td><td>₦85,000</td></tr></tbody></table></div><hr><div class="d-flex justify-content-end"><div style="min-width:230px"><div class="d-flex justify-content-between py-1"><span>Subtotal</span><strong>₦85,000</strong></div><div class="d-flex justify-content-between py-1"><span>Shipping</span><strong>₦0</strong></div><div class="d-flex justify-content-between py-2 border-top mt-2"><span>Total</span><strong>₦85,000</strong></div></div></div></div>
-<div class="card-style"><div class="luxe-section-title">Customer & delivery</div><p><strong>David Okafor</strong><br>david@example.com<br>+234 801 234 5678</p><hr><p class="mb-0"><strong>Shipping address</strong><br>12 Admiralty Way<br>Lagos, Nigeria</p><hr><label class="form-label">Update fulfillment</label><select class="form-select"><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select><button class="btn btn-primary mt-3 w-100" onclick="LUXE.toast('Order status updated')">Update order</button></div></div>
-<div class="card-style"><div class="luxe-section-title">Payment</div><div class="d-flex justify-content-between"><span>Paystack transaction</span><span class="luxe-badge success">Successful</span></div><div class="d-flex justify-content-between mt-2"><span>Reference</span><code>LUX-10482-PS</code></div></div>
+        <!-- Page heading -->
+        <div class="title-wrapper pt-30 mb-25">
+            <div class="row align-items-center">
 
-<div class="luxe-footer text-center">{{ store_name }} Admin • Ecommerce management</div>
-</div></section>
-</main>
-<script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'admin/js/luxe-admin.js' %}"></script>
-</body></html>
+                <div class="col-md-6">
+                    <div class="title">
+                        <h2 class="page-title">Order Details</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="breadcrumb-wrapper">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb justify-content-md-end">
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'admin_dashboard' %}">Admin</a>
+                                </li>
+
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'admin_orders' %}">Orders</a>
+                                </li>
+
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    {{ order.item_code }}
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="luxe-order-layout">
+
+            <!-- Main order information -->
+            <div class="luxe-order-main">
+
+                <div class="luxe-card">
+
+                    <div class="luxe-order-header">
+                        <div>
+                            <div class="luxe-order-number">
+                                Order {{ order.item_code }}
+                            </div>
+
+                            <div class="luxe-order-date">
+                                <i class="lni lni-calendar me-1"></i>
+                                Placed {{ order.created_at|date:"M d, Y, h:i A" }}
+                            </div>
+                        </div>
+
+                        <span class="luxe-badge warning">
+                            Processing
+                        </span>
+                    </div>
+
+                    <div class="luxe-section-title">
+                        Ordered Items
+                    </div>
+
+                    <div class="luxe-table-wrapper">
+                        <table class="table luxe-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <div class="luxe-product-name">
+                                            {{ item.product_name }}
+                                        </div>
+                                    </td>
+
+                                    <td>{{ item.quantity }}</td>
+
+                                    <td>
+                                        {{ currency.currency_symbol }}{{ item.product_price|floatformat:2|intcomma }}
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            {{ currency.currency_symbol }}{{ item.subtotal|floatformat:2|intcomma }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="luxe-empty-items">
+                                        No products found for this order.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Order totals -->
+                    <div class="mt-4">
+                        <div class="luxe-total-box">
+
+                            <div class="luxe-total-row">
+                                <span>Subtotal</span>
+                                <strong>
+                                    {{ currency.currency_symbol }}{{ order.subtotal|floatformat:2|intcomma }}
+                                </strong>
+                            </div>
+
+                            <div class="luxe-total-row">
+                                <span>Shipping</span>
+                                <strong>
+                                    {{ currency.currency_symbol }}{{ order.shipping|floatformat:2|intcomma }}
+                                </strong>
+                            </div>
+
+                            <div class="luxe-total-row luxe-grand-total">
+                                <span>Total</span>
+                                <strong>
+                                    {{ currency.currency_symbol }}{{ order.total|floatformat:2|intcomma }}
+                                </strong>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Payment information -->
+                <div class="luxe-card">
+
+                    <div class="luxe-section-title">
+                        <i class="lni lni-credit-cards me-2"></i>
+                        Payment Information
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                        <div>
+                            <div class="fw-semibold mb-1">
+                                Paystack transaction
+                            </div>
+
+                            <small class="text-muted">
+                                Payment method
+                            </small>
+                        </div>
+
+                        <span class="luxe-badge success">
+                            <i class="lni lni-checkmark-circle me-1"></i>
+                            Successful
+                        </span>
+                    </div>
+
+                    <hr class="luxe-divider">
+
+                    <div class="luxe-info-label">
+                        Transaction reference
+                    </div>
+
+                    <code class="luxe-payment-reference">
+                        {{ order.item_code }}
+                    </code>
+
+                </div>
+
+            </div>
+
+            <!-- Customer and fulfillment sidebar -->
+            <div class="luxe-order-sidebar">
+
+                <div class="luxe-card">
+
+                    <div class="luxe-section-title">
+                        <i class="lni lni-user me-2"></i>
+                        Customer Information
+                    </div>
+
+                    <div class="luxe-info-row">
+                        <div class="luxe-info-icon">
+                            <i class="lni lni-user"></i>
+                        </div>
+
+                        <div class="luxe-info-content">
+                            <div class="luxe-info-label">Customer name</div>
+                            <div class="luxe-info-value">
+                                {{ order.first_name }} {{ order.last_name }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="luxe-info-row">
+                        <div class="luxe-info-icon">
+                            <i class="lni lni-user"></i>
+                        </div>
+
+                        <div class="luxe-info-content">
+                            <div class="luxe-info-label">Alternate name</div>
+                            <div class="luxe-info-value">
+                                {{ order.alternate_contact_name|default:"Not provided" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="luxe-info-row">
+                        <div class="luxe-info-icon">
+                            <i class="lni lni-envelope"></i>
+                        </div>
+
+                        <div class="luxe-info-content">
+                            <div class="luxe-info-label">Email address</div>
+                            <div class="luxe-info-value">
+                                {{ order.email }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="luxe-info-row mb-0">
+                        <div class="luxe-info-icon">
+                            <i class="lni lni-phone"></i>
+                        </div>
+
+                        <div class="luxe-info-content">
+                            <div class="luxe-info-label">Phone number</div>
+                            <div class="luxe-info-value">
+                                {{ order.phone }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="luxe-info-row mt-3 mb-0">
+                        <div class="luxe-info-icon">
+                            <i class="lni lni-phone"></i>
+                        </div>
+
+                        <div class="luxe-info-content">
+                            <div class="luxe-info-label">Alternative phone number</div>
+                            <div class="luxe-info-value">
+                                {{ order.alternate_phone|default:"Not provided" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="luxe-divider">
+
+                    <!-- Delivery address -->
+                    <div class="luxe-section-title">
+                        <i class="lni lni-map-marker me-2"></i>
+                        Delivery Address
+                    </div>
+
+                    <div class="luxe-info-value">
+                        {{ order.address }}<br>
+                        {{ order.city }}, {{ order.state }}
+                        {% if order.zip %}
+                            {{ order.zip }}
+                        {% endif %}
+                        <br>
+                        {{ order.country }}
+                    </div>
+
+                    <hr class="luxe-divider">
+
+                    <!-- Order fulfillment -->
+                    <div class="luxe-section-title">
+                        Update Fulfillment
+                    </div>
+
+                    <form method="post" action="">
+                        {% csrf_token %}
+
+                        <label for="order-status" class="form-label luxe-form-label">
+                            Order status
+                        </label>
+
+                        <select
+                            name="status"
+                            id="order-status"
+                            class="luxe-form-control"
+                            required
+                        >
+                            <option value="processing" selected>
+                                Processing
+                            </option>
+
+                            <option value="shipped">
+                                Shipped
+                            </option>
+
+                            <option value="delivered">
+                                Delivered
+                            </option>
+
+                            <option value="cancelled">
+                                Cancelled
+                            </option>
+                        </select>
+
+                        <button type="submit" class="luxe-primary-btn mt-3">
+                            <i class="lni lni-checkmark-circle"></i>
+                            Update Order
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="luxe-footer">
+            {{ store_name }} Admin &bull; Ecommerce Management
+        </div>
+
+    </div>
+</section>
+
+</main><script src="{% static 'admin/js/bootstrap.bundle.min.js' %}"></script><script src="{% static 'admin/js/luxe-admin.js' %}"></script></body>
+</html>

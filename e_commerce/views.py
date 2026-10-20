@@ -23,6 +23,24 @@ def home(request):
 
     return render(request, 'index.html',{'desc' : desc})
 
+
+
+def api_categories(request):
+    categories = Category.objects.all().order_by('name')
+
+    data = [
+        {
+            'id': category.id,
+            'name': category.name,
+        }
+        for category in categories
+    ]
+
+    return JsonResponse({
+        'success': True,
+        'categories': data,
+    })
+
 # Login view
 
 def signup_view(request):
@@ -659,14 +677,17 @@ def checkout(request):
     for item in cart_items:
 
         product = item.product
+        
+        item_code = product.product_code
 
         price = product.new_product_price
 
         item_total = price * item.quantity
 
         subtotal += item_total
-
-
+        
+        print(item.quantity)
+        
         
         
     
@@ -679,6 +700,8 @@ def checkout(request):
     # Save order
     order = Order.objects.create(
         user=request.user,
+        
+        item_code=item_code,
 
         email=email,
         phone=phone,
@@ -966,17 +989,17 @@ def admin_dashboard(request):
     orders = Order.objects.count()
     pdt = Product.objects.count()
     currency = StoreSettings.objects.first()
-    
-    
+    all_order = Order.objects.all().order_by()[:5]
     total_revenue = Order.objects.filter().aggregate(
         total=Sum('subtotal')
     )['total'] or 0
-
-    context = {
-       
-    }
     
-    return render(request, "custom_admin/dashboard.html", {'users' :  user , 'orders' : orders, 'pdt' : pdt,  'total_revenue': total_revenue, 'currency' : currency})
+    
+    
+    
+    return render(request, "custom_admin/dashboard.html", {'users' :  user , 'orders' : orders, 'pdt' : pdt,  'total_revenue': total_revenue, 'currency' : currency,
+        'order' : all_order
+    })
 
 
 def admin_products(request):
@@ -1110,17 +1133,53 @@ def admin_categories(request):
     )
 
 def admin_orders(request):
-    return render(request, "custom_admin/orders.html")
+    order = Order.objects.all()
+    return render(request, "custom_admin/orders.html",
+       { 'order' : order}
+        )
 
 
 def admin_order_detail(request, order_id):
+    
+    order = get_object_or_404(Order, id = order_id)
+    settings = StoreSettings.objects.first()
+    
+    items = order.items.select_related("product").all()
+    
+    
     return render(request, "custom_admin/order-detail.html", {
-        "order_id": order_id,
-    })
-
+    "order": order,
+    "items": items,
+    "shp": settings,
+    "currency": settings,
+    "store_name": settings,
+})
 
 def admin_customers(request):
-    return render(request, "custom_admin/customers.html")
+    
+    currency = StoreSettings.objects.first()
+    customers = User.objects.all().order_by("-date_joined")
+
+    for customer in customers:
+        customer.orders_count = Order.objects.filter(
+            user=customer
+        ).count()
+
+        customer.total_spent = Order.objects.filter(
+            user=customer
+        ).aggregate(
+            total=Sum("total")
+        )["total"] or 0
+
+    return render(
+        request,
+        "custom_admin/customers.html",
+        {
+            "customers": customers,
+            "currency" : currency
+        }
+    )
+
 
 
 def admin_inventory(request):
@@ -1257,4 +1316,12 @@ def admin_profile(request):
 
 
 def admin_login(request):
+    
+    if request.method == 'POST':
+        username = request.POST.ger('username')
+        password = request.POST.get('password')
+        if not username or not password:
+            messages.error('All Field are Required ')
+        
+        
     return render(request, "custom_admin/login.html")

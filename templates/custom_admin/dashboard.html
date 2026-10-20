@@ -12,6 +12,93 @@
 <link rel="stylesheet" href="{% static 'admin/css/main.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/luxe-admin.css' %}">
 </head>
+
+<style>
+    
+
+/* Recent Orders card */
+.card-style {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+/* Responsive table wrapper */
+.card-style .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Orders table */
+.card-style .luxe-table {
+    width: 100%;
+    min-width: 600px;
+    margin-bottom: 0;
+}
+
+/* Table spacing */
+.card-style .luxe-table th,
+.card-style .luxe-table td {
+    padding: 12px 14px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Smaller screens */
+@media (max-width: 768px) {
+    .card-style {
+        padding: 14px;
+    }
+
+    .card-style .luxe-table {
+        min-width: 550px;
+        font-size: 13px;
+    }
+
+    .card-style .luxe-table th,
+    .card-style .luxe-table td {
+        padding: 10px;
+    }
+
+    .luxe-toolbar {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .luxe-section-title {
+        font-size: 17px;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 480px) {
+    .card-style {
+        padding: 10px;
+    }
+
+    .card-style .luxe-table {
+        min-width: 500px;
+        font-size: 12px;
+    }
+
+    .card-style .luxe-table th,
+    .card-style .luxe-table td {
+        padding: 8px;
+    }
+
+    .luxe-section-title {
+        font-size: 15px;
+    }
+
+    .luxe-toolbar .btn {
+        font-size: 12px;
+        padding: 5px 9px;
+    }
+}
+</style>
+
 <body>
 <div id="preloader"><div class="spinner"></div></div>
 <aside class="sidebar-nav-wrapper" id="sidebar">
@@ -101,7 +188,7 @@
 <div class="title-wrapper pt-30 mb-25"><div class="row align-items-center"><div class="col-md-6"><div class="title"><h2 class="page-title">Dashboard</h2></div></div><div class="col-md-6"><div class="breadcrumb-wrapper"><nav aria-label="breadcrumb"><ol class="breadcrumb justify-content-md-end"><li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Admin</a></li><li class="breadcrumb-item active">Dashboard</li></ol></nav></div></div></div></div>
 
 <div class="luxe-grid mb-20">
-<div class="card-style luxe-stat"><div class="label">Today's sales</div><div class="value">{{currency.currency_symbol}}{{total_revenue|intcomma}}</div><div class="delta luxe-success">↑ Total amount of sales </div></div>
+<div class="card-style luxe-stat"><div class="label">Today's sales</div><div class="value">{{currency.currency_symbol}}{{total_revenue | floatformat:2 |intcomma}}</div><div class="delta luxe-success">↑ Total amount of sales </div></div>
 <div class="card-style luxe-stat"><div class="label">Orders</div><div class="value">{{orders}}</div><div class="delta luxe-success">Numbers of orders made</div></div>
 <div class="card-style luxe-stat"><div class="label">Customers</div><div class="value">{{users}}</div><div class="delta luxe-success">Numbers of users available</div></div>
 <div class="card-style luxe-stat"><div class="label">Stocks available</div><div class="value">{{pdt}}</div><div class="delta luxe-success">Numbers of stock available</div></div>
@@ -116,11 +203,15 @@
 </div></div>
 <div class="card-style"><div class="luxe-toolbar mb-3"><div class="luxe-section-title mb-0">Recent orders</div><a class="btn btn-sm btn-outline-primary" href="{% url 'admin_orders' %}">View all</a></div>
 <div class="table-responsive"><table class="table luxe-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
+
 <tbody>
-<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10482</strong></a></td><td>David Okafor</td><td>Oct 06, 2026</td><td>₦85,000</td><td><span class="luxe-badge success">Paid</span></td></tr>
-<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10481</strong></a></td><td>Amaka Nwosu</td><td>Oct 06, 2026</td><td>₦42,500</td><td><span class="luxe-badge warning">Processing</span></td></tr>
-<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>#LUX-10480</strong></a></td><td>John Ade</td><td>Oct 05, 2026</td><td>₦128,900</td><td><span class="luxe-badge success">Shipped</span></td></tr>
+               {% if order %}
+           {% for odd in order %}
+<tr><td><a href="{% url 'admin_order_detail' order_id=10480 %}"><strong>{{odd.item_code}}</strong></a></td><td>{{odd.user }}</td><td>{{odd.created_at}}</td><td>{{odd.subtotal}}</td><td><span class="luxe-badge success">Paid</span></td></tr>
+      {% endfor %}
+        {% endif %}
 </tbody></table></div></div>
+      
 <script>
 window.addEventListener('load',()=>{const c=document.getElementById('salesChart');if(c&&window.Chart)new Chart(c,{type:'line',data:{labels:['Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'],datasets:[{label:'Sales',data:[320000,410000,360000,520000,610000],borderWidth:2,tension:.35,fill:false}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}})})
 </script>

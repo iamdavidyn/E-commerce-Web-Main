@@ -1,8 +1,5 @@
-/* ============================================
-   LUXE — Shop page logic
-   ============================================ */
+let SHOP_CATS = [];
 
-const SHOP_CATS = ['Electronics', 'Fashion', 'Home & Living', 'Beauty', 'Sports'];
 const state = {
   cats: new Set(),
   categoryFilterEnabled: false,
@@ -14,59 +11,185 @@ const state = {
   q: '',
 };
 
+let categoriesLoaded = false;
+let filterDrawerInitialized = false;
+
+async function loadShopCategories() {
+  try {
+    const response = await fetch('/api/categories/', {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json'
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data.categories)) {
+      throw new Error('Invalid categories response.');
+    }
+
+    SHOP_CATS = data.categories
+      .map(category => {
+        if (typeof category === 'string') {
+          return category.trim();
+        }
+
+        return String(
+          category.name ?? category.category_name ?? ''
+        ).trim();
+      })
+      .filter(Boolean);
+
+    categoriesLoaded = true;
+  } catch (error) {
+    console.error('Unable to load categories:', error);
+    SHOP_CATS = [];
+    categoriesLoaded = false;
+  }
+
+  return categoriesLoaded;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, character => {
+    const entities = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+
+    return entities[character];
+  });
+}
+
 function renderFilterControls() {
-  const fi = document.querySelector('#filter-icon');
-  if (fi) fi.innerHTML = icon('grid');
+  const filterIcon = document.querySelector('#filter-icon');
+
+  if (filterIcon) {
+    filterIcon.innerHTML = icon('grid');
+  }
 
   const catWrap = document.querySelector('#filter-cats');
-  catWrap.innerHTML = SHOP_CATS.map((c) => {
-    const count = PRODUCTS.filter((p) => p.cat === c).length;
-    return `<label class="filter-check">
-      <input type="checkbox" value="${c}" ${state.cats.has(c) ? 'checked' : ''}>
-      <span>${c}</span>
-      <small>${count}</small>
-    </label>`;
-  }).join('');
-  catWrap.querySelectorAll('input').forEach((inp) => {
-    inp.addEventListener('change', () => {
-      inp.checked ? state.cats.add(inp.value) : state.cats.delete(inp.value);
-      state.categoryFilterEnabled = state.cats.size > 0;
-      apply();
-    });
-  });
+
+  if (catWrap) {
+    if (!categoriesLoaded) {
+      catWrap.innerHTML = '<p class="filter-message">Categories could not be loaded.</p>';
+    } else if (!SHOP_CATS.length) {
+      catWrap.innerHTML = '<p class="filter-message">No categories available.</p>';
+    } else {
+      catWrap.innerHTML = SHOP_CATS.map(category => {
+        const count = Array.isArray(PRODUCTS)
+          ? PRODUCTS.filter(product => product.cat === category).length
+          : 0;
+
+        return `
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              value="${escapeHTML(category)}"
+              ${state.cats.has(category) ? 'checked' : ''}
+            >
+            <span>${escapeHTML(category)}</span>
+            <small>${count}</small>
+          </label>
+        `;
+      }).join('');
+
+      catWrap.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        input.addEventListener('change', () => {
+          if (input.checked) {
+            state.cats.add(input.value);
+          } else {
+            state.cats.delete(input.value);
+          }
+
+          state.categoryFilterEnabled = state.cats.size > 0;
+          apply();
+        });
+      });
+    }
+  }
 
   const ratingWrap = document.querySelector('#filter-rating');
-  ratingWrap.innerHTML = [4.5, 4.0, 3.0, 0].map((r) => `
-    <label class="filter-radio">
-      <input type="radio" name="rating" value="${r}" ${state.minRating === r ? 'checked' : ''}>
-      <span class="stars">${Array.from({ length: 5 }, (_, i) => i < Math.round(r) ? icon('star') : icon('starOff')).join('')}</span>
-      <small>${r === 0 ? 'All' : r + ' & up'}</small>
-    </label>`).join('');
-  ratingWrap.querySelectorAll('input').forEach((inp) => {
-    inp.addEventListener('change', () => {
-      state.minRating = Number(inp.value);
-      state.ratingFilterEnabled = state.minRating > 0;
-      apply();
+
+  if (ratingWrap) {
+    ratingWrap.innerHTML = [4.5, 4.0, 3.0, 0].map(rating => `
+      <label class="filter-radio">
+        <input
+          type="radio"
+          name="rating"
+          value="${rating}"
+          ${state.minRating === rating ? 'checked' : ''}
+        >
+        <span class="stars">
+          ${Array.from(
+            { length: 5 },
+            (_, index) => (
+              index < Math.round(rating)
+                ? icon('star')
+                : icon('starOff')
+            )
+          ).join('')}
+        </span>
+        <small>${rating === 0 ? 'All' : `${rating} & up`}</small>
+      </label>
+    `).join('');
+
+    ratingWrap.querySelectorAll('input[name="rating"]').forEach(input => {
+      input.addEventListener('change', () => {
+        state.minRating = Number(input.value);
+        state.ratingFilterEnabled = state.minRating > 0;
+        apply();
+      });
     });
-  });
+  }
 
   const range = document.querySelector('#price-range');
-  const priceVal = document.querySelector('#price-value');
-  range.value = state.maxPrice === Infinity ? range.max : state.maxPrice;
-  priceVal.textContent = state.priceFilterEnabled ? PRICE_FMT(state.maxPrice).replace('.00', '') : 'No limit';
-  range.addEventListener('input', () => {
-    state.priceFilterEnabled = true;
-    state.maxPrice = Number(range.value);
-    priceVal.textContent = PRICE_FMT(state.maxPrice).replace('.00', '');
-    apply();
-  });
+  const priceValue = document.querySelector('#price-value');
 
-  document.querySelector('#sort-select').addEventListener('change', (e) => {
-    state.sort = e.target.value;
-    apply();
-  });
+  if (range && priceValue) {
+    range.value = state.priceFilterEnabled
+      ? Math.min(Number(range.max), state.maxPrice)
+      : range.max;
 
-  document.querySelectorAll('.js-clear-filters').forEach((b) => b.addEventListener('click', clearFilters));
+    priceValue.textContent = state.priceFilterEnabled
+      ? PRICE_FMT(state.maxPrice).replace(/\.00$/, '')
+      : 'No limit';
+
+    range.oninput = () => {
+      state.priceFilterEnabled = true;
+      state.maxPrice = Number(range.value);
+
+      priceValue.textContent = PRICE_FMT(state.maxPrice)
+        .replace(/\.00$/, '');
+
+      apply();
+    };
+  }
+
+  const sortSelect = document.querySelector('#sort-select');
+
+  if (sortSelect) {
+    sortSelect.value = state.sort;
+
+    sortSelect.onchange = event => {
+      state.sort = event.target.value;
+      apply();
+    };
+  }
+
+  document.querySelectorAll('.js-clear-filters').forEach(button => {
+    button.onclick = clearFilters;
+  });
 }
 
 function clearFilters() {
@@ -77,78 +200,179 @@ function clearFilters() {
   state.minRating = 0;
   state.ratingFilterEnabled = false;
   state.q = '';
-  document.querySelector('#search-box') && (document.querySelector('#search-box').value = '');
+  state.sort = 'featured';
+
+  const searchBox = document.querySelector('#search-box');
+  if (searchBox) searchBox.value = '';
+
+  const sortSelect = document.querySelector('#sort-select');
+  if (sortSelect) sortSelect.value = 'featured';
+
   renderFilterControls();
   apply();
 }
 
 function getFiltered() {
-  let list = PRODUCTS.filter((p) => {
-    if (state.categoryFilterEnabled && !state.cats.has(p.cat)) return false;
-    if (state.priceFilterEnabled && p.price > state.maxPrice) return false;
-    if (state.ratingFilterEnabled && p.rating < state.minRating) return false;
-    if (state.q && !(`${p.name} ${p.cat}`.toLowerCase().includes(state.q.toLowerCase()))) return false;
+  const products = Array.isArray(PRODUCTS) ? PRODUCTS : [];
+
+  const list = products.filter(product => {
+    if (
+      state.categoryFilterEnabled &&
+      !state.cats.has(product.cat)
+    ) {
+      return false;
+    }
+
+    if (
+      state.priceFilterEnabled &&
+      Number(product.price) > state.maxPrice
+    ) {
+      return false;
+    }
+
+    if (
+      state.ratingFilterEnabled &&
+      Number(product.rating || 0) < state.minRating
+    ) {
+      return false;
+    }
+
+    if (state.q) {
+      const searchableText = `${product.name || ''} ${product.cat || ''}`.toLowerCase();
+
+      if (!searchableText.includes(state.q.toLowerCase())) {
+        return false;
+      }
+    }
+
     return true;
   });
+
   switch (state.sort) {
-    case 'price-asc': list.sort((a, b) => a.price - b.price); break;
-    case 'price-desc': list.sort((a, b) => b.price - a.price); break;
-    case 'rating': list.sort((a, b) => b.rating - a.rating); break;
-    case 'name': list.sort((a, b) => a.name.localeCompare(b.name)); break;
+    case 'price-asc':
+      list.sort((a, b) => Number(a.price) - Number(b.price));
+      break;
+
+    case 'price-desc':
+      list.sort((a, b) => Number(b.price) - Number(a.price));
+      break;
+
+    case 'rating':
+      list.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+      break;
+
+    case 'name':
+      list.sort((a, b) =>
+        String(a.name || '').localeCompare(String(b.name || ''))
+      );
+      break;
   }
+
   return list;
 }
 
 function apply() {
   const list = getFiltered();
+
   const grid = document.querySelector('#shop-grid');
   const empty = document.querySelector('#shop-empty');
   const count = document.querySelector('#result-count');
-  count.textContent = `${list.length} product${list.length === 1 ? '' : 's'}`;
+
+  if (!grid) return;
+
+  if (count) {
+    count.textContent = `${list.length} product${list.length === 1 ? '' : 's'}`;
+  }
+
   if (!list.length) {
     grid.innerHTML = '';
-    empty.hidden = false;
+
+    if (empty) empty.hidden = false;
   } else {
-    empty.hidden = true;
+    if (empty) empty.hidden = true;
     grid.innerHTML = list.map(productCard).join('');
   }
-  setupReveal();
+
+  if (typeof setupReveal === 'function') {
+    setupReveal();
+  }
+}
+
+function setupShopSearch() {
+  const searchBox = document.querySelector('#search-box');
+
+  if (!searchBox) return;
+
+  searchBox.value = state.q;
+
+  searchBox.oninput = event => {
+    state.q = event.target.value.trim();
+    apply();
+  };
 }
 
 function setupFilterDrawer() {
   const sidebar = document.querySelector('#shop-sidebar');
   const overlay = document.querySelector('.js-filter-overlay');
-  document.querySelectorAll('.js-filter-toggle').forEach((b) =>
-    b.addEventListener('click', () => {
+
+  if (!sidebar || !overlay || filterDrawerInitialized) return;
+
+  document.querySelectorAll('.js-filter-toggle').forEach(button => {
+    button.addEventListener('click', () => {
       sidebar.classList.toggle('open');
       overlay.classList.toggle('open');
-    })
-  );
+    });
+  });
+
   overlay.addEventListener('click', () => {
     sidebar.classList.remove('open');
     overlay.classList.remove('open');
   });
+
+  filterDrawerInitialized = true;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const cat = getParam('cat');
-  const q = getParam('q');
-  if (cat && SHOP_CATS.includes(cat)) {
-    state.cats.add(cat);
+function initialiseShopPage() {
+  const category = getParam('cat');
+  const query = getParam('q');
+
+  const title = document.querySelector('#shop-title');
+  const breadcrumb = document.querySelector('#crumb-current');
+  const subtitle = document.querySelector('#shop-subtitle');
+
+  if (category && SHOP_CATS.includes(category)) {
+    state.cats.clear();
+    state.cats.add(category);
     state.categoryFilterEnabled = true;
-    document.querySelector('#shop-title').textContent = cat;
-    document.querySelector('#crumb-current').textContent = cat;
-    document.querySelector('#shop-subtitle').textContent = `Browse our selection of ${cat.toLowerCase()} products.`;
+
+    if (title) title.textContent = category;
+    if (breadcrumb) breadcrumb.textContent = category;
+
+    if (subtitle) {
+      subtitle.textContent = `Browse our selection of ${category.toLowerCase()} products.`;
+    }
   }
-  if (q) {
-    state.q = q;
-    document.querySelector('#shop-title').textContent = `Search: "${q}"`;
-    document.querySelector('#crumb-current').textContent = 'Search';
-    document.querySelector('#shop-subtitle').textContent = `Showing results for "${q}".`;
+
+  if (query) {
+    state.q = query;
+
+    if (title) title.textContent = `Search: "${query}"`;
+    if (breadcrumb) breadcrumb.textContent = 'Search';
+
+    if (subtitle) {
+      subtitle.textContent = `Showing results for "${query}".`;
+    }
   }
+
   renderFilterControls();
+  setupShopSearch();
   setupFilterDrawer();
   apply();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadShopCategories();
+  initialiseShopPage();
 });
 
 document.addEventListener('products:loaded', () => {

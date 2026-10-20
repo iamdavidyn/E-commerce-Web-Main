@@ -16,8 +16,7 @@ function getCSRFToken() {
 
     const name = "csrftoken=";
 
-    const cookies =
-        document.cookie.split(";");
+    const cookies = document.cookie.split(";");
 
     for (let cookie of cookies) {
 
@@ -95,8 +94,7 @@ async function loadDatabaseCart() {
 
     if (!isAuthenticated) {
 
-        databaseCart =
-            getGuestCart();
+        databaseCart = getGuestCart();
 
         renderCart();
 
@@ -112,21 +110,18 @@ async function loadDatabaseCart() {
 
     try {
 
-        const response =
-            await fetch(
-                "/api/cart/",
-                {
-                    method: "GET",
+        const response = await fetch(
+            "/api/cart/",
+            {
+                method: "GET",
 
-                    credentials:
-                        "same-origin",
+                credentials: "same-origin",
 
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
+                headers: {
+                    "Accept": "application/json"
                 }
-            );
+            }
+        );
 
 
         if (!response.ok) {
@@ -138,8 +133,7 @@ async function loadDatabaseCart() {
         }
 
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
 
         if (!data.success) {
@@ -152,9 +146,7 @@ async function loadDatabaseCart() {
         }
 
 
-        databaseCart =
-            data.items || [];
-
+        databaseCart = data.items || [];
 
         renderCart();
 
@@ -167,10 +159,9 @@ async function loadDatabaseCart() {
         );
 
 
-        const layout =
-            document.querySelector(
-                "#cart-layout"
-            );
+        const layout = document.querySelector(
+            "#cart-layout"
+        );
 
 
         if (layout) {
@@ -210,28 +201,23 @@ function cartDetailed() {
     return databaseCart.map(
         (item) => ({
 
-            id:
-                Number(item.id),
+            id: Number(item.id),
 
             name:
                 item.name ||
                 "Unknown Product",
 
             price:
-                Number(item.price) ||
-                0,
+                Number(item.price) || 0,
 
             img:
-                item.img ||
-                "",
+                item.img || "",
 
             cat:
-                item.cat ||
-                "N/A",
+                item.cat || "N/A",
 
             qty:
-                Number(item.qty) ||
-                1
+                Number(item.qty) || 1
 
         })
     );
@@ -243,47 +229,32 @@ function cartDetailed() {
 TOTALS
 
 Tax has been completely removed.
-
 Shipping comes directly from Django Admin.
 ============================================ */
 
 function cartTotals() {
 
-    const items =
-        cartDetailed();
+    const items = cartDetailed();
 
 
-    const subtotal =
-        items.reduce(
-            (sum, item) =>
-                sum +
-                item.price *
-                item.qty,
-            0
-        );
+    const subtotal = items.reduce(
+        (sum, item) =>
+            sum + item.price * item.qty,
+        0
+    );
 
 
-    /*
-     * Django Admin controls:
-     *
-     * STORE_SETTINGS.shipping_fee
-     */
+    /* Shipping fee controlled by Django Admin */
 
     const shipping =
         subtotal > 0
-            ? Number(
-                STORE_SETTINGS?.shipping_fee
-            ) || 0
+            ? Number(STORE_SETTINGS?.shipping_fee) || 0
             : 0;
 
 
-    /*
-     * No tax.
-     */
+    /* No tax */
 
-    const total =
-        subtotal +
-        shipping;
+    const total = subtotal + shipping;
 
 
     return {
@@ -309,14 +280,12 @@ RENDER CART
 
 function renderCart() {
 
-    const items =
-        cartDetailed();
+    const items = cartDetailed();
 
 
-    const layout =
-        document.querySelector(
-            "#cart-layout"
-        );
+    const layout = document.querySelector(
+        "#cart-layout"
+    );
 
 
     if (!layout) {
@@ -343,17 +312,14 @@ function renderCart() {
                     ${icon("cart")}
                 </div>
 
-
                 <h3>
                     Your cart is empty
                 </h3>
-
 
                 <p>
                     Looks like you haven't added anything yet.
                     Let's fix that.
                 </p>
-
 
                 <a
                     href="/shop"
@@ -371,8 +337,7 @@ function renderCart() {
     }
 
 
-    const t =
-        cartTotals();
+    const t = cartTotals();
 
 
     /* ============================================
@@ -383,7 +348,6 @@ function renderCart() {
 
         <div class="cart-items">
 
-
             ${items.map(
                 (item) => `
 
@@ -392,6 +356,7 @@ function renderCart() {
                     data-id="${item.id}"
                 >
 
+                    <!-- PRODUCT IMAGE -->
 
                     <a
                         href="/product?id=${item.id}"
@@ -400,24 +365,21 @@ function renderCart() {
 
                         ${
                             item.img
-
                                 ? `
-
                                     <img
                                         src="${item.img}"
                                         alt="${item.name}"
                                     >
-
                                 `
-
                                 : ""
                         }
 
                     </a>
 
 
-                    <div class="cart-row-info">
+                    <!-- PRODUCT INFORMATION -->
 
+                    <div class="cart-row-info">
 
                         <a
                             href="/product?id=${item.id}"
@@ -426,13 +388,12 @@ function renderCart() {
                             ${item.name}
                         </a>
 
-
                         <span class="product-cat">
                             ${item.cat}
                         </span>
 
-
                         <button
+                            type="button"
                             class="link-btn danger js-remove"
                             data-id="${item.id}"
                         >
@@ -443,18 +404,16 @@ function renderCart() {
 
                         </button>
 
-
                     </div>
 
 
-                    <!-- =========================
-                    QUANTITY COUNTER
-                    ========================== -->
+                    <!-- =================================
+                    INCREASED QUANTITY COUNTER
+                    ================================== -->
 
                     <div
-                        class="qty-stepper sm"
-                        aria-label="Quantity"
-                    >
+                        class="qty-stepper cart-qty-large"
+                        aria-label="Quantity">
 
                         <button
                             type="button"
@@ -462,9 +421,7 @@ function renderCart() {
                             data-id="${item.id}"
                             aria-label="Decrease quantity"
                         >
-
                             ${icon("chevron")}
-
                         </button>
 
 
@@ -485,45 +442,34 @@ function renderCart() {
                             data-id="${item.id}"
                             aria-label="Increase quantity"
                         >
-
                             ${icon("plus")}
-
                         </button>
 
                     </div>
 
 
-                    <div
-                        class="cart-row-price"
-                    >
+                    <!-- PRODUCT PRICE -->
+
+                    <div class="cart-row-price">
 
                         <strong>
                             ${PRICE_FMT(
-                                item.price *
-                                item.qty
+                                item.price * item.qty
                             )}
                         </strong>
 
-
                         ${
                             item.qty > 1
-
                                 ? `
-
                                     <small>
-                                        ${PRICE_FMT(
-                                            item.price
-                                        )}
+                                        ${PRICE_FMT(item.price)}
                                         each
                                     </small>
-
                                 `
-
                                 : ""
                         }
 
                     </div>
-
 
                 </div>
 
@@ -531,23 +477,28 @@ function renderCart() {
             ).join("")}
 
 
+            <!-- =================================
+            CONTINUE SHOPPING
+            No icon; compact link
+            Positioned below product list
+            ================================== -->
+
             <a
                 href="/shop"
-                class="link-btn"
+                class="link-btn continue-shopping"
             >
-
-                ${icon("arrowLeft")}
-
                 Continue shopping
-
             </a>
 
 
         </div>
 
 
-        <aside class="cart-summary">
+        <!-- =====================================
+        ORDER SUMMARY
+        ====================================== -->
 
+        <aside class="cart-summary">
 
             <h2>
                 Order Summary
@@ -561,9 +512,7 @@ function renderCart() {
                 </span>
 
                 <span>
-                    ${PRICE_FMT(
-                        t.subtotal
-                    )}
+                    ${PRICE_FMT(t.subtotal)}
                 </span>
 
             </div>
@@ -579,11 +528,7 @@ function renderCart() {
 
                     ${
                         t.shipping > 0
-
-                            ? PRICE_FMT(
-                                t.shipping
-                            )
-
+                            ? PRICE_FMT(t.shipping)
                             : "FREE"
                     }
 
@@ -602,9 +547,7 @@ function renderCart() {
                 </span>
 
                 <span>
-                    ${PRICE_FMT(
-                        t.total
-                    )}
+                    ${PRICE_FMT(t.total)}
                 </span>
 
             </div>
@@ -614,9 +557,7 @@ function renderCart() {
                 href="/checkout"
                 class="btn btn-primary btn-lg btn-block"
             >
-
                 Proceed to Checkout
-
             </a>
 
 
@@ -627,7 +568,6 @@ function renderCart() {
                 Secure checkout • SSL encrypted
 
             </div>
-
 
         </aside>
 
@@ -643,19 +583,12 @@ function renderCart() {
 UPDATE QUANTITY
 ============================================ */
 
-async function setQty(
-    id,
-    qty
-) {
+async function setQty(id, qty) {
 
-    qty =
-        parseInt(qty);
+    qty = parseInt(qty);
 
 
-    if (
-        isNaN(qty) ||
-        qty < 1
-    ) {
+    if (isNaN(qty) || qty < 1) {
 
         qty = 1;
 
@@ -673,27 +606,22 @@ async function setQty(
 
     if (!isAuthenticated) {
 
-        let cart =
-            getGuestCart();
+        let cart = getGuestCart();
 
 
-        const item =
-            cart.find(
-                (item) =>
-                    Number(item.id) ===
-                    Number(id)
-            );
+        const item = cart.find(
+            (item) =>
+                Number(item.id) === Number(id)
+        );
 
 
         if (item) {
 
-            item.qty =
-                qty;
+            item.qty = qty;
 
             saveGuestCart(cart);
 
-            databaseCart =
-                cart;
+            databaseCart = cart;
 
             renderCart();
 
@@ -711,51 +639,35 @@ async function setQty(
 
     try {
 
-        const formData =
-            new FormData();
+        const formData = new FormData();
+
+        formData.append("product_id", id);
+
+        formData.append("quantity", qty);
 
 
-        formData.append(
-            "product_id",
-            id
+        const response = await fetch(
+            "/api/cart/update/",
+            {
+
+                method: "POST",
+
+                credentials: "same-origin",
+
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                },
+
+                body: formData
+
+            }
         );
 
 
-        formData.append(
-            "quantity",
-            qty
-        );
+        const data = await response.json();
 
 
-        const response =
-            await fetch(
-                "/api/cart/update/",
-                {
-
-                    method: "POST",
-
-                    credentials:
-                        "same-origin",
-
-                    headers: {
-
-                        "X-CSRFToken":
-                            getCSRFToken()
-
-                    },
-
-                    body:
-                        formData
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!data.success) {
+        if (!response.ok || !data.success) {
 
             throw new Error(
                 data.message ||
@@ -803,22 +715,18 @@ async function removeFromCart(id) {
 
     if (!isAuthenticated) {
 
-        let cart =
-            getGuestCart();
+        let cart = getGuestCart();
 
 
-        cart =
-            cart.filter(
-                (item) =>
-                    Number(item.id) !==
-                    Number(id)
-            );
+        cart = cart.filter(
+            (item) =>
+                Number(item.id) !== Number(id)
+        );
 
 
         saveGuestCart(cart);
 
-        databaseCart =
-            cart;
+        databaseCart = cart;
 
 
         toast(
@@ -841,45 +749,33 @@ async function removeFromCart(id) {
 
     try {
 
-        const formData =
-            new FormData();
+        const formData = new FormData();
+
+        formData.append("product_id", id);
 
 
-        formData.append(
-            "product_id",
-            id
+        const response = await fetch(
+            "/api/cart/remove/",
+            {
+
+                method: "POST",
+
+                credentials: "same-origin",
+
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                },
+
+                body: formData
+
+            }
         );
 
 
-        const response =
-            await fetch(
-                "/api/cart/remove/",
-                {
-
-                    method: "POST",
-
-                    credentials:
-                        "same-origin",
-
-                    headers: {
-
-                        "X-CSRFToken":
-                            getCSRFToken()
-
-                    },
-
-                    body:
-                        formData
-
-                }
-            );
+        const data = await response.json();
 
 
-        const data =
-            await response.json();
-
-
-        if (!data.success) {
+        if (!response.ok || !data.success) {
 
             throw new Error(
                 data.message ||
@@ -923,153 +819,133 @@ EVENTS
 function bindCartEvents() {
 
 
-    /* ---------- REMOVE ---------- */
+    /* ============================================
+    REMOVE ITEM
+    ============================================ */
 
     document
-        .querySelectorAll(
-            ".js-remove"
-        )
-        .forEach(
-            (button) => {
+        .querySelectorAll(".js-remove")
+        .forEach((button) => {
 
-                button.addEventListener(
-                    "click",
-                    () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                        removeFromCart(
-                            button.dataset.id
-                        );
+                    removeFromCart(
+                        button.dataset.id
+                    );
 
-                    }
-                );
+                }
+            );
 
-            }
-        );
+        });
 
 
-    /* ---------- INCREASE ---------- */
+    /* ============================================
+    INCREASE QUANTITY
+    ============================================ */
 
     document
-        .querySelectorAll(
-            ".js-cart-inc"
-        )
-        .forEach(
-            (button) => {
+        .querySelectorAll(".js-cart-inc")
+        .forEach((button) => {
 
-                button.addEventListener(
-                    "click",
-                    () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                        const item =
-                            databaseCart.find(
-                                (item) =>
-                                    Number(item.id) ===
-                                    Number(
-                                        button.dataset.id
-                                    )
-                            );
+                    const item = databaseCart.find(
+                        (item) =>
+                            Number(item.id) ===
+                            Number(button.dataset.id)
+                    );
 
 
-                        if (!item) {
+                    if (!item) {
 
-                            return;
-
-                        }
-
-
-                        setQty(
-                            button.dataset.id,
-                            Number(item.qty) + 1
-                        );
+                        return;
 
                     }
-                );
-
-            }
-        );
 
 
-    /* ---------- DECREASE ---------- */
+                    setQty(
+                        button.dataset.id,
+                        Number(item.qty) + 1
+                    );
+
+                }
+            );
+
+        });
+
+
+    /* ============================================
+    DECREASE QUANTITY
+    ============================================ */
 
     document
-        .querySelectorAll(
-            ".js-cart-dec"
-        )
-        .forEach(
-            (button) => {
+        .querySelectorAll(".js-cart-dec")
+        .forEach((button) => {
 
-                button.addEventListener(
-                    "click",
-                    () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                        const item =
-                            databaseCart.find(
-                                (item) =>
-                                    Number(item.id) ===
-                                    Number(
-                                        button.dataset.id
-                                    )
-                            );
+                    const item = databaseCart.find(
+                        (item) =>
+                            Number(item.id) ===
+                            Number(button.dataset.id)
+                    );
 
 
-                        if (!item) {
+                    if (!item) {
 
-                            return;
-
-                        }
-
-
-                        const newQty =
-                            Math.max(
-                                1,
-                                Number(item.qty) - 1
-                            );
-
-
-                        setQty(
-                            button.dataset.id,
-                            newQty
-                        );
+                        return;
 
                     }
-                );
-
-            }
-        );
 
 
-    /* ---------- MANUAL QUANTITY ---------- */
+                    const newQty = Math.max(
+                        1,
+                        Number(item.qty) - 1
+                    );
+
+
+                    setQty(
+                        button.dataset.id,
+                        newQty
+                    );
+
+                }
+            );
+
+        });
+
+
+    /* ============================================
+    MANUAL QUANTITY INPUT
+    ============================================ */
 
     document
-        .querySelectorAll(
-            ".js-cart-qty"
-        )
-        .forEach(
-            (input) => {
+        .querySelectorAll(".js-cart-qty")
+        .forEach((input) => {
 
-                input.addEventListener(
-                    "change",
-                    () => {
+            input.addEventListener(
+                "change",
+                () => {
 
-                        const value =
-                            parseInt(
-                                input.value
-                            ) || 1;
+                    const value =
+                        parseInt(input.value) || 1;
 
 
-                        setQty(
-                            input.dataset.id,
-                            Math.max(
-                                1,
-                                value
-                            )
-                        );
+                    setQty(
+                        input.dataset.id,
+                        Math.max(1, value)
+                    );
 
-                    }
-                );
+                }
+            );
 
-            }
-        );
+        });
 
 }
 
@@ -1085,14 +961,12 @@ document.addEventListener(
 
         /*
          * main.js provides loadStoreSettings().
-         *
-         * Wait for Django currency and
-         * shipping settings before rendering.
+         * Wait for Django currency and shipping
+         * settings before rendering the cart.
          */
 
         if (
-            typeof loadStoreSettings ===
-            "function"
+            typeof loadStoreSettings === "function"
         ) {
 
             await loadStoreSettings();
